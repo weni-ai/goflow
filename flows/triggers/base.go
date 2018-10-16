@@ -51,11 +51,6 @@ func (t *baseTrigger) Initialize(session flows.Session) error {
 		return fmt.Errorf("unable to load flow[uuid=%s]: %s", t.Flow().UUID, err)
 	}
 
-	// check flow is valid and has everything it needs to run
-	if err := flow.Validate(session.Assets()); err != nil {
-		return fmt.Errorf("validation failed for flow[uuid=%s]: %s", flow.UUID(), err)
-	}
-
 	session.PushFlow(flow, nil, false)
 
 	if t.environment != nil {

@@ -55,9 +55,9 @@
                                 "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
                                 "name": "Twilio Channel"
                             }
-                        }, 
+                        },
                         {
-                            "uuid": "3248a064-bc42-4dff-aa0f-93d85de2f600",
+                            "uuid": "d9b82dc7-6ab6-4069-b22b-018e58be03ae",
                             "type": "set_run_result",
                             "name": "Favorite Color",
                             "value": "red",
@@ -81,7 +81,12 @@
                     "wait": {
                         "type": "msg",
                         "timeout": 600
-                    } 
+                    },
+                    "exits": [
+                        {
+                            "uuid": "1380a727-ce5d-46d0-a458-05a79b66c99c"
+                        }
+                    ]
                 }
             ]
         }
@@ -94,10 +99,17 @@
             "name": "Collect Language",
             "language": "eng",
             "type": "messaging",
-            "nodes": [{
-                "uuid": "d9dba561-b5ee-4f62-ba44-60c4dc242b84",
-                "actions": []
-            }]
+            "nodes": [
+                {
+                    "uuid": "d9dba561-b5ee-4f62-ba44-60c4dc242b84",
+                    "actions": [],
+                    "exits": [
+                        {
+                            "uuid": "3b6957a1-7381-4c41-b659-c11786960bca"
+                        }
+                    ]
+                }
+            ]
         }
     },
     {
@@ -163,8 +175,13 @@
                 "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
                 "name": "Nexmo",
                 "address": "+12345671111",
-                "schemes": ["tel"],
-                "roles": ["send", "receive"]
+                "schemes": [
+                    "tel"
+                ],
+                "roles": [
+                    "send",
+                    "receive"
+                ]
             }
         ]
     },

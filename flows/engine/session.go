@@ -161,11 +161,6 @@ func (s *session) Resume(resume flows.Resume) error {
 		return fmt.Errorf("session doesn't contain any runs which are waiting")
 	}
 
-	// check flow is valid and has everything it needs to run
-	if err := waitingRun.Flow().Validate(s.Assets()); err != nil {
-		return fmt.Errorf("validation failed for flow[uuid=%s]: %s", waitingRun.Flow().UUID(), err)
-	}
-
 	if err := s.tryToResume(waitingRun, resume); err != nil {
 		// if we got an error, add it to the log and shut everything down
 		for _, run := range s.runs {

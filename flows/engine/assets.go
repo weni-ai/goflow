@@ -8,8 +8,6 @@ import (
 
 // our implementation of SessionAssets - the high-level API for asset access from the engine
 type sessionAssets struct {
-	source assets.AssetSource
-
 	channels  *flows.ChannelAssets
 	fields    *flows.FieldAssets
 	flows     flows.FlowAssets
@@ -48,16 +46,17 @@ func NewSessionAssets(source assets.AssetSource) (flows.SessionAssets, error) {
 		return nil, err
 	}
 
-	return &sessionAssets{
-		source:    source,
+	sa := &sessionAssets{
 		channels:  flows.NewChannelAssets(channels),
 		fields:    flows.NewFieldAssets(fields),
-		flows:     definition.NewFlowAssets(source),
 		groups:    flows.NewGroupAssets(groups),
 		labels:    flows.NewLabelAssets(labels),
 		locations: flows.NewLocationAssets(locations),
 		resthooks: flows.NewResthookAssets(resthooks),
-	}, nil
+	}
+	sa.flows = definition.NewFlowAssets(source, sa)
+
+	return sa, nil
 }
 
 func (s *sessionAssets) Channels() *flows.ChannelAssets   { return s.channels }
