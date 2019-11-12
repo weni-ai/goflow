@@ -28,7 +28,7 @@ func TestService(t *testing.T) {
 	uuids.SetGenerator(uuids.NewSeededGenerator(12345))
 	dates.SetNowSource(dates.NewSequentialNowSource(time.Date(2019, 10, 7, 15, 21, 30, 123456789, time.UTC)))
 	httpx.SetRequestor(httpx.NewMockRequestor(map[string][]httpx.MockResponse{
-		"https://nlp.bothub.it/parse": []httpx.MockResponse{
+		"https://nlp.bothub.it/v2/parse": []httpx.MockResponse{
 			httpx.NewMockResponse(200, `{
 				"intent": {
 				  "name": "book_flight",
@@ -86,5 +86,5 @@ func TestService(t *testing.T) {
 	}, classification.Entities)
 
 	assert.Equal(t, 1, len(httpLogger.Logs))
-	assert.Equal(t, "https://nlp.bothub.it/parse", httpLogger.Logs[0].URL)
+	assert.Equal(t, "https://nlp.bothub.it/v2/parse", httpLogger.Logs[0].URL)
 }

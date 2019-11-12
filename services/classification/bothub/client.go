@@ -55,7 +55,7 @@ func NewClient(httpClient *http.Client, accessToken string) *Client {
 
 // Parse does a parse of the given text
 func (c *Client) Parse(text string) (*ParseResponse, *httpx.Trace, error) {
-	endpoint := fmt.Sprintf("%s/parse", apiBaseURL)
+	endpoint := fmt.Sprintf("%s/v2/parse", apiBaseURL)
 
 	form := url.Values{}
 	form.Add("text", text)
