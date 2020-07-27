@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"github.com/buger/jsonparser"
 	"time"
 
 	"github.com/nyaruka/goflow/flows"
@@ -51,6 +52,16 @@ func ReadEvent(data json.RawMessage) (flows.Event, error) {
 	typeName, err := utils.ReadTypeFromJSON(data)
 	if err != nil {
 		return nil, err
+	}
+	// switch from classifier_called to service_called in order to avoid problems on flow resuming
+	if typeName == "classifier_called" {
+		newData, err := jsonparser.Set(data, []byte(`"classifier"`), "service")
+		if err != nil {
+			return nil, err
+		}
+
+		typeName = TypeServiceCalled
+		data = newData
 	}
 
 	f := registeredTypes[typeName]
