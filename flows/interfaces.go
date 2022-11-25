@@ -102,6 +102,7 @@ type SessionAssets interface {
 
 	Channels() *ChannelAssets
 	Classifiers() *ClassifierAssets
+	ExternalServices() *ExternalServiceAssets
 	Fields() *FieldAssets
 	Flows() FlowAssets
 	Globals() *GlobalAssets
