@@ -724,6 +724,7 @@ func TestConstructors(t *testing.T) {
 			actions.NewCallExternalService(
 				actionUUID,
 				assets.NewExternalServiceReference(assets.ExternalServiceUUID("75a246f4-6fe8-43bd-8e7f-3da1f69b4507"), "external service"),
+				assets.ExternalServiceCallAction{Name: "IncluirContato"},
 				[]assets.ExternalServiceParam{
 					*assets.NewExternalServiceParam("123", "nCod", "integer", "Código do Contato", "identificacao", "Identificação"),
 					*assets.NewExternalServiceParam("fulano", "cNome", "string", "Nome do Contato", "identificacao", "Identificação"),
