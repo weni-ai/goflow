@@ -7,6 +7,7 @@ import (
 	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
+	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/utils"
 
 	"github.com/shopspring/decimal"
@@ -93,7 +94,7 @@ type TicketService interface {
 }
 
 type ExternalServiceService interface {
-	Call(sesion Session, body string, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
+	Call(sesion Session, params []assets.ExternalServiceParam, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer
