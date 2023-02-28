@@ -30,6 +30,46 @@ type ExternalServiceReference struct {
 	Name string              `json:"name"`
 }
 
+type ExternalServiceParam struct {
+	Data struct {
+		Value string `json:"value,omitempty"`
+	} `json:"data,omitempty"`
+	Filter struct {
+		Value *ExternalServiceFilterValue `json:"value"`
+	} `json:"filter,omitempty"`
+	Type        string `json:"type,omitempty"`
+	VerboseName string `json:"verboseName,omitempty"`
+}
+
+type ExternalServiceFilterValue struct {
+	Name        string `json:"name,omitempty"`
+	Type        string `json:"type,omitempty"`
+	VerboseName string `json:"verboseName,omitempty"`
+}
+
+func NewExternalServiceParam(
+	dataValue,
+	filterName,
+	filterType,
+	filterVerboseName,
+	pType,
+	verboseName string,
+) *ExternalServiceParam {
+	p := &ExternalServiceParam{}
+	p.Data.Value = dataValue
+	if filterName != "" && filterType != "" && filterVerboseName != "" {
+		p.Filter.Value = &ExternalServiceFilterValue{}
+		p.Filter.Value.Name = filterName
+		p.Filter.Value.Type = filterType
+		p.Filter.Value.VerboseName = filterVerboseName
+	} else {
+		p.Filter.Value = nil
+	}
+	p.Type = pType
+	p.VerboseName = verboseName
+	return p
+}
+
 // NewExternalServiceReference creates a new external service reference with the given UUID and name
 func NewExternalServiceReference(uuid ExternalServiceUUID, name string) *ExternalServiceReference {
 	return &ExternalServiceReference{UUID: uuid, Name: name}

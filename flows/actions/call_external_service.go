@@ -21,14 +21,11 @@ const TypeCallExternalService string = "call_external_service"
 //   {
 //     "uuid": "3ed82e8e-409c-46b8-99ec-4ef9c7ec0270",
 //     "type": "call_external_service",
-//     "method": "GET",
 //     "external_service": {
 //         "uuid": "0ebd32fd-362b-4253-89a1-3796aa499b82",
 //         "name": "service foo",
 //     },
-//		 "header: "{"key1":"value1"}",
-//     "query": "{"query":"value"}",
-//     "body": "{"key1":"value1", "key2":"value2"}"
+//		 "params": [{"data":{"value":"foo"}, "filter": {"value":{"name":"foo","type":"bar","verboseName":"barz"}}, "type": "foo", "verboseName": "bar"}],
 //     "result_name": "external_service_call"
 //   }
 type CallExternalServiceAction struct {
@@ -36,19 +33,15 @@ type CallExternalServiceAction struct {
 	onlineAction
 
 	ExternalService *assets.ExternalServiceReference `json:"external_service,omitempty"`
-	Header          map[string]string                `json:"header,omitempty"`
-	Query           map[string]string                `json:"query,omitempty"`
-	Body            string                           `json:"input,omitempty"`
+	Params          []assets.ExternalServiceParam    `json:"params,omitempty"`
 	ResultName      string                           `json:"result_name,omitempty"`
 }
 
-func NewCallExternalService(uuid flows.ActionUUID, externalService *assets.ExternalServiceReference, header map[string]string, query map[string]string, body string, resultName string) *CallExternalServiceAction {
+func NewCallExternalService(uuid flows.ActionUUID, externalService *assets.ExternalServiceReference, params []assets.ExternalServiceParam, resultName string) *CallExternalServiceAction {
 	return &CallExternalServiceAction{
 		baseAction:      newBaseAction(TypeCallExternalService, uuid),
 		ExternalService: externalService,
-		Header:          header,
-		Query:           query,
-		Body:            body,
+		Params:          params,
 		ResultName:      resultName,
 	}
 }
@@ -57,15 +50,10 @@ func (a *CallExternalServiceAction) Execute(run flows.FlowRun, step flows.Step, 
 	externalServices := run.Session().Assets().ExternalServices()
 	externalService := externalServices.Get(a.ExternalService.UUID)
 
-	evaluetedBody, err := run.EvaluateTemplate(a.Body)
-	if err != nil {
-		logEvent(events.NewError(err))
-	}
-
-	return a.call(run, step, externalService, evaluetedBody, logEvent)
+	return a.call(run, step, externalService, a.Params, logEvent)
 }
 
-func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, externalService *flows.ExternalService, body string, logEvent flows.EventCallback) error {
+func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, externalService *flows.ExternalService, params []assets.ExternalServiceParam, logEvent flows.EventCallback) error {
 	if externalService == nil {
 		logEvent(events.NewDependencyError(a.ExternalService))
 		return nil
@@ -79,7 +67,7 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 
 	httpLogger := &flows.HTTPLogger{}
 
-	call, err := svc.Call(run.Session(), body, httpLogger.Log)
+	call, err := svc.Call(run.Session(), params, httpLogger.Log)
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
