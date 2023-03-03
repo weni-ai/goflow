@@ -1,8 +1,6 @@
 package actions
 
 import (
-	"fmt"
-
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -79,8 +77,7 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 
 	if call != nil {
 		if a.ResultName != "" {
-			input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
-			a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", input, call.ResponseJSON, logEvent)
+			a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", "", call.ResponseJSON, logEvent)
 		}
 	}
 
