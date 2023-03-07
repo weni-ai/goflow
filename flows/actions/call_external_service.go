@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"fmt"
+
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -23,6 +25,7 @@ const TypeCallExternalService string = "call_external_service"
 //         "uuid": "0ebd32fd-362b-4253-89a1-3796aa499b82",
 //         "name": "service foo",
 //     },
+//     "call": {"name": "foo", "value": "bar"},
 //		 "params": [{"data":{"value":"foo"}, "filter": {"value":{"name":"foo","type":"bar","verboseName":"barz"}}, "type": "foo", "verboseName": "bar"}],
 //     "result_name": "external_service_call"
 //   }
@@ -77,7 +80,8 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 
 	if call != nil {
 		if a.ResultName != "" {
-			a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", "", call.ResponseJSON, logEvent)
+			input := fmt.Sprintf("%s %s", call.RequestMethod, call.RequestURL)
+			a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", input, call.ResponseJSON, logEvent)
 		}
 	}
 
