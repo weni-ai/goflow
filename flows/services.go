@@ -77,7 +77,8 @@ type Classification struct {
 
 // ExternalServiceCall is the result of a external service call
 type ExternalServiceCall struct {
-	*httpx.Trace
+	RequestMethod   string
+	RequestURL      string
 	ResponseJSON    []byte
 	ResponseCleaned bool
 }
