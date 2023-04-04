@@ -18,17 +18,18 @@ var externalServiceCategories = []string{CategorySuccess, CategoryFailure}
 const TypeCallExternalService string = "call_external_service"
 
 // CallExternalServiceAction is used to call a external service in the context of contact
-//   {
-//     "uuid": "3ed82e8e-409c-46b8-99ec-4ef9c7ec0270",
-//     "type": "call_external_service",
-//     "external_service": {
-//         "uuid": "0ebd32fd-362b-4253-89a1-3796aa499b82",
-//         "name": "service foo",
-//     },
-//     "call": {"name": "foo", "value": "bar"},
-//		 "params": [{"data":{"value":"foo"}, "filter": {"value":{"name":"foo","type":"bar","verboseName":"barz"}}, "type": "foo", "verboseName": "bar"}],
-//     "result_name": "external_service_call"
-//   }
+//
+//	  {
+//	    "uuid": "3ed82e8e-409c-46b8-99ec-4ef9c7ec0270",
+//	    "type": "call_external_service",
+//	    "external_service": {
+//	        "uuid": "0ebd32fd-362b-4253-89a1-3796aa499b82",
+//	        "name": "service foo",
+//	    },
+//	    "call": {"name": "foo", "value": "bar"},
+//			 "params": [{"data":{"value":"foo"}, "filter": {"value":{"name":"foo","type":"bar","verboseName":"barz"}}, "type": "foo", "verboseName": "bar"}],
+//	    "result_name": "external_service_call"
+//	  }
 type CallExternalServiceAction struct {
 	baseAction
 	onlineAction
@@ -66,6 +67,15 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 	if err != nil {
 		logEvent(events.NewError(err))
 		return nil
+	}
+
+	// substitute any variables in our params
+	for i, param := range params {
+		evaluatedParam, err := run.EvaluateTemplate(param.Data.Value)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		params[i].Data.Value = evaluatedParam
 	}
 
 	httpLogger := &flows.HTTPLogger{}
