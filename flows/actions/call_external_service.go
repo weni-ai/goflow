@@ -89,17 +89,15 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 	}
 
 	if call != nil {
-		if a.ResultName != "" {
-			input := fmt.Sprintf("%s %s", call.RequestMethod, call.RequestURL)
-			a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", input, call.ResponseJSON, logEvent)
-		}
+		input := fmt.Sprintf("%s %s", call.RequestMethod, call.RequestURL)
+		a.saveResult(run, step, a.ResultName, string(call.ResponseJSON), CategorySuccess, "", input, call.ResponseJSON, logEvent)
+	} else {
+		a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 	}
 
 	return nil
 }
 
 func (a *CallExternalServiceAction) Results(include func(*flows.ResultInfo)) {
-	if a.ResultName != "" {
-		include(flows.NewResultInfo(a.ResultName, externalServiceCategories))
-	}
+	include(flows.NewResultInfo(a.ResultName, externalServiceCategories))
 }
