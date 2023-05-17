@@ -282,12 +282,6 @@ func TestTriggerMarshaling(t *testing.T) {
 				Build(),
 			"ticket_closed",
 		},
-		{
-			triggers.NewBuilder(env, flow, contact).
-				Ticket(ticket, triggers.TicketEventTypeClosed).WithParams(types.NewXObject(map[string]types.XValue{"foo": types.NewXText("bar")})).
-				Build(),
-			"ticket_closed",
-		},
 	}
 
 	for _, tc := range triggerTests {
