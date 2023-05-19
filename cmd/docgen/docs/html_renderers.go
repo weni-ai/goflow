@@ -47,6 +47,9 @@ func createItemListContextFunc(tag string, renderer renderFunc) ContextFunc {
 		buffer := &strings.Builder{}
 
 		for _, item := range items[tag] {
+			if len(item.examples) == 0 {
+				continue
+			}
 			if err := renderer(buffer, item, session, voiceSession); err != nil {
 				return nil, errors.Wrapf(err, "error rendering %s:%s", item.tagName, item.tagValue)
 			}
