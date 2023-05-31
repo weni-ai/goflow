@@ -68,7 +68,6 @@ func (c *Client) Predict(q string) (*Intent, *httpx.Trace, error) {
 	if trace.Response != nil && trace.Response.StatusCode == 200 {
 		response := &Intent{}
 		if err := utils.UnmarshalAndValidate(trace.ResponseBody, response); err != nil {
-			fmt.Println("Erro: ", err)
 			return nil, trace, err
 		}
 

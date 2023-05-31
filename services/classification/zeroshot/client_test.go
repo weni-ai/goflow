@@ -1,7 +1,6 @@
 package zeroshot_test
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -33,7 +32,6 @@ func TestPredict(t *testing.T) {
 	assert.Nil(t, response)
 
 	response, trace, err = client.Predict("book flight to Quito")
-	fmt.Println(err)
 	assert.EqualError(t, err, `field 'text' is required`)
 	assert.NotNil(t, trace)
 	assert.Nil(t, response)
