@@ -32,7 +32,6 @@ type Client struct {
 	httpRetries *httpx.RetryConfig
 	token       string
 	repository  string
-	//saber se é preciso add repository tbm
 }
 
 // NewClient creates a new client
@@ -45,14 +44,12 @@ func NewClient(httpClient *http.Client, httpRetries *httpx.RetryConfig, token st
 	}
 }
 
-// Predict
 func (c *Client) Predict(q string) (*Intent, *httpx.Trace, error) {
 	endpoint := fmt.Sprintf("%s/v2/repository/nlp/zeroshot/zeroshot-predict", apiBaseURL)
 
 	body, _ := json.Marshal(map[string]string{
-		"repository_uuid": c.repository, //repository_uuid
-		"text":            q,
-		"token":           c.token,
+		"text":  q,
+		"token": c.token,
 	})
 
 	request, err := httpx.NewRequest("POST", endpoint, bytes.NewBuffer(body), nil)

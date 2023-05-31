@@ -18,9 +18,9 @@ type service struct {
 // NewService creates a new classification service
 func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, classifier *flows.Classifier, accessToken string, repository string) flows.ClassificationService {
 	return &service{
-		client:     NewClient(httpClient, httpRetries, accessToken, repository), //add campos corretos para client
+		client:     NewClient(httpClient, httpRetries, accessToken, repository),
 		classifier: classifier,
-		redactor:   utils.NewRedactor(flows.RedactionMask, accessToken), //add campos corretos para newRedactor
+		redactor:   utils.NewRedactor(flows.RedactionMask, accessToken),
 	}
 }
 
