@@ -22,10 +22,6 @@ type Intent struct {
 	Option string `json:"option"`
 }
 
-type PredictionResponse struct {
-	Intent Intent
-}
-
 // Client is a basic zeroshot client
 type Client struct {
 	httpClient  *http.Client
