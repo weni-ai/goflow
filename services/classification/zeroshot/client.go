@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	apiBaseURL = "https://zeroshot.it"
+	apiBaseURL = "https://api.bothub.it/"
 )
 
 // Intent is possible intent match
