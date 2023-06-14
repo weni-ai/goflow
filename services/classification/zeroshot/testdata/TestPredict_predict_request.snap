@@ -1,0 +1,7 @@
+POST /v2/repository/nlp/zeroshot/zeroshot-predict HTTP/1.1
+Host: zeroshot.it
+User-Agent: Go-http-client/1.1
+Content-Length: 135
+Accept-Encoding: gzip
+
+{"repository_uuid":"656b0715-9071-4782-8cce-4f33d0bf7c38","text":"book flight to Quito","token":"123e4567-e89b-12d3-a456-426655440000"}
