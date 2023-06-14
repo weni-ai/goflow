@@ -69,13 +69,16 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 		return nil
 	}
 
-	// substitute any variables in our params
+	// substitute any variables in our params if data value is string
 	for i, param := range params {
-		evaluatedParam, err := run.EvaluateTemplate(param.Data.Value)
-		if err != nil {
-			logEvent(events.NewError(err))
+		dataValue, ok := param.Data.Value.(string)
+		if ok {
+			evaluatedParam, err := run.EvaluateTemplate(dataValue)
+			if err != nil {
+				logEvent(events.NewError(err))
+			}
+			params[i].Data.Value = evaluatedParam
 		}
-		params[i].Data.Value = evaluatedParam
 	}
 
 	httpLogger := &flows.HTTPLogger{}
