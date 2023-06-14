@@ -11,11 +11,11 @@ type ExternalServiceUUID uuids.UUID
 
 // ExternalService is a third party service that can be called
 //
-//    {
-//		  "uuid": "4e19fc3c-ae17-4f6b-acb5-7d915e29dc27",
-//		  "name": "Third party service integration 1",
-//		  "uuid": "generic third party service",
-//    }
+//	   {
+//			  "uuid": "4e19fc3c-ae17-4f6b-acb5-7d915e29dc27",
+//			  "name": "Third party service integration 1",
+//			  "uuid": "generic third party service",
+//	   }
 //
 // @asset external_service
 type ExternalService interface {
@@ -37,7 +37,7 @@ type ExternalServiceCallAction struct {
 
 type ExternalServiceParam struct {
 	Data struct {
-		Value string `json:"value,omitempty"`
+		Value interface{} `json:"value,omitempty"`
 	} `json:"data,omitempty"`
 	Filter struct {
 		Value *ExternalServiceFilterValue `json:"value"`
@@ -53,7 +53,7 @@ type ExternalServiceFilterValue struct {
 }
 
 func NewExternalServiceParam(
-	dataValue,
+	dataValue interface{},
 	filterName,
 	filterType,
 	filterVerboseName,
