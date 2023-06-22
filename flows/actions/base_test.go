@@ -720,6 +720,72 @@ func TestConstructors(t *testing.T) {
 			"create_contact": true
 		}`,
 		},
+		{
+			actions.NewCallExternalService(
+				actionUUID,
+				assets.NewExternalServiceReference(assets.ExternalServiceUUID("75a246f4-6fe8-43bd-8e7f-3da1f69b4507"), "external service"),
+				assets.ExternalServiceCallAction{Name: "IncluirContato", Value: "IncluirContato"},
+				[]assets.ExternalServiceParam{
+					*assets.NewExternalServiceParam("123", "nCod", "integer", "Código do Contato", "identificacao", "Identificação"),
+					*assets.NewExternalServiceParam("fulano", "cNome", "string", "Nome do Contato", "identificacao", "Identificação"),
+					*assets.NewExternalServiceParam("obs1", "", "", "", "cObs", "Observações"),
+				},
+				"ExternalServiceResponse",
+			),
+			`{
+				"external_service": {
+					"name": "external service",
+					"uuid": "75a246f4-6fe8-43bd-8e7f-3da1f69b4507"
+				},
+				"type": "call_external_service",
+				"call": {
+					"name": "IncluirContato",
+					"value": "IncluirContato"
+				},
+				"params": [
+					{
+						"data": {
+							"value": "123"
+						},
+						"filter": {
+							"value": {
+								"name": "nCod",
+								"type": "integer",
+								"verboseName": "Código do Contato"
+							}
+						},
+						"type": "identificacao",
+						"verboseName": "Identificação"
+					},
+					{
+						"data": {
+							"value": "fulano"
+						},
+						"filter": {
+							"value": {
+								"name": "cNome",
+								"type": "string",
+								"verboseName": "Nome do Contato"
+							}
+						},
+						"type": "identificacao",
+						"verboseName": "Identificação"
+					},
+					{
+						"data": {
+							"value": "obs1"
+						},
+						"filter": {
+							"value": null
+						},
+						"type": "cObs",
+						"verboseName": "Observações"
+					}
+				],
+				"result_name": "ExternalServiceResponse",
+				"uuid": "ad154980-7bf7-4ab8-8728-545fd6378912"
+			}`,
+		},
 	}
 
 	for _, tc := range tests {

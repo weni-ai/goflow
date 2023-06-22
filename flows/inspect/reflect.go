@@ -160,6 +160,9 @@ func walkTypes(t reflect.Type, path string, visitField func(string, *EngineField
 // gets the actual type if we've been given an interface or pointer type
 func derefType(t reflect.Type) reflect.Type {
 	for t.Kind() == reflect.Interface || t.Kind() == reflect.Ptr {
+		if t.Kind() == reflect.Interface { // avoid panic if reflect type kind is interface and theres is no a underlying type
+			return t
+		}
 		t = t.Elem()
 	}
 	return t

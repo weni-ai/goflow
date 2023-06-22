@@ -96,6 +96,11 @@ func (b *Builder) WithAirtimeServiceFactory(f AirtimeServiceFactory) *Builder {
 	return b
 }
 
+func (b *Builder) WithExternalServiceServiceFactory(f ExternalServiceServiceFactory) *Builder {
+	b.eng.services.externalService = f
+	return b
+}
+
 // WithMaxStepsPerSprint sets the maximum number of steps allowed in a single sprint
 func (b *Builder) WithMaxStepsPerSprint(max int) *Builder {
 	b.eng.maxStepsPerSprint = max
