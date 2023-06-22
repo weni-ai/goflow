@@ -1,13 +1,14 @@
 package flows
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
-
-	"github.com/pkg/errors"
 )
 
 // Field represents a contact field
@@ -33,16 +34,16 @@ func (f *Field) Reference() *assets.FieldReference {
 
 // Value represents a value in each of the field types
 type Value struct {
-	Text     types.XText      `json:"text" validate:"required"`
-	Datetime *types.XDateTime `json:"datetime,omitempty"`
-	Number   *types.XNumber   `json:"number,omitempty"`
-	State    LocationPath     `json:"state,omitempty"`
-	District LocationPath     `json:"district,omitempty"`
-	Ward     LocationPath     `json:"ward,omitempty"`
+	Text     types.XText       `json:"text" validate:"required"`
+	Datetime *types.XDateTime  `json:"datetime,omitempty"`
+	Number   *types.XNumber    `json:"number,omitempty"`
+	State    envs.LocationPath `json:"state,omitempty"`
+	District envs.LocationPath `json:"district,omitempty"`
+	Ward     envs.LocationPath `json:"ward,omitempty"`
 }
 
 // NewValue creates an empty value
-func NewValue(text types.XText, datetime *types.XDateTime, number *types.XNumber, state LocationPath, district LocationPath, ward LocationPath) *Value {
+func NewValue(text types.XText, datetime *types.XDateTime, number *types.XNumber, state envs.LocationPath, district envs.LocationPath, ward envs.LocationPath) *Value {
 	return &Value{
 		Text:     text,
 		Datetime: datetime,
@@ -79,8 +80,8 @@ func NewFieldValue(field *Field, value *Value) *FieldValue {
 	return &FieldValue{field: field, Value: value}
 }
 
-// TypedValue returns the value in its proper type or nil if there is no value in that type
-func (v *FieldValue) TypedValue() types.XValue {
+// ToXValue returns a representation of this object for use in expressions
+func (v *FieldValue) ToXValue(env envs.Environment) types.XValue {
 	// the typed value of no value is nil
 	if v == nil {
 		return nil
@@ -99,74 +100,77 @@ func (v *FieldValue) TypedValue() types.XValue {
 		}
 	case assets.FieldTypeState:
 		if v.State != "" {
-			return v.State
+			return types.NewXText(string(v.State))
 		}
 	case assets.FieldTypeDistrict:
 		if v.District != "" {
-			return v.District
+			return types.NewXText(string(v.District))
 		}
 	case assets.FieldTypeWard:
 		if v.Ward != "" {
-			return v.Ward
+			return types.NewXText(string(v.Ward))
 		}
 	}
 	return nil
 }
 
-// Resolve resolves the given key when this field value is referenced in an expression
-func (v *FieldValue) Resolve(env utils.Environment, key string) types.XValue {
-	switch strings.ToLower(key) {
-	case "text":
-		return v.Text
+// QueryValue returns the value for use in contact queries
+func (v *FieldValue) QueryValue() interface{} {
+	// the typed value of no value is nil
+	if v == nil {
+		return nil
 	}
-	return types.NewXResolveError(v, key)
+
+	switch v.field.Type() {
+	case assets.FieldTypeText:
+		return v.Text.Native()
+	case assets.FieldTypeDatetime:
+		if v.Datetime != nil {
+			return (*v.Datetime).Native()
+		}
+	case assets.FieldTypeNumber:
+		if v.Number != nil {
+			return (*v.Number).Native()
+		}
+
+	// we only search against location names and not full paths
+	case assets.FieldTypeState:
+		if v.State != "" {
+			return v.State.Name()
+		}
+	case assets.FieldTypeDistrict:
+		if v.District != "" {
+			return v.District.Name()
+		}
+	case assets.FieldTypeWard:
+		if v.Ward != "" {
+			return v.Ward.Name()
+		}
+	}
+	return nil
 }
-
-// Describe returns a representation of this type for error messages
-func (v *FieldValue) Describe() string { return "field value" }
-
-// Reduce is called when this object needs to be reduced to a primitive
-func (v *FieldValue) Reduce(env utils.Environment) types.XPrimitive {
-	return types.Reduce(env, v.TypedValue())
-}
-
-// ToXJSON is called when this type is passed to @(json(...))
-func (v *FieldValue) ToXJSON(env utils.Environment) types.XText {
-	j, _ := types.ToXJSON(env, v.Reduce(env))
-	return j
-}
-
-var _ types.XValue = (*FieldValue)(nil)
-var _ types.XResolvable = (*FieldValue)(nil)
 
 // FieldValues is the set of all field values for a contact
 type FieldValues map[string]*FieldValue
 
 // NewFieldValues creates a new field value map
-func NewFieldValues(a SessionAssets, values map[string]*Value, missing assets.MissingCallback) (FieldValues, error) {
+func NewFieldValues(a SessionAssets, values map[string]*Value, missing assets.MissingCallback) FieldValues {
 	allFields := a.Fields().All()
 	fieldValues := make(FieldValues, len(allFields))
 	for _, field := range allFields {
 		value := values[field.Key()]
-		if value != nil {
-			if value.Text.Empty() {
-				return nil, errors.Errorf("field values can't be empty")
-			}
-			fieldValues[field.Key()] = NewFieldValue(field, value)
-		} else {
-			fieldValues[field.Key()] = nil
-		}
+		fieldValues.Set(field, value)
 	}
 
 	// log any unmatched field keys as missing assets
 	for key := range values {
 		_, valid := fieldValues[key]
 		if !valid {
-			missing(assets.NewFieldReference(key, ""))
+			missing(assets.NewFieldReference(key, ""), nil)
 		}
 	}
 
-	return fieldValues, nil
+	return fieldValues
 }
 
 // Clone returns a clone of this set of field values
@@ -189,26 +193,18 @@ func (f FieldValues) Get(field *Field) *Value {
 
 // Set sets the value for the given field (can be null to clear it)
 func (f FieldValues) Set(field *Field, value *Value) {
-	if value == nil {
-		f.Clear(field)
-	} else {
-		fieldValue := NewFieldValue(field, value)
-		f[field.Key()] = fieldValue
+	var fv *FieldValue
+	if value != nil && !value.Text.Empty() {
+		fv = NewFieldValue(field, value)
 	}
-}
-
-// Clear clears the value set for the given field
-func (f FieldValues) Clear(field *Field) {
-	delete(f, field.Key())
+	f[field.Key()] = fv
 }
 
 // Parse parses a raw string field value into the different possible types
-func (f FieldValues) Parse(env utils.Environment, fields *FieldAssets, field *Field, rawValue string) *Value {
+func (f FieldValues) Parse(env envs.Environment, fields *FieldAssets, field *Field, rawValue string) *Value {
 	if rawValue == "" {
 		return nil
 	}
-
-	runEnv := env.(RunEnvironment)
 
 	var asText = types.NewXText(rawValue)
 	var asDateTime *types.XDateTime
@@ -222,45 +218,50 @@ func (f FieldValues) Parse(env utils.Environment, fields *FieldAssets, field *Fi
 		asDateTime = &parsedDate
 	}
 
-	var asLocation *utils.Location
+	var asLocation *envs.Location
 
-	// for locations, if it has a '>' then it is explicit, look it up that way
-	if IsPossibleLocationPath(rawValue) {
-		asLocation, _ = runEnv.LookupLocation(LocationPath(rawValue))
-	} else {
-		var matchingLocations []*utils.Location
+	// to do location parsing we need an environment with location support
+	locations := env.LocationResolver()
 
-		if field.Type() == assets.FieldTypeWard {
-			parent := f.getFirstLocationValue(runEnv, fields, assets.FieldTypeDistrict)
-			if parent != nil {
-				matchingLocations, _ = runEnv.FindLocationsFuzzy(rawValue, LocationLevelWard, parent)
+	if locations != nil {
+		// for locations, if it has a '>' then it is explicit, look it up that way
+		if envs.IsPossibleLocationPath(rawValue) {
+			asLocation = locations.LookupLocation(envs.LocationPath(rawValue))
+		} else {
+			var matchingLocations []*envs.Location
+
+			if field.Type() == assets.FieldTypeWard {
+				parent := f.getFirstLocationValue(env, fields, assets.FieldTypeDistrict)
+				if parent != nil {
+					matchingLocations = locations.FindLocationsFuzzy(rawValue, LocationLevelWard, parent)
+				}
+			} else if field.Type() == assets.FieldTypeDistrict {
+				parent := f.getFirstLocationValue(env, fields, assets.FieldTypeState)
+				if parent != nil {
+					matchingLocations = locations.FindLocationsFuzzy(rawValue, LocationLevelDistrict, parent)
+				}
+			} else if field.Type() == assets.FieldTypeState {
+				matchingLocations = locations.FindLocationsFuzzy(rawValue, LocationLevelState, nil)
 			}
-		} else if field.Type() == assets.FieldTypeDistrict {
-			parent := f.getFirstLocationValue(runEnv, fields, assets.FieldTypeState)
-			if parent != nil {
-				matchingLocations, _ = runEnv.FindLocationsFuzzy(rawValue, LocationLevelDistrict, parent)
-			}
-		} else if field.Type() == assets.FieldTypeState {
-			matchingLocations, _ = runEnv.FindLocationsFuzzy(rawValue, LocationLevelState, nil)
-		}
 
-		if len(matchingLocations) > 0 {
-			asLocation = matchingLocations[0]
+			if len(matchingLocations) > 0 {
+				asLocation = matchingLocations[0]
+			}
 		}
 	}
 
-	var asState, asDistrict, asWard LocationPath
+	var asState, asDistrict, asWard envs.LocationPath
 	if asLocation != nil {
 		switch asLocation.Level() {
 		case LocationLevelState:
-			asState = LocationPath(asLocation.Path())
+			asState = envs.LocationPath(asLocation.Path())
 		case LocationLevelDistrict:
-			asState = LocationPath(asLocation.Parent().Path())
-			asDistrict = LocationPath(asLocation.Path())
+			asState = envs.LocationPath(asLocation.Parent().Path())
+			asDistrict = envs.LocationPath(asLocation.Path())
 		case LocationLevelWard:
-			asState = LocationPath(asLocation.Parent().Parent().Path())
-			asDistrict = LocationPath(asLocation.Parent().Path())
-			asWard = LocationPath(asLocation.Path())
+			asState = envs.LocationPath(asLocation.Parent().Parent().Path())
+			asDistrict = envs.LocationPath(asLocation.Parent().Path())
+			asWard = envs.LocationPath(asLocation.Path())
 		}
 	}
 
@@ -274,65 +275,40 @@ func (f FieldValues) Parse(env utils.Environment, fields *FieldAssets, field *Fi
 	}
 }
 
-func (f FieldValues) getFirstLocationValue(env RunEnvironment, fields *FieldAssets, valueType assets.FieldType) *utils.Location {
+// Context returns the properties available in expressions
+func (f FieldValues) Context(env envs.Environment) map[string]types.XValue {
+	entries := make(map[string]types.XValue, len(f)+1)
+	lines := make([]string, 0, len(f))
+
+	for k, v := range f {
+		val := v.ToXValue(env)
+		entries[string(k)] = val
+
+		if !utils.IsNil(val) {
+			lines = append(lines, fmt.Sprintf("%s: %s", v.field.Name(), types.Render(val)))
+		}
+	}
+
+	sort.Strings(lines)
+	entries["__default__"] = types.NewXText(strings.Join(lines, "\n"))
+
+	return entries
+}
+
+func (f FieldValues) getFirstLocationValue(env envs.Environment, fields *FieldAssets, valueType assets.FieldType) *envs.Location {
 	// do we have a field of this type?
 	field := fields.FirstOfType(valueType)
 	if field == nil {
 		return nil
 	}
 	// does this contact have a value for that field?
-	value := f[field.Key()].TypedValue()
+	value := f[field.Key()].ToXValue(env)
 	if value == nil {
 		return nil
 	}
 
-	location, err := env.LookupLocation(value.(LocationPath))
-	if err != nil {
-		return nil
-	}
-	return location
+	return env.LocationResolver().LookupLocation(envs.LocationPath(value.(types.XText).Native()))
 }
-
-// Length is called to get the length of this object which in this case is the number of set values
-func (f FieldValues) Length() int {
-	count := 0
-	for _, v := range f {
-		if v != nil {
-			count++
-		}
-	}
-	return count
-}
-
-// Resolve resolves the given key when this set of field values is referenced in an expression
-func (f FieldValues) Resolve(env utils.Environment, key string) types.XValue {
-	val, exists := f[strings.ToLower(key)]
-	if !exists {
-		return types.NewXErrorf("no such contact field '%s'", key)
-	}
-	return val
-}
-
-// Describe returns a representation of this type for error messages
-func (f FieldValues) Describe() string { return "field values" }
-
-// Reduce is called when this object needs to be reduced to a primitive
-func (f FieldValues) Reduce(env utils.Environment) types.XPrimitive {
-	values := types.NewEmptyXMap()
-	for k, v := range f {
-		values.Put(string(k), v)
-	}
-	return values
-}
-
-// ToXJSON is called when this type is passed to @(json(...))
-func (f FieldValues) ToXJSON(env utils.Environment) types.XText {
-	return f.Reduce(env).ToXJSON(env)
-}
-
-var _ types.XValue = (FieldValues)(nil)
-var _ types.XLengthable = (FieldValues)(nil)
-var _ types.XResolvable = (FieldValues)(nil)
 
 // FieldAssets provides access to all field assets
 type FieldAssets struct {
@@ -346,9 +322,9 @@ func NewFieldAssets(fields []assets.Field) *FieldAssets {
 		all:   make([]*Field, len(fields)),
 		byKey: make(map[string]*Field, len(fields)),
 	}
-	for f, asset := range fields {
+	for i, asset := range fields {
 		field := NewField(asset)
-		s.all[f] = field
+		s.all[i] = field
 		s.byKey[field.Key()] = field
 	}
 	return s
@@ -371,5 +347,17 @@ func (s *FieldAssets) FirstOfType(valueType assets.FieldType) *Field {
 			return field
 		}
 	}
+	return nil
+}
+
+func (s *FieldAssets) ResolveField(key string) assets.Field {
+	f := s.byKey[key]
+	if f != nil {
+		return f
+	}
+	return nil
+}
+
+func (s *FieldAssets) ResolveGroup(name string) assets.Group {
 	return nil
 }

@@ -1,12 +1,12 @@
-// Package static is an implementation of AssetSource which loads assets from a static JSON file.
+// Package static is an implementation of Source which loads assets from a static JSON file.
 package static
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"github.com/nyaruka/goflow/assets"
-	"github.com/nyaruka/goflow/assets/static/types"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/utils"
 
 	"github.com/pkg/errors"
@@ -15,13 +15,19 @@ import (
 // StaticSource is an asset source which loads assets from a static JSON file
 type StaticSource struct {
 	s struct {
-		Channels  []*types.Channel           `json:"channels" validate:"omitempty,dive"`
-		Fields    []*types.Field             `json:"fields" validate:"omitempty,dive"`
-		Flows     []*types.Flow              `json:"flows" validate:"omitempty,dive"`
-		Groups    []*types.Group             `json:"groups" validate:"omitempty,dive"`
-		Labels    []*types.Label             `json:"labels" validate:"omitempty,dive"`
-		Locations []*utils.LocationHierarchy `json:"locations"`
-		Resthooks []*types.Resthook          `json:"resthooks" validate:"omitempty,dive"`
+		Channels    []*Channel                `json:"channels" validate:"omitempty,dive"`
+		Classifiers []*Classifier             `json:"classifiers" validate:"omitempty,dive"`
+		Fields      []*Field                  `json:"fields" validate:"omitempty,dive"`
+		Flows       []*Flow                   `json:"flows" validate:"omitempty,dive"`
+		Globals     []*Global                 `json:"globals" validate:"omitempty,dive"`
+		Groups      []*Group                  `json:"groups" validate:"omitempty,dive"`
+		Labels      []*Label                  `json:"labels" validate:"omitempty,dive"`
+		Locations   []*envs.LocationHierarchy `json:"locations"`
+		Resthooks   []*Resthook               `json:"resthooks" validate:"omitempty,dive"`
+		Templates   []*Template               `json:"templates" validate:"omitempty,dive"`
+		Ticketers   []*Ticketer               `json:"ticketers" validate:"omitempty,dive"`
+		Topics      []*Topic                  `json:"topics" validate:"omitempty,dive"`
+		Users       []*User                   `json:"users" validate:"omitempty,dive"`
 	}
 }
 
@@ -41,20 +47,29 @@ func NewSource(data json.RawMessage) (*StaticSource, error) {
 
 // LoadSource loads a new static source from the given JSON file
 func LoadSource(path string) (*StaticSource, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading file '%s'", path)
 	}
 	return NewSource(data)
 }
 
-var _ assets.AssetSource = (*StaticSource)(nil)
+var _ assets.Source = (*StaticSource)(nil)
 
 // Channels returns all channel assets
 func (s *StaticSource) Channels() ([]assets.Channel, error) {
 	set := make([]assets.Channel, len(s.s.Channels))
 	for i := range s.s.Channels {
 		set[i] = s.s.Channels[i]
+	}
+	return set, nil
+}
+
+// Classifiers returns all classifier assets
+func (s *StaticSource) Classifiers() ([]assets.Classifier, error) {
+	set := make([]assets.Classifier, len(s.s.Classifiers))
+	for i := range s.s.Classifiers {
+		set[i] = s.s.Classifiers[i]
 	}
 	return set, nil
 }
@@ -76,6 +91,15 @@ func (s *StaticSource) Flow(uuid assets.FlowUUID) (assets.Flow, error) {
 		}
 	}
 	return nil, errors.Errorf("no such flow with UUID '%s'", uuid)
+}
+
+// Globals returns all global assets
+func (s *StaticSource) Globals() ([]assets.Global, error) {
+	set := make([]assets.Global, len(s.s.Globals))
+	for i := range s.s.Globals {
+		set[i] = s.s.Globals[i]
+	}
+	return set, nil
 }
 
 // Groups returns all group assets
@@ -110,6 +134,42 @@ func (s *StaticSource) Resthooks() ([]assets.Resthook, error) {
 	set := make([]assets.Resthook, len(s.s.Resthooks))
 	for i := range s.s.Resthooks {
 		set[i] = s.s.Resthooks[i]
+	}
+	return set, nil
+}
+
+// Templates returns all template assets
+func (s *StaticSource) Templates() ([]assets.Template, error) {
+	set := make([]assets.Template, len(s.s.Templates))
+	for i := range s.s.Templates {
+		set[i] = s.s.Templates[i]
+	}
+	return set, nil
+}
+
+// Ticketers returns all ticketer assets
+func (s *StaticSource) Ticketers() ([]assets.Ticketer, error) {
+	set := make([]assets.Ticketer, len(s.s.Ticketers))
+	for i := range s.s.Ticketers {
+		set[i] = s.s.Ticketers[i]
+	}
+	return set, nil
+}
+
+// Topics returns all topic assets
+func (s *StaticSource) Topics() ([]assets.Topic, error) {
+	set := make([]assets.Topic, len(s.s.Topics))
+	for i := range s.s.Topics {
+		set[i] = s.s.Topics[i]
+	}
+	return set, nil
+}
+
+// Users returns all user assets
+func (s *StaticSource) Users() ([]assets.User, error) {
+	set := make([]assets.User, len(s.s.Users))
+	for i := range s.s.Users {
+		set[i] = s.s.Users[i]
 	}
 	return set, nil
 }

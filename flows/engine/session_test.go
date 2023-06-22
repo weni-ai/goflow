@@ -2,245 +2,279 @@ package engine_test
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"os"
+	"sort"
 	"testing"
 	"time"
 
-	"github.com/nyaruka/gocommon/urns"
+	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/assets/static"
+	"github.com/nyaruka/goflow/envs"
+	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
 	"github.com/nyaruka/goflow/flows/events"
 	"github.com/nyaruka/goflow/flows/resumes"
 	"github.com/nyaruka/goflow/flows/triggers"
 	"github.com/nyaruka/goflow/test"
-	"github.com/nyaruka/goflow/utils"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestEvaluateTemplate(t *testing.T) {
-	tests := []struct {
-		template string
-		expected string
-		errorMsg string
-	}{
-		// contact basic properties
-		{"@contact.uuid", "5d76d86b-3bb9-4d5a-b822-c9d86f5d8e4f", ""},
-		{"@contact.id", "1234567", ""},
-		{"@CONTACT.NAME", "Ryan Lewis", ""},
-		{"@contact.name", "Ryan Lewis", ""},
-		{"@contact.first_name", "Ryan", ""},
-		{"@contact.language", "eng", ""},
-		{"@contact.timezone", "America/Guayaquil", ""},
-
-		// contact single URN access
-		{"@contact.urn", `tel:+12065551212`, ""},
-		{"@contact.urn.scheme", `tel`, ""},
-		{"@contact.urn.path", `+12065551212`, ""},
-
-		// contact URN list access
-		{"@contact.urns", `tel:+12065551212, twitterid:54784326227#nyaruka, mailto:foo@bar.com`, ""},
-		{"@contact.urns.tel", `tel:+12065551212`, ""},
-		{"@contact.urns.xxx", "", "error evaluating @contact.urns.xxx: no such URN scheme 'xxx'"},
-		{"@(contact.urns[0])", "tel:+12065551212", ""},
-		{"@(contact.urns[110])", "", "error evaluating @(contact.urns[110]): index 110 out of range for 3 items"},
-		{"@(contact.urns[0].scheme)", "tel", ""},
-		{"@(contact.urns[0].path)", "+12065551212", ""},
-		{"@(contact.urns[0].display)", "(206) 555-1212", ""},
-		{"@(contact.urns[0].channel)", "My Android Phone", ""},
-		{"@(contact.urns[0].channel.uuid)", "57f1078f-88aa-46f4-a59a-948a5739c03d", ""},
-		{"@(contact.urns[0].channel.name)", "My Android Phone", ""},
-		{"@(contact.urns[0].channel.address)", "+12345671111", ""},
-		{"@(contact.urns[1])", "twitterid:54784326227#nyaruka", ""},
-		{"@(contact.urns[1].channel)", "", ""},
-		{"@(format_urn(contact.urns[0]))", "(206) 555-1212", ""},
-		{"@(contact.urns.twitterid[0])", `twitterid:54784326227#nyaruka`, ""},
-		{"@(contact.urns.twitterid[0].scheme)", `twitterid`, ""},
-		{"@(contact.urns.twitterid[0].path)", `54784326227`, ""},
-		{"@contact.urns.telegram", ``, ""},
-
-		// contact groups
-		{"@contact.groups", `Testers, Males`, ""},
-		{"@(join(contact.groups, \"|\"))", `Testers|Males`, ""},
-		{"@(length(contact.groups))", "2", ""},
-
-		// contact fields
-		{"@contact.fields", "activation_token: AACC55\nage: 23\ngender: Male\njoin_date: 2017-12-02T00:00:00.000000-02:00\nnot_set: ", ""},
-		{"@contact.fields.activation_token", "AACC55", ""},
-		{"@contact.fields.age", "23", ""},
-		{"@contact.fields.join_date", "2017-12-02T00:00:00.000000-02:00", ""},
-		{"@contact.fields.favorite_icecream", "", "error evaluating @contact.fields.favorite_icecream: no such contact field 'favorite_icecream'"},
-		{"@(is_error(contact.fields.favorite_icecream))", "true", ""},
-		{"@(length(contact.fields))", "4", ""},
-
-		{"@input", "Hi there\nhttp://s3.amazon.com/bucket/test.jpg\nhttp://s3.amazon.com/bucket/test.mp3", ""},
-		{"@input.text", "Hi there", ""},
-		{"@input.attachments", `http://s3.amazon.com/bucket/test.jpg, http://s3.amazon.com/bucket/test.mp3`, ""},
-		{"@(input.attachments[0])", "http://s3.amazon.com/bucket/test.jpg", ""},
-		{"@input.created_on", "2017-12-31T11:35:10.035757-02:00", ""},
-		{"@input.channel.name", "My Android Phone", ""},
-
-		{"@results", "2Factor: 34634624463525\nFavorite Color: red\nPhone Number: +12344563452", ""},
-		{"@results.favorite_color", "red", ""},
-		{"@results.favorite_color.category", "Red", ""},
-		{"@results.favorite_icecream", "", "error evaluating @results.favorite_icecream: no such run result 'favorite_icecream'"},
-		{"@(is_error(results.favorite_icecream))", "true", ""},
-		{"@(length(results))", "3", ""},
-
-		{"@run.status", "completed", ""},
-		{"@run.results.favorite_color", "red", ""},
-
-		{"@trigger.params", `{"source": "website","address": {"state": "WA"}}`, ""},
-		{"@trigger.params.source", "website", ""},
-		{"@(length(trigger.params.address))", "1", ""},
-
-		// migrated split by expressions
-		{`@(if(is_error(results.favorite_color), "@flow.favorite_color", results.favorite_color))`, `red`, ""},
-		{`@(if(is_error(legacy_extra.0.default_city), "@extra.0.default_city", legacy_extra.0.default_city))`, `@extra.0.default_city`, ""},
-
-		// non-expressions
-		{"bob@nyaruka.com", "bob@nyaruka.com", ""},
-		{"@twitter_handle", "@twitter_handle", ""},
-	}
-
-	session, _, err := test.CreateTestSession("http://localhost", nil)
+	testFile, err := os.ReadFile("testdata/templates.json")
 	require.NoError(t, err)
-
-	run := session.Runs()[0]
-
-	for _, test := range tests {
-		eval, err := run.EvaluateTemplate(test.template)
-
-		var actualErrorMsg string
-		if err != nil {
-			actualErrorMsg = err.Error()
-		}
-
-		assert.Equal(t, test.expected, eval, "output mismatch evaluating template: '%s'", test.template)
-		assert.Equal(t, test.errorMsg, actualErrorMsg, "error mismatch evaluating template: '%s'", test.template)
-	}
-}
-
-func TestContextToJSON(t *testing.T) {
-	tests := []struct {
-		path     string
-		expected string
-	}{
-		{"contact.uuid", `"5d76d86b-3bb9-4d5a-b822-c9d86f5d8e4f"`},
-		{"contact.name", `"Ryan Lewis"`},
-		{"contact.urns", `[{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},{"display":"nyaruka","path":"54784326227","scheme":"twitterid"},{"display":"foo@bar.com","path":"foo@bar.com","scheme":"mailto"}]`},
-		{"contact.urns[0]", `{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"}`},
-		{"contact.fields", `{"activation_token":"AACC55","age":23,"gender":"Male","join_date":"2017-12-02T00:00:00.000000-02:00","not_set":null}`},
-		{"contact.fields.age", `23`},
-		{"contact", `{"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2018-06-20T11:40:30.123456Z","fields":{"activation_token":"AACC55","age":23,"gender":"Male","join_date":"2017-12-02T00:00:00.000000-02:00","not_set":null},"groups":[{"name":"Testers","uuid":"b7cf0d83-f1c9-411c-96fd-c511a4cfa86d"},{"name":"Males","uuid":"4f1f98fc-27a7-4a69-bbdb-24744ba739a9"}],"language":"eng","name":"Ryan Lewis","timezone":"America/Guayaquil","urns":[{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},{"display":"nyaruka","path":"54784326227","scheme":"twitterid"},{"display":"foo@bar.com","path":"foo@bar.com","scheme":"mailto"}],"uuid":"5d76d86b-3bb9-4d5a-b822-c9d86f5d8e4f"}`},
-		{"input", `{"attachments":[{"content_type":"image/jpeg","url":"http://s3.amazon.com/bucket/test.jpg"},{"content_type":"audio/mp3","url":"http://s3.amazon.com/bucket/test.mp3"}],"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2017-12-31T11:35:10.035757-02:00","text":"Hi there","type":"msg","urn":{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},"uuid":"9bf91c2b-ce58-4cef-aacc-281e03f69ab5"}`},
-		{"run", `{"contact":{"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2018-06-20T11:40:30.123456Z","fields":{"activation_token":"AACC55","age":23,"gender":"Male","join_date":"2017-12-02T00:00:00.000000-02:00","not_set":null},"groups":[{"name":"Testers","uuid":"b7cf0d83-f1c9-411c-96fd-c511a4cfa86d"},{"name":"Males","uuid":"4f1f98fc-27a7-4a69-bbdb-24744ba739a9"}],"language":"eng","name":"Ryan Lewis","timezone":"America/Guayaquil","urns":[{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},{"display":"nyaruka","path":"54784326227","scheme":"twitterid"},{"display":"foo@bar.com","path":"foo@bar.com","scheme":"mailto"}],"uuid":"5d76d86b-3bb9-4d5a-b822-c9d86f5d8e4f"},"created_on":"2018-04-11T13:24:30.123456Z","exited_on":"2018-04-11T13:24:30.123456Z","flow":{"name":"Registration","revision":123,"uuid":"50c3706e-fedb-42c0-8eab-dda3335714b7"},"results":{"2factor":{"category":"","category_localized":"","created_on":"2018-04-11T13:24:30.123456Z","input":null,"name":"2Factor","node_uuid":"f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03","value":"34634624463525"},"favorite_color":{"category":"Red","category_localized":"Red","created_on":"2018-04-11T13:24:30.123456Z","input":null,"name":"Favorite Color","node_uuid":"f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03","value":"red"},"phone_number":{"category":"","category_localized":"","created_on":"2018-04-11T13:24:30.123456Z","input":null,"name":"Phone Number","node_uuid":"f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03","value":"+12344563452"},"webhook":{"category":"Success","category_localized":"Success","created_on":"2018-04-11T13:24:30.123456Z","input":"GET http://127.0.0.1:49992/?content=%7B%22results%22%3A%5B%7B%22state%22%3A%22WA%22%7D%2C%7B%22state%22%3A%22IN%22%7D%5D%7D","name":"webhook","node_uuid":"f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03","value":"200"}},"status":"completed","uuid":"d2f852ec-7b4e-457f-ae7f-f8b243c49ff5"}`},
-		{"child", `{"contact":{"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2018-06-20T11:40:30.123456Z","fields":{"activation_token":"AACC55","age":23,"gender":"Male","join_date":"2017-12-02T00:00:00.000000-02:00","not_set":null},"groups":[{"name":"Testers","uuid":"b7cf0d83-f1c9-411c-96fd-c511a4cfa86d"},{"name":"Males","uuid":"4f1f98fc-27a7-4a69-bbdb-24744ba739a9"}],"language":"eng","name":"Ryan Lewis","timezone":"America/Guayaquil","urns":[{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},{"display":"nyaruka","path":"54784326227","scheme":"twitterid"},{"display":"foo@bar.com","path":"foo@bar.com","scheme":"mailto"}],"uuid":"5d76d86b-3bb9-4d5a-b822-c9d86f5d8e4f"},"flow":{"name":"Collect Age","revision":0,"uuid":"b7cf0d83-f1c9-411c-96fd-c511a4cfa86d"},"results":{"age":{"category":"Youth","category_localized":"Youth","created_on":"2018-04-11T13:24:30.123456Z","input":null,"name":"Age","node_uuid":"d9dba561-b5ee-4f62-ba44-60c4dc242b84","value":"23"}},"status":"completed","uuid":"8720f157-ca1c-432f-9c0b-2014ddc77094"}`},
-		{"parent", `{"contact":{"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2018-01-01T12:00:00.000000Z","fields":{"activation_token":null,"age":33,"gender":"Female","join_date":null,"not_set":null},"groups":[],"language":"spa","name":"Jasmine","timezone":null,"urns":[{"display":"097 911 1222","path":"+593979111222","scheme":"tel"}],"uuid":"c59b0033-e748-4240-9d4c-e85eb6800151"},"flow":{"name":"Parent","revision":0,"uuid":"fece6eac-9127-4343-9269-56e88f391562"},"results":{"role":{"category":"Reporter","category_localized":"Reporter","created_on":"2000-01-01T00:00:00.000000Z","input":"a reporter","name":"Role","node_uuid":"385cb848-5043-448e-9123-05cbcf26ad74","value":"reporter"}},"status":"active","uuid":"4213ac47-93fd-48c4-af12-7da8218ef09d"}`},
-		{"trigger", `{"params":{"source":"website","address":{"state":"WA"}},"type":"flow_action"}`},
-	}
 
 	server := test.NewTestHTTPServer(49992)
 	defer server.Close()
-	defer utils.SetUUIDGenerator(utils.DefaultUUIDGenerator)
-	defer utils.SetTimeSource(utils.DefaultTimeSource)
+	defer uuids.SetGenerator(uuids.DefaultGenerator)
+	defer dates.SetNowSource(dates.DefaultNowSource)
 
-	utils.SetUUIDGenerator(utils.NewSeededUUID4Generator(123456))
-	utils.SetTimeSource(utils.NewFixedTimeSource(time.Date(2018, 4, 11, 13, 24, 30, 123456000, time.UTC)))
+	uuids.SetGenerator(uuids.NewSeededGenerator(123456))
+	dates.SetNowSource(dates.NewFixedNowSource(time.Date(2018, 4, 11, 13, 24, 30, 123456000, time.UTC)))
 
-	session, _, err := test.CreateTestSession(server.URL, nil)
+	sessionWithURNs, _, err := test.CreateTestSession(server.URL, envs.RedactionPolicyNone)
 	require.NoError(t, err)
+	sessionWithoutURNs, _, err := test.CreateTestSession(server.URL, envs.RedactionPolicyURNs)
+	require.NoError(t, err)
+
+	tests := []struct {
+		Template   string `json:"template"`
+		RedactURNs bool   `json:"redact_urns,omitempty"`
+
+		Output     string          `json:"output,omitempty"`
+		OutputJSON json.RawMessage `json:"output_json,omitempty"`
+		Error      string          `json:"error,omitempty"`
+	}{}
+
+	err = jsonx.Unmarshal(testFile, &tests)
+	require.NoError(t, err)
+
+	for i, tc := range tests {
+		var run flows.FlowRun
+		if tc.RedactURNs {
+			run = sessionWithoutURNs.Runs()[0]
+		} else {
+			run = sessionWithURNs.Runs()[0]
+		}
+
+		eval, err := run.EvaluateTemplate(tc.Template)
+
+		// clone test case and populate with actual values
+		actual := tc
+		if tc.OutputJSON != nil {
+			actual.OutputJSON = []byte(eval)
+		} else {
+			actual.Output = eval
+		}
+		if err != nil {
+			actual.Error = err.Error()
+		}
+
+		if !test.UpdateSnapshots {
+			if tc.OutputJSON != nil {
+				test.AssertEqualJSON(t, tc.OutputJSON, actual.OutputJSON, "output mismatch evaluating template: '%s'", tc.Template)
+			} else {
+				assert.Equal(t, tc.Output, actual.Output, "output mismatch evaluating template: '%s'", tc.Template)
+			}
+			assert.Equal(t, tc.Error, actual.Error, "error mismatch evaluating template: '%s'", tc.Template)
+		} else {
+			tests[i] = actual
+		}
+	}
+
+	if test.UpdateSnapshots {
+		actualJSON, err := jsonx.MarshalPretty(tests)
+		require.NoError(t, err)
+
+		err = os.WriteFile("testdata/templates.json", actualJSON, 0666)
+		require.NoError(t, err)
+	}
+}
+
+func BenchmarkEvaluateTemplate(b *testing.B) {
+	testFile, err := os.ReadFile("testdata/templates.json")
+	require.NoError(b, err)
+
+	session, _, err := test.CreateTestSession("http://localhost", envs.RedactionPolicyNone)
+	require.NoError(b, err)
 
 	run := session.Runs()[0]
 
-	for _, test := range tests {
-		template := fmt.Sprintf("@(json(%s))", test.path)
-		eval, err := run.EvaluateTemplate(template)
+	tests := []struct {
+		Template   string `json:"template"`
+		RedactURNs bool   `json:"redact_urns,omitempty"`
 
-		assert.NoError(t, err, "unexpected error evaluating template '%s'", template)
-		assert.Equal(t, test.expected, eval, "json() returned unexpected value for template '%s'", template)
+		Output string `json:"output,omitempty"`
+		Error  string `json:"error,omitempty"`
+	}{}
+	jsonx.Unmarshal(testFile, &tests)
+	require.NoError(b, err)
+
+	for n := 0; n < b.N; n++ {
+		for _, tc := range tests {
+			run.EvaluateTemplate(tc.Template)
+		}
 	}
 }
 
 func TestReadWithMissingAssets(t *testing.T) {
 	// create standard test session and marshal to JSON
-	session, _, err := test.CreateTestSession("", nil)
+	session, _, err := test.CreateTestSession("", envs.RedactionPolicyNone)
 	require.NoError(t, err)
 
-	sessionJSON, err := json.Marshal(session)
+	sessionJSON, err := jsonx.Marshal(session)
 	require.NoError(t, err)
 
-	// try to read it back but with only the flow assets
-	source, err := static.NewSource([]byte(`{
-		"flows": [
-			{
-				"uuid": "50c3706e-fedb-42c0-8eab-dda3335714b7",
-				"name": "Registration",
-				"spec_version": "12.0",
-				"language": "eng",
-				"type": "messaging",
-				"revision": 123,
-				"nodes": []
-			},
-			{
-				"uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d",
-				"name": "Collect Age",
-				"spec_version": "12.0",
-				"language": "eng",
-				"type": "messaging",
-				"nodes": []
-			}
-		]
-	}`))
+	// try to read it back but with no assets
+	sessionAssets, err := engine.NewSessionAssets(session.Environment(), static.NewEmptySource(), nil)
 	require.NoError(t, err)
-	sessionAssets, err := engine.NewSessionAssets(source)
 
 	missingAssets := make([]assets.Reference, 0)
-	missing := func(a assets.Reference) { missingAssets = append(missingAssets, a) }
+	missing := func(a assets.Reference, err error) { missingAssets = append(missingAssets, a) }
 
-	eng := engine.NewBuilder().WithDefaultUserAgent("test").Build()
+	eng := engine.NewBuilder().Build()
 	_, err = eng.ReadSession(sessionAssets, sessionJSON, missing)
 	require.NoError(t, err)
-	assert.Equal(t, 14, len(missingAssets))
-	assert.Equal(t, assets.NewChannelReference(assets.ChannelUUID("57f1078f-88aa-46f4-a59a-948a5739c03d"), ""), missingAssets[0])
-	assert.Equal(t, assets.NewGroupReference(assets.GroupUUID("b7cf0d83-f1c9-411c-96fd-c511a4cfa86d"), "Testers"), missingAssets[1])
-	assert.Equal(t, assets.NewGroupReference(assets.GroupUUID("4f1f98fc-27a7-4a69-bbdb-24744ba739a9"), "Males"), missingAssets[2])
 
-	// still get error if we're missing flow assets
-	emptyAssets, err := engine.NewSessionAssets(static.NewEmptySource())
+	refs := make([]string, len(missingAssets))
+	for i := range missingAssets {
+		refs[i] = missingAssets[i].String()
+	}
+
+	// ordering isn't deterministic so sort A-Z
+	sort.Strings(refs)
+
+	assert.Equal(t, []string{
+		"channel[uuid=57f1078f-88aa-46f4-a59a-948a5739c03d,name=My Android Phone]",
+		"channel[uuid=57f1078f-88aa-46f4-a59a-948a5739c03d,name=]",
+		"channel[uuid=57f1078f-88aa-46f4-a59a-948a5739c03d,name=]",
+		"field[key=activation_token,name=]",
+		"field[key=activation_token,name=]",
+		"field[key=age,name=]",
+		"field[key=gender,name=]",
+		"field[key=gender,name=]",
+		"field[key=join_date,name=]",
+		"field[key=join_date,name=]",
+		"flow[uuid=50c3706e-fedb-42c0-8eab-dda3335714b7,name=Registration]",
+		"flow[uuid=b7cf0d83-f1c9-411c-96fd-c511a4cfa86d,name=Collect Age]",
+		"group[uuid=4f1f98fc-27a7-4a69-bbdb-24744ba739a9,name=Males]",
+		"group[uuid=4f1f98fc-27a7-4a69-bbdb-24744ba739a9,name=Males]",
+		"group[uuid=b7cf0d83-f1c9-411c-96fd-c511a4cfa86d,name=Testers]",
+		"group[uuid=b7cf0d83-f1c9-411c-96fd-c511a4cfa86d,name=Testers]",
+		"ticketer[uuid=19dc6346-9623-4fe4-be80-538d493ecdf5,name=Support Tickets]",
+		"ticketer[uuid=19dc6346-9623-4fe4-be80-538d493ecdf5,name=Support Tickets]",
+		"ticketer[uuid=19dc6346-9623-4fe4-be80-538d493ecdf5,name=Support Tickets]",
+		"ticketer[uuid=19dc6346-9623-4fe4-be80-538d493ecdf5,name=Support Tickets]",
+		"topic[uuid=472a7a73-96cb-4736-b567-056d987cc5b4,name=Weather]",
+		"topic[uuid=472a7a73-96cb-4736-b567-056d987cc5b4,name=Weather]",
+		"user[email=bob@nyaruka.com,name=Bob]",
+		"user[email=bob@nyaruka.com,name=Bob]",
+	}, refs)
+}
+
+func TestQueryBasedGroupReevaluationOnTrigger(t *testing.T) {
+	assetsJSON, err := os.ReadFile("testdata/smart_groups.json")
 	require.NoError(t, err)
 
-	_, err = eng.ReadSession(emptyAssets, sessionJSON, missing)
-	assert.EqualError(t, err, "unable to read run 0: unable to load flow[uuid=50c3706e-fedb-42c0-8eab-dda3335714b7,name=Registration]: no such flow with UUID '50c3706e-fedb-42c0-8eab-dda3335714b7'")
+	sa, err := test.CreateSessionAssets(assetsJSON, "")
+	require.NoError(t, err)
+
+	// contact is in wrong groups
+	contact, err := flows.ReadContact(sa, []byte(`{
+		"uuid": "6d116680-eab9-460a-9c6e-1f05d3c5b5d6",
+		"created_on": "2018-06-20T11:40:30.123456789-00:00",
+        "groups": [
+            {"uuid": "047de1c9-9189-4f4c-aa04-bff0a4c2efb6", "name": "Males"}
+        ],
+        "fields": {
+            "gender": {
+                "text": "Female"
+			}
+		}
+	}`), assets.PanicOnMissing)
+	require.NoError(t, err)
+
+	env := envs.NewBuilder().Build()
+	trigger := triggers.NewBuilder(env, assets.NewFlowReference("1b462ce8-983a-4393-b133-e15a0efdb70c", ""), contact).Manual().Build()
+	eng := engine.NewBuilder().Build()
+
+	session, sprint, err := eng.NewSession(sa, trigger)
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(sprint.Events()))
+	assert.Equal(t, "contact_groups_changed", sprint.Events()[0].Type())
+	assert.Equal(t, 1, session.Contact().Groups().Count())
+	assert.Equal(t, "Females", session.Contact().Groups().All()[0].Name())
+}
+
+func TestRunResuming(t *testing.T) {
+	assetsJSON, err := os.ReadFile("testdata/subflows.json")
+	require.NoError(t, err)
+
+	session, _ := test.NewSessionBuilder().WithAssets(assetsJSON).WithFlow("72162f46-dce3-4798-9f19-384a2447efc5").MustBuild()
+
+	// each run should be marked as completed
+	assert.Equal(t, 3, len(session.Runs()))
+	assert.Equal(t, flows.RunStatusCompleted, session.Runs()[0].Status())
+	assert.Equal(t, flows.RunStatusCompleted, session.Runs()[1].Status())
+	assert.Equal(t, flows.RunStatusCompleted, session.Runs()[2].Status())
+
+	// change the UUID of the third flow so the nter_flow in the second flow will error
+	assetsWithoutChildFlow := test.JSONReplace(assetsJSON, []string{"flows", "[2]", "uuid"}, []byte(`"653a3fa3-ff59-4a89-93c3-a8b9486ec479"`))
+
+	session, _ = test.NewSessionBuilder().WithAssets(assetsWithoutChildFlow).WithFlow("72162f46-dce3-4798-9f19-384a2447efc5").MustBuild()
+
+	// each run should be marked as failed
+	assert.Equal(t, 2, len(session.Runs()))
+	assert.Equal(t, flows.RunStatusFailed, session.Runs()[0].Status())
+	assert.Equal(t, flows.RunStatusFailed, session.Runs()[1].Status())
+}
+
+func TestResumeAfterWaitWithMissingFlowAssets(t *testing.T) {
+	assetsJSON, err := os.ReadFile("../../test/testdata/runner/subflow.json")
+	require.NoError(t, err)
+
+	session1, _ := test.NewSessionBuilder().WithAssets(assetsJSON).WithFlow("76f0a02f-3b75-4b86-9064-e9195e1b3a02").MustBuild()
+
+	assert.Equal(t, flows.SessionStatusWaiting, session1.Status())
+	assert.Equal(t, flows.RunStatusActive, session1.Runs()[0].Status())
+	assert.Equal(t, flows.RunStatusWaiting, session1.Runs()[1].Status())
+
+	// change the UUID of the child flow so it will effectively be missing
+	assetsWithoutChildFlow := test.JSONReplace(assetsJSON, []string{"flows", "[1]", "uuid"}, []byte(`"653a3fa3-ff59-4a89-93c3-a8b9486ec479"`))
+
+	session2, _, err := test.ResumeSession(session1, assetsWithoutChildFlow, "Hello")
+	require.NoError(t, err)
+
+	// should have a failed session
+	assert.Equal(t, flows.SessionStatusFailed, session2.Status())
+	assert.Equal(t, flows.RunStatusActive, session2.Runs()[0].Status())
+	assert.Equal(t, flows.RunStatusFailed, session2.Runs()[1].Status())
+
+	// change the UUID of the parent flow so it will effectively be missing
+	assetsWithoutParentFlow := test.JSONReplace(assetsJSON, []string{"flows", "[0]", "uuid"}, []byte(`"653a3fa3-ff59-4a89-93c3-a8b9486ec479"`))
+
+	session3, _, err := test.ResumeSession(session1, assetsWithoutParentFlow, "Hello")
+	require.NoError(t, err)
+
+	// should have an failed session
+	assert.Equal(t, flows.SessionStatusFailed, session3.Status())
+	assert.Equal(t, flows.RunStatusActive, session3.Runs()[0].Status())
+	assert.Equal(t, flows.RunStatusFailed, session3.Runs()[1].Status())
 }
 
 func TestWaitTimeout(t *testing.T) {
-	defer utils.SetTimeSource(utils.DefaultTimeSource)
+	defer dates.SetNowSource(dates.DefaultNowSource)
 
 	t1 := time.Date(2018, 4, 11, 13, 24, 30, 123456000, time.UTC)
-	t2 := t1.Add(time.Minute * 10)
-	utils.SetTimeSource(utils.NewFixedTimeSource(t1))
+	dates.SetNowSource(dates.NewFixedNowSource(t1))
 
-	sessionAssets, err := ioutil.ReadFile("testdata/timeout_test.json")
-	require.NoError(t, err)
-
-	// create our engine session
-	session, err := test.CreateSession(json.RawMessage(sessionAssets), "")
-	require.NoError(t, err)
-
-	flow, err := session.Assets().Flows().Get(assets.FlowUUID("76f0a02f-3b75-4b86-9064-e9195e1b3a02"))
-	require.NoError(t, err)
-
-	contact := flows.NewEmptyContact(session.Assets(), "Joe", "eng", nil)
-	contact.AddURN(flows.NewContactURN(urns.URN("tel:+18005555777"), nil))
-	trigger := triggers.NewManualTrigger(nil, flow.Reference(), contact, nil)
-
-	sprint, err := session.Start(trigger)
-	require.NoError(t, err)
+	session, sprint := test.NewSessionBuilder().WithAssetsPath("testdata/timeout_test.json").WithFlow("76f0a02f-3b75-4b86-9064-e9195e1b3a02").MustBuild()
 
 	require.Equal(t, 1, len(session.Runs()[0].Path()))
 	run := session.Runs()[0]
@@ -249,20 +283,11 @@ func TestWaitTimeout(t *testing.T) {
 	require.Equal(t, "msg_created", sprint.Events()[0].Type())
 	require.Equal(t, "msg_wait", sprint.Events()[1].Type())
 
-	// check that our timeout is 10 minutes in the future
+	// check our wait has a timeout
 	waitEvent := run.Events()[1].(*events.MsgWaitEvent)
-	require.Equal(t, &t2, waitEvent.TimeoutOn)
+	require.Equal(t, 600, *waitEvent.TimeoutSeconds)
 
-	// should fail with error event if we try to timeout immediately
-	sprint, err = session.Resume(resumes.NewWaitTimeoutResume(nil, nil))
-	require.NoError(t, err)
-	require.Equal(t, 1, len(sprint.Events()))
-	require.Equal(t, "error", sprint.Events()[0].Type())
-
-	// mock our current time to be 10 seconds after the wait times out
-	utils.SetTimeSource(utils.NewFixedTimeSource(t2.Add(time.Second * 10)))
-
-	_, err = session.Resume(resumes.NewWaitTimeoutResume(nil, nil))
+	_, err := session.Resume(resumes.NewWaitTimeout(nil, nil))
 	require.NoError(t, err)
 
 	require.Equal(t, flows.SessionStatusCompleted, session.Status())
@@ -271,6 +296,116 @@ func TestWaitTimeout(t *testing.T) {
 
 	result := run.Results().Get("favorite_color")
 	require.Equal(t, "Timeout", result.Category)
-	require.Equal(t, "2018-04-11T13:34:40.123456Z", result.Value)
-	require.Nil(t, result.Input)
+	require.Equal(t, "2018-04-11T13:24:30.123456Z", result.Value)
+	require.Equal(t, "", result.Input)
+}
+
+func TestCurrentContext(t *testing.T) {
+	session, _ := test.NewSessionBuilder().WithAssetsPath("../../test/testdata/runner/subflow_loop_with_wait.json").WithFlow("76f0a02f-3b75-4b86-9064-e9195e1b3a02").MustBuild()
+
+	assert.Equal(t, string(flows.SessionStatusWaiting), string(session.Status()))
+
+	context := session.CurrentContext()
+	assert.NotNil(t, context)
+
+	runContext, _ := context.Get("run")
+	flowContext, _ := runContext.(*types.XObject).Get("flow")
+	flowName, _ := flowContext.(*types.XObject).Get("name")
+	assert.Equal(t, types.NewXText("Child flow"), flowName)
+
+	// check we can marshal it
+	_, err := jsonx.Marshal(context)
+	assert.NoError(t, err)
+
+	// end it
+	session.Resume(resumes.NewRunExpiration(nil, nil))
+	assert.Equal(t, flows.SessionStatusCompleted, session.Status())
+
+	// can still get context of completed session
+	context = session.CurrentContext()
+	assert.NotNil(t, context)
+
+	runContext, _ = context.Get("run")
+	flowContext, _ = runContext.(*types.XObject).Get("flow")
+	flowName, _ = flowContext.(*types.XObject).Get("name")
+	assert.Equal(t, types.NewXText("Parent Flow"), flowName)
+}
+
+func TestSessionHistory(t *testing.T) {
+	env := envs.NewBuilder().Build()
+
+	source, err := static.NewSource([]byte(`{
+		"flows": [
+			{
+				"uuid": "5472a1c3-63e1-484f-8485-cc8ecb16a058",
+				"name": "Empty",
+				"spec_version": "13.1",
+				"language": "eng",
+				"type": "messaging",
+				"nodes": []
+			}
+		]
+	}`))
+	require.NoError(t, err)
+
+	sa, err := engine.NewSessionAssets(env, source, nil)
+	require.NoError(t, err)
+
+	flow := assets.NewFlowReference("5472a1c3-63e1-484f-8485-cc8ecb16a058", "Inception")
+	contact := flows.NewEmptyContact(sa, "Bob", envs.Language("eng"), nil)
+
+	// trigger session manually which will have no history
+	eng := engine.NewBuilder().Build()
+	session1, _, err := eng.NewSession(sa, triggers.NewBuilder(env, flow, contact).Manual().Build())
+	require.NoError(t, err)
+
+	assert.Equal(t, flows.EmptyHistory, session1.History())
+
+	// trigger another session from that session
+	runSummary := session1.Runs()[0].Snapshot()
+	runSummaryJSON := jsonx.MustMarshal(runSummary)
+	history := flows.NewChildHistory(session1)
+
+	session2, _, err := eng.NewSession(sa, triggers.NewBuilder(env, flow, contact).FlowAction(history, runSummaryJSON).Build())
+	require.NoError(t, err)
+
+	assert.Equal(t, &flows.SessionHistory{
+		ParentUUID:          session1.UUID(),
+		Ancestors:           1,
+		AncestorsSinceInput: 1,
+	}, session2.History())
+}
+
+func TestMaxResumesPerSession(t *testing.T) {
+	session, _ := test.NewSessionBuilder().WithAssetsPath("../../test/testdata/runner/two_questions.json").WithFlow("615b8a0f-588c-4d20-a05f-363b0b4ce6f4").MustBuild()
+	require.Equal(t, flows.SessionStatusWaiting, session.Status())
+
+	numResumes := 0
+	for {
+		msg := flows.NewMsgIn(flows.MsgUUID(uuids.New()), "tel:+593979123456", nil, "Teal", nil)
+		resume := resumes.NewMsg(nil, nil, msg)
+		numResumes++
+
+		_, err := session.Resume(resume)
+		require.NoError(t, err)
+
+		if session.Status() == flows.SessionStatusFailed {
+			break
+		}
+	}
+
+	assert.Equal(t, 500, numResumes)
+}
+
+func TestFindStep(t *testing.T) {
+	session, sprint := test.NewSessionBuilder().MustBuild()
+	evts := sprint.Events()
+
+	run, step := session.FindStep(evts[0].StepUUID())
+	assert.Equal(t, "Registration", run.Flow().Name())
+	assert.Equal(t, step.UUID(), evts[0].StepUUID())
+
+	run, step = session.FindStep(flows.StepUUID("4f33917a-d562-4c20-88bd-f1a4c6827848"))
+	assert.Nil(t, run)
+	assert.Nil(t, step)
 }

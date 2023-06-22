@@ -2,10 +2,17 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"strings"
+	"time"
 
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/urns"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/assets/static"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
 	"github.com/nyaruka/goflow/flows/resumes"
@@ -19,9 +26,10 @@ var sessionAssets = `{
         {
             "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
             "name": "My Android Phone",
-            "address": "+12345671111",
+            "address": "+17036975131",
             "schemes": ["tel"],
-            "roles": ["send", "receive"]
+            "roles": ["send", "receive"],
+            "country": "US"
         },
         {
             "uuid": "8e21f093-99aa-413b-b55b-758b54308fcb",
@@ -38,11 +46,36 @@ var sessionAssets = `{
             "roles": ["send", "receive"]
         }
     ],
+    "classifiers": [
+        {
+            "uuid": "1c06c884-39dd-4ce4-ad9f-9a01cbe6c000",
+            "name": "Booking",
+            "type": "wit",
+            "intents": ["book_flight", "book_hotel"]
+        }
+    ],
+    "ticketers": [
+        {
+            "uuid": "19dc6346-9623-4fe4-be80-538d493ecdf5",
+            "name": "Support Tickets",
+            "type": "mailgun"
+        }
+    ],
+    "topics": [
+        {
+            "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+            "name": "Weather"
+        },
+        {
+            "uuid": "daa356b6-32af-44f0-9d35-6126d55ec3e9",
+            "name": "Computers"
+        }
+    ],
     "flows": [
         {
             "uuid": "50c3706e-fedb-42c0-8eab-dda3335714b7",
             "name": "Registration",
-            "spec_version": "12.0",
+            "spec_version": "13.0",
             "language": "eng",
             "type": "messaging",
             "revision": 123,
@@ -62,26 +95,31 @@ var sessionAssets = `{
                     "exits": [
                         {
                             "uuid": "d7a36118-0a38-4b35-a7e4-ae89042f0d3c",
-                            "destination_node_uuid": "3dcccbb4-d29c-41dd-a01f-16d814c9ab82"
+                            "destination_uuid": "3dcccbb4-d29c-41dd-a01f-16d814c9ab82"
                         }
                     ]
                 },
                 {
                     "uuid": "3dcccbb4-d29c-41dd-a01f-16d814c9ab82",
-                    "wait": {
-                        "type": "msg",
-                        "timeout": 600
-                    },
                     "router": {
                         "type": "switch",
-                        "default_exit_uuid": "37d8813f-1402-4ad2-9cc2-e9054a96525b",
-                        "operand": "@input"
+                        "wait": {
+                            "type": "msg"
+                        },
+                        "categories": [
+                            {
+                                "uuid": "37d8813f-1402-4ad2-9cc2-e9054a96525b",
+                                "name": "All Responses",
+                                "exit_uuid": "100f2d68-2481-4137-a0a3-177620ba3c5f"
+                            }
+                        ],
+                        "operand": "@input.text",
+                        "default_category_uuid": "37d8813f-1402-4ad2-9cc2-e9054a96525b"
                     },
                     "exits": [
                         {
-                            "uuid": "37d8813f-1402-4ad2-9cc2-e9054a96525b",
-                            "name": "All Responses",
-                            "destination_node_uuid": "f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03"
+                            "uuid": "100f2d68-2481-4137-a0a3-177620ba3c5f",
+                            "destination_uuid": "f5bb9b7a-7b5e-45c3-8f0e-61b4e95edf03"
                         }
                     ]
                 },
@@ -113,12 +151,22 @@ var sessionAssets = `{
                             "method": "GET",
                             "url": "http://localhost/?content=%7B%22results%22%3A%5B%7B%22state%22%3A%22WA%22%7D%2C%7B%22state%22%3A%22IN%22%7D%5D%7D",
                             "result_name": "webhook"
+                        },
+                        {
+                            "uuid": "bd821625-5254-40ca-be17-e9a4dc5bde99",
+                            "type": "call_classifier",
+                            "classifier": {
+                                "uuid": "1c06c884-39dd-4ce4-ad9f-9a01cbe6c000",
+                                "name": "Booking"
+                            },
+                            "input": "@input.text",
+                            "result_name": "Intent"
                         }
                     ],
                     "exits": [
                         {
                             "uuid": "d898f9a4-f0fc-4ac4-a639-c98c602bb511",
-                            "destination_node_uuid": "c0781400-737f-4940-9a6c-1ec1c3df0325"
+                            "destination_uuid": "c0781400-737f-4940-9a6c-1ec1c3df0325"
                         }
                     ]
                 },
@@ -136,7 +184,7 @@ var sessionAssets = `{
         {
             "uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d",
             "name": "Collect Age",
-            "spec_version": "12.0",
+            "spec_version": "13.0",
             "language": "eng",
             "type": "messaging",
             "nodes": [{
@@ -156,7 +204,7 @@ var sessionAssets = `{
                             "key": "age",
                             "name": "Age"
                         },
-                        "value": "@results.age"
+                        "value": "@results.age.value"
                     }
                 ],
                 "exits": [
@@ -169,7 +217,7 @@ var sessionAssets = `{
         {
             "uuid": "fece6eac-9127-4343-9269-56e88f391562",
             "name": "Parent",
-            "spec_version": "12.0",
+            "spec_version": "13.0",
             "language": "eng",
             "type": "messaging",
             "nodes": []
@@ -177,18 +225,19 @@ var sessionAssets = `{
         {
             "uuid": "aa71426e-13bd-4607-a4f5-77666ff9c4bf",
             "name": "Voice Test",
-            "spec_version": "12.0",
+            "spec_version": "13.0",
             "language": "eng",
             "type": "voice",
             "nodes": []
         }
     ],
     "fields": [
-        {"key": "gender", "name": "Gender", "type": "text"},
-        {"key": "age", "name": "Age", "type": "number"},
-        {"key": "join_date", "name": "Join Date", "type": "datetime"},
-        {"key": "activation_token", "name": "Activation Token", "type": "text"},
-        {"key": "not_set", "name": "Not set", "type": "text"}
+        {"uuid": "d66a7823-eada-40e5-9a3a-57239d4690bf", "key": "gender", "name": "Gender", "type": "text"},
+        {"uuid": "f1b5aea6-6586-41c7-9020-1a6326cc6565", "key": "age", "name": "Age", "type": "number"},
+        {"uuid": "6c86d5ab-3fd9-4a5c-a5b6-48168b016747", "key": "join_date", "name": "Join Date", "type": "datetime"},
+        {"uuid": "c88d2640-d124-438a-b666-5ec53a353dcd", "key": "activation_token", "name": "Activation Token", "type": "text"},
+        {"uuid": "ab9c0631-d8cd-4e77-a5a2-66a8b077e385", "key": "state", "name": "State", "type": "state"},
+        {"uuid": "3bfc3908-a402-48ea-841c-b73b5ef3a254", "key": "not_set", "name": "Not set", "type": "text"}
     ],
     "groups": [
         {"uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d", "name": "Testers"},
@@ -234,6 +283,12 @@ var sessionAssets = `{
                 "http://localhost/?cmd=success"
             ]
         }
+    ],
+    "users": [
+        {
+            "email": "bob@nyaruka.com",
+            "name": "Bob"
+        }
     ]
 }`
 
@@ -249,7 +304,7 @@ var sessionTrigger = `{
         "timezone": "America/Guayaquil",
         "created_on": "2018-06-20T11:40:30.123456789-00:00",
         "urns": [
-            "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d", 
+            "tel:+12024561111?channel=57f1078f-88aa-46f4-a59a-948a5739c03d", 
             "twitterid:54784326227#nyaruka",
             "mailto:foo@bar.com"
         ],
@@ -267,7 +322,32 @@ var sessionTrigger = `{
             "activation_token": {
                 "text": "AACC55"
             }
-        }
+        },
+        "tickets": [
+            {
+                "uuid": "e5f5a9b0-1c08-4e56-8f5c-92e00bc3cf52",
+                "subject": "Old ticket",
+                "body": "I have a problem",
+                "ticketer": {
+                    "name": "Support Tickets",
+                    "uuid": "19dc6346-9623-4fe4-be80-538d493ecdf5"
+                }
+            },
+            {
+                "uuid": "78d1fe0d-7e39-461e-81c3-a6a25f15ed69",
+                "subject": "Question",
+                "body": "What day is it?",
+                "ticketer": {
+                    "name": "Support Tickets",
+                    "uuid": "19dc6346-9623-4fe4-be80-538d493ecdf5"
+                },
+                "topic": {
+                    "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+                    "name": "Weather"
+                },
+                "assignee": {"email": "bob@nyaruka.com", "name": "Bob"}
+            }
+        ]
     },
     "run_summary": {
         "uuid": "4213ac47-93fd-48c4-af12-7da8218ef09d",
@@ -277,7 +357,7 @@ var sessionTrigger = `{
             "created_on": "2018-01-01T12:00:00.000000000-00:00",
             "language": "spa",
             "urns": [
-                "tel:+593979111222"
+                "tel:+12024562222"
             ],
             "fields": {
                 "age": {
@@ -305,14 +385,14 @@ var sessionTrigger = `{
         "status": "active"
     },
     "environment": {
-        "date_format": "YYYY-MM-DD",
-        "default_language": "eng",
+        "date_format": "DD-MM-YYYY",
         "allowed_languages": [
             "eng", 
             "spa"
         ],
+        "default_country": "US",
         "redaction_policy": "none",
-        "time_format": "hh:mm",
+        "time_format": "tt:mm",
         "timezone": "America/Guayaquil"
     },
     "params": {"source": "website","address": {"state": "WA"}}
@@ -341,14 +421,15 @@ var voiceSessionAssets = `{
         {
             "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
             "name": "My Android Phone",
-            "address": "+12345671111",
+            "address": "+17036975131",
             "schemes": ["tel"],
-            "roles": ["send", "receive"]
+            "roles": ["send", "receive"],
+            "country": "US"
         },
         {
             "uuid": "fd47a886-451b-46fb-bcb6-242a4046c0c0",
             "name": "Nexmo",
-            "address": "345642627",
+            "address": "+12024560010",
             "schemes": ["tel"],
             "roles": ["send", "receive", "call", "answer"]
         }
@@ -357,22 +438,24 @@ var voiceSessionAssets = `{
         {
             "uuid": "aa71426e-13bd-4607-a4f5-77666ff9c4bf",
             "name": "Voice Test",
-            "spec_version": "12.0",
+            "spec_version": "13.0",
             "language": "eng",
             "type": "voice",
             "nodes": [
                 {
                     "uuid": "6da04a32-6c84-40d9-b614-3782fde7af80",
-                    "type": "set_run_result",
-                    "name": "Age",
-                    "value": "23",
-                    "category": "Youth"
+                    "actions": [],
+                    "exits": [
+                        {
+                            "uuid": "9082b6ec-a65f-4677-8b3c-2f8de402ff13"
+                        }
+                    ]
                 }
             ]
         }
     ],
     "fields": [
-        {"key": "gender", "name": "Gender", "type": "text"}
+        {"uuid": "d66a7823-eada-40e5-9a3a-57239d4690bf", "key": "gender", "name": "Gender", "type": "text"}
     ],
     "groups": [
         {"uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d", "name": "Testers"},
@@ -401,7 +484,7 @@ var voiceSessionTrigger = `{
         "timezone": "America/Guayaquil",
         "created_on": "2018-06-20T11:40:30.123456789-00:00",
         "urns": [
-            "tel:+12065551212"
+            "tel:+12024561111"
         ],
         "groups": [
             {"uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d", "name": "Testers"},
@@ -415,7 +498,6 @@ var voiceSessionTrigger = `{
     },
     "environment": {
         "date_format": "DD-MM-YYYY",
-        "default_language": "eng",
         "allowed_languages": [
             "eng", 
             "spa"
@@ -427,32 +509,32 @@ var voiceSessionTrigger = `{
 }`
 
 // CreateTestSession creates a standard example session for testing
-func CreateTestSession(testServerURL string, actionToAdd flows.Action) (flows.Session, []flows.Event, error) {
+func CreateTestSession(testServerURL string, redact envs.RedactionPolicy) (flows.Session, []flows.Event, error) {
+	assetsJSON := json.RawMessage(sessionAssets)
 
-	session, err := CreateSession(json.RawMessage(sessionAssets), testServerURL)
+	sa, err := CreateSessionAssets(assetsJSON, testServerURL)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error creating test session")
 	}
 
-	// optional modify the main flow by adding the provided action to the last node
-	if actionToAdd != nil {
-		flow, _ := session.Assets().Flows().Get(assets.FlowUUID("50c3706e-fedb-42c0-8eab-dda3335714b7"))
-		flow.Nodes()[len(flow.Nodes())-1].AddAction(actionToAdd)
-	}
-
 	// read our trigger
-	trigger, err := triggers.ReadTrigger(session.Assets(), json.RawMessage(sessionTrigger), assets.PanicOnMissing)
+	triggerJSON := json.RawMessage(sessionTrigger)
+	triggerJSON = JSONReplace(triggerJSON, []string{"environment", "redaction_policy"}, []byte(fmt.Sprintf(`"%s"`, redact)))
+
+	trigger, err := triggers.ReadTrigger(sa, triggerJSON, assets.PanicOnMissing)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error reading trigger")
 	}
 
-	_, err = session.Start(trigger)
+	eng := NewEngine()
+
+	session, _, err := eng.NewSession(sa, trigger)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error starting test session")
 	}
 
 	// read our resume
-	resume, err := resumes.ReadResume(session.Assets(), json.RawMessage(sessionResume), assets.PanicOnMissing)
+	resume, err := resumes.ReadResume(sa, json.RawMessage(sessionResume), assets.PanicOnMissing)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error reading resume")
 	}
@@ -462,27 +544,22 @@ func CreateTestSession(testServerURL string, actionToAdd flows.Action) (flows.Se
 }
 
 // CreateTestVoiceSession creates a standard example session for testing voice flows and actions
-func CreateTestVoiceSession(testServerURL string, actionToAdd flows.Action) (flows.Session, []flows.Event, error) {
+func CreateTestVoiceSession(testServerURL string) (flows.Session, []flows.Event, error) {
+	assetsJSON := json.RawMessage(voiceSessionAssets)
 
-	session, err := CreateSession(json.RawMessage(voiceSessionAssets), testServerURL)
+	sa, err := CreateSessionAssets(assetsJSON, testServerURL)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "error creating test voice session")
-	}
-
-	// optional modify the main flow by adding the provided action to the last node
-	if actionToAdd != nil {
-		flow, _ := session.Assets().Flows().Get(assets.FlowUUID("aa71426e-13bd-4607-a4f5-77666ff9c4bf"))
-		nodes := flow.Nodes()
-		nodes[len(nodes)-1].AddAction(actionToAdd)
+		return nil, nil, errors.Wrap(err, "error creating test voice session assets")
 	}
 
 	// read our trigger
-	trigger, err := triggers.ReadTrigger(session.Assets(), json.RawMessage(voiceSessionTrigger), assets.PanicOnMissing)
+	trigger, err := triggers.ReadTrigger(sa, json.RawMessage(voiceSessionTrigger), assets.PanicOnMissing)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error reading trigger")
 	}
 
-	sprint, err := session.Start(trigger)
+	eng := NewEngine()
+	session, sprint, err := eng.NewSession(sa, trigger)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error starting test voice session")
 	}
@@ -490,8 +567,10 @@ func CreateTestVoiceSession(testServerURL string, actionToAdd flows.Action) (flo
 	return session, sprint.Events(), err
 }
 
-// CreateSession creates a session with the given assets
-func CreateSession(assetsJSON json.RawMessage, testServerURL string) (flows.Session, error) {
+// CreateSessionAssets creates assets from given JSON
+func CreateSessionAssets(assetsJSON json.RawMessage, testServerURL string) (flows.SessionAssets, error) {
+	env := envs.NewBuilder().Build()
+
 	// different tests different ports for the test HTTP server
 	if testServerURL != "" {
 		assetsJSON = json.RawMessage(strings.Replace(string(assetsJSON), "http://localhost", testServerURL, -1))
@@ -504,12 +583,182 @@ func CreateSession(assetsJSON json.RawMessage, testServerURL string) (flows.Sess
 	}
 
 	// create our engine session
-	assets, err := engine.NewSessionAssets(source)
+	sa, err := engine.NewSessionAssets(env, source, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating test session assets")
 	}
 
-	eng := engine.NewBuilder().WithDefaultUserAgent("goflow-testing").Build()
-	session := eng.NewSession(assets)
-	return session, nil
+	return sa, nil
+}
+
+type SessionBuilder struct {
+	env         envs.Environment
+	assetsJSON  []byte
+	assetsPath  string
+	flowUUID    assets.FlowUUID
+	engine      flows.Engine
+	contactUUID flows.ContactUUID
+	contactID   flows.ContactID
+	contactName string
+	contactLang envs.Language
+	contactURN  urns.URN
+	triggerMsg  string
+}
+
+func NewSessionBuilder() *SessionBuilder {
+	env := envs.NewBuilder().
+		WithDateFormat(envs.DateFormatDayMonthYear).
+		WithDefaultCountry("US").
+		WithAllowedLanguages([]envs.Language{"eng", "spa"}).
+		Build()
+
+	return &SessionBuilder{
+		env:         env,
+		assetsJSON:  []byte(sessionAssets),
+		flowUUID:    "50c3706e-fedb-42c0-8eab-dda3335714b7",
+		engine:      NewEngine(),
+		contactUUID: flows.ContactUUID(uuids.New()),
+		contactID:   flows.ContactID(123),
+		contactName: "Bob",
+		contactLang: "eng",
+		contactURN:  "tel:+12065551212",
+	}
+}
+
+func (b *SessionBuilder) WithEnvironment(env envs.Environment) *SessionBuilder {
+	b.env = env
+	return b
+}
+
+func (b *SessionBuilder) WithAssetsPath(path string) *SessionBuilder {
+	b.assetsPath = path
+	return b
+}
+
+func (b *SessionBuilder) WithAssets(assetsJSON []byte) *SessionBuilder {
+	b.assetsJSON = assetsJSON
+	return b
+}
+
+func (b *SessionBuilder) WithFlow(flowUUID assets.FlowUUID) *SessionBuilder {
+	b.flowUUID = flowUUID
+	return b
+}
+
+func (b *SessionBuilder) WithContact(uuid flows.ContactUUID, id flows.ContactID, name string, lang envs.Language, urn urns.URN) *SessionBuilder {
+	b.contactUUID = uuid
+	b.contactID = id
+	b.contactName = name
+	b.contactLang = lang
+	b.contactURN = urn
+	return b
+}
+
+func (b *SessionBuilder) WithTriggerMsg(text string) *SessionBuilder {
+	b.triggerMsg = text
+	return b
+}
+
+func (b *SessionBuilder) Build() (flows.Session, flows.Sprint, error) {
+	var err error
+	if b.assetsPath != "" {
+		b.assetsJSON, err = os.ReadFile(b.assetsPath)
+		if err != nil {
+			errors.Wrapf(err, "error reading assets from %s", b.assetsPath)
+		}
+	}
+
+	sa, err := CreateSessionAssets(b.assetsJSON, "")
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error creating session assets")
+	}
+
+	flow, err := sa.Flows().Get(b.flowUUID)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "error getting flow %s from assets", b.flowUUID)
+	}
+
+	var urnz []urns.URN
+	if b.contactURN != "" {
+		urnz = []urns.URN{b.contactURN}
+	}
+
+	contact, err := flows.NewContact(sa,
+		b.contactUUID,
+		b.contactID,
+		b.contactName,
+		b.contactLang,
+		flows.ContactStatusActive,
+		nil,
+		time.Date(2020, 1, 1, 12, 45, 30, 123456, time.UTC),
+		nil,
+		urnz,
+		nil,
+		nil,
+		nil,
+		assets.PanicOnMissing,
+	)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error creating contact")
+	}
+
+	var trigger flows.Trigger
+	if b.triggerMsg != "" {
+		msg := flows.NewMsgIn(flows.MsgUUID(uuids.New()), urns.URN("tel:+12065551212"), nil, b.triggerMsg, nil)
+		trigger = triggers.NewBuilder(b.env, flow.Reference(), contact).Msg(msg).Build()
+	} else {
+		trigger = triggers.NewBuilder(b.env, flow.Reference(), contact).Manual().Build()
+	}
+
+	return b.engine.NewSession(sa, trigger)
+}
+
+func (b *SessionBuilder) MustBuild() (flows.Session, flows.Sprint) {
+	session, sprint, err := b.Build()
+	if err != nil {
+		panic(err)
+	}
+	return session, sprint
+}
+
+// ResumeSession resumes the given session with potentially different assets
+func ResumeSession(session flows.Session, assetsJSON json.RawMessage, msgText string) (flows.Session, flows.Sprint, error) {
+	// reload session with new assets
+	sessionJSON, err := jsonx.Marshal(session)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sa, err := CreateSessionAssets(assetsJSON, "")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// re-use same engine instance
+	eng := session.Engine()
+
+	session, err = eng.ReadSession(sa, sessionJSON, assets.IgnoreMissing)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	msg := flows.NewMsgIn(flows.MsgUUID(uuids.New()), urns.NilURN, nil, msgText, nil)
+
+	sprint, err := session.Resume(resumes.NewMsg(session.Environment(), session.Contact(), msg))
+
+	return session, sprint, err
+}
+
+// EventLog is a utility for testing things which take an event logger function
+type EventLog struct {
+	Events []flows.Event
+}
+
+// NewEventLog creates a new event log
+func NewEventLog() *EventLog {
+	return &EventLog{make([]flows.Event, 0)}
+}
+
+func (l *EventLog) Log(e flows.Event) {
+	l.Events = append(l.Events, e)
 }

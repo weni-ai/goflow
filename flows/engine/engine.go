@@ -3,28 +3,34 @@ package engine
 import (
 	"encoding/json"
 
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
-	"github.com/nyaruka/goflow/utils"
 )
 
 // an instance of the engine
 type engine struct {
-	httpClient              *utils.HTTPClient
-	disableWebhooks         bool
-	maxWebhookResponseBytes int
-	maxStepsPerSprint       int
+	services             *services
+	maxStepsPerSprint    int
+	maxResumesPerSession int
+	maxTemplateChars     int
 }
 
 // NewSession creates a new session
-func (e *engine) NewSession(sa flows.SessionAssets) flows.Session {
-	return &session{
+func (e *engine) NewSession(sa flows.SessionAssets, trigger flows.Trigger) (flows.Session, flows.Sprint, error) {
+	s := &session{
+		uuid:       flows.SessionUUID(uuids.New()),
 		engine:     e,
-		env:        utils.NewEnvironmentBuilder().Build(),
 		assets:     sa,
+		trigger:    trigger,
 		status:     flows.SessionStatusActive,
+		batchStart: trigger.Batch(),
 		runsByUUID: make(map[flows.RunUUID]flows.FlowRun),
 	}
+
+	sprint, err := s.start(trigger)
+
+	return s, sprint, err
 }
 
 // ReadSession reads an existing session
@@ -32,10 +38,10 @@ func (e *engine) ReadSession(sa flows.SessionAssets, data json.RawMessage, missi
 	return readSession(e, sa, data, missing)
 }
 
-func (e *engine) HTTPClient() *utils.HTTPClient { return e.httpClient }
-func (e *engine) DisableWebhooks() bool         { return e.disableWebhooks }
-func (e *engine) MaxWebhookResponseBytes() int  { return e.maxWebhookResponseBytes }
-func (e *engine) MaxStepsPerSprint() int        { return e.maxStepsPerSprint }
+func (e *engine) Services() flows.Services  { return e.services }
+func (e *engine) MaxStepsPerSprint() int    { return e.maxStepsPerSprint }
+func (e *engine) MaxResumesPerSession() int { return e.maxResumesPerSession }
+func (e *engine) MaxTemplateChars() int     { return e.maxTemplateChars }
 
 var _ flows.Engine = (*engine)(nil)
 
@@ -48,39 +54,63 @@ type Builder struct {
 	eng *engine
 }
 
-// NewBuilder creates a new environment builder
+// NewBuilder creates a new engine builder
 func NewBuilder() *Builder {
 	return &Builder{
 		eng: &engine{
-			httpClient:              utils.NewHTTPClient("goflow"),
-			disableWebhooks:         false,
-			maxWebhookResponseBytes: 10000,
-			maxStepsPerSprint:       100,
+			services:             newEmptyServices(),
+			maxStepsPerSprint:    100,
+			maxResumesPerSession: 500,
+			maxTemplateChars:     10000,
 		},
 	}
 }
 
-// WithDefaultUserAgent sets the default user-agent string used for webhook calls
-func (b *Builder) WithDefaultUserAgent(userAgent string) *Builder {
-	b.eng.httpClient = utils.NewHTTPClient(userAgent)
+// WithEmailServiceFactory sets the email service factory
+func (b *Builder) WithEmailServiceFactory(f EmailServiceFactory) *Builder {
+	b.eng.services.email = f
 	return b
 }
 
-// WithDisableWebhooks sets whether webhooks are enabled
-func (b *Builder) WithDisableWebhooks(disable bool) *Builder {
-	b.eng.disableWebhooks = disable
+// WithWebhookServiceFactory sets the webhook service factory
+func (b *Builder) WithWebhookServiceFactory(f WebhookServiceFactory) *Builder {
+	b.eng.services.webhook = f
 	return b
 }
 
-// WithMaxWebhookResponseBytes sets the maximum webhook request bytes
-func (b *Builder) WithMaxWebhookResponseBytes(max int) *Builder {
-	b.eng.maxWebhookResponseBytes = max
+// WithClassificationServiceFactory sets the NLU service factory
+func (b *Builder) WithClassificationServiceFactory(f ClassificationServiceFactory) *Builder {
+	b.eng.services.classification = f
+	return b
+}
+
+// WithTicketServiceFactory sets the ticket service factory
+func (b *Builder) WithTicketServiceFactory(f TicketServiceFactory) *Builder {
+	b.eng.services.ticket = f
+	return b
+}
+
+// WithAirtimeServiceFactory sets the airtime service factory
+func (b *Builder) WithAirtimeServiceFactory(f AirtimeServiceFactory) *Builder {
+	b.eng.services.airtime = f
 	return b
 }
 
 // WithMaxStepsPerSprint sets the maximum number of steps allowed in a single sprint
 func (b *Builder) WithMaxStepsPerSprint(max int) *Builder {
 	b.eng.maxStepsPerSprint = max
+	return b
+}
+
+// WithMaxResumesPerSession sets the maximum number of resumes allowed in a single session
+func (b *Builder) WithMaxResumesPerSession(max int) *Builder {
+	b.eng.maxResumesPerSession = max
+	return b
+}
+
+// WithMaxTemplateChars sets the maximum number of characters allowed from an evaluated template
+func (b *Builder) WithMaxTemplateChars(max int) *Builder {
+	b.eng.maxTemplateChars = max
 	return b
 }
 

@@ -3,16 +3,20 @@ package routers_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/random"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/routers"
 	"github.com/nyaruka/goflow/flows/triggers"
 	"github.com/nyaruka/goflow/test"
-	"github.com/nyaruka/goflow/utils"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -34,105 +38,123 @@ var contactJSON = `{
 }`
 
 func TestRouterTypes(t *testing.T) {
-	assetsJSON, err := ioutil.ReadFile("testdata/_assets.json")
+	assetsJSON, err := os.ReadFile("testdata/_assets.json")
 	require.NoError(t, err)
 
-	server := test.NewTestHTTPServer(49993)
-
-	for typeName := range routers.RegisteredTypes() {
-		testRouterType(t, assetsJSON, typeName, server.URL)
+	for _, typeName := range routers.RegisteredTypes() {
+		testRouterType(t, assetsJSON, typeName)
 	}
 }
 
-type inspectionResults struct {
-	Templates    []string `json:"templates"`
-	Dependencies []string `json:"dependencies"`
-	ResultNames  []string `json:"result_names"`
-}
-
-func testRouterType(t *testing.T, assetsJSON json.RawMessage, typeName string, testServerURL string) {
-	testFile, err := ioutil.ReadFile(fmt.Sprintf("testdata/%s.json", typeName))
+func testRouterType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
+	testPath := fmt.Sprintf("testdata/%s.json", typeName)
+	testFile, err := os.ReadFile(testPath)
 	require.NoError(t, err)
 
 	tests := []struct {
-		Description     string             `json:"description"`
-		Router          json.RawMessage    `json:"router"`
-		ValidationError string             `json:"validation_error"`
-		Results         json.RawMessage    `json:"results"`
-		Inspection      *inspectionResults `json:"inspection"`
+		Description string          `json:"description"`
+		Router      json.RawMessage `json:"router"`
+
+		ReadError         string          `json:"read_error,omitempty"`
+		DependenciesError string          `json:"dependencies_error,omitempty"`
+		Results           json.RawMessage `json:"results,omitempty"`
+		Events            json.RawMessage `json:"events,omitempty"`
+		Templates         []string        `json:"templates,omitempty"`
+		LocalizedText     []string        `json:"localizables,omitempty"`
+		Inspection        json.RawMessage `json:"inspection,omitempty"`
 	}{}
 
-	err = json.Unmarshal(testFile, &tests)
+	err = jsonx.Unmarshal(testFile, &tests)
 	require.NoError(t, err)
 
-	defer utils.SetTimeSource(utils.DefaultTimeSource)
-	defer utils.SetUUIDGenerator(utils.DefaultUUIDGenerator)
-	defer utils.SetRand(utils.DefaultRand)
+	defer dates.SetNowSource(dates.DefaultNowSource)
+	defer uuids.SetGenerator(uuids.DefaultGenerator)
+	defer random.SetGenerator(random.DefaultGenerator)
 
-	for _, tc := range tests {
-		utils.SetTimeSource(utils.NewFixedTimeSource(time.Date(2018, 10, 18, 14, 20, 30, 123456, time.UTC)))
-		utils.SetUUIDGenerator(utils.NewSeededUUID4Generator(12345))
-		utils.SetRand(utils.NewSeededRand(123456))
+	for i, tc := range tests {
+		dates.SetNowSource(dates.NewFixedNowSource(time.Date(2018, 10, 18, 14, 20, 30, 123456, time.UTC)))
+		uuids.SetGenerator(uuids.NewSeededGenerator(12345))
+		random.SetGenerator(random.NewSeededGenerator(123456))
 
-		testName := fmt.Sprintf("test '%s' for action type '%s'", tc.Description, typeName)
+		testName := fmt.Sprintf("test '%s' for router type '%s'", tc.Description, typeName)
 
-		// create unstarted session from our assets
-		session, err := test.CreateSession(assetsJSON, testServerURL)
+		// inject the router into a suitable node in our test flow
+		routerPath := []string{"flows", "[0]", "nodes", "[0]", "router"}
+		assetsJSON = test.JSONReplace(assetsJSON, routerPath, tc.Router)
+
+		// create session assets
+		sa, err := test.CreateSessionAssets(assetsJSON, "")
 		require.NoError(t, err)
 
-		// read the router to be tested
-		router, err := routers.ReadRouter(tc.Router)
-		require.NoError(t, err, "error loading router in %s", testName)
-		assert.Equal(t, typeName, router.Type())
-
-		// get a suitable "holder" flow
-		flow, err := session.Assets().Flows().Get("16f6eee7-9843-4333-bad2-1d7fd636452c")
-		require.NoError(t, err)
-
-		// if not, add it to our flow
-		flow.Nodes()[0].SetRouter(router)
-
-		// if this router is expected to cause flow validation failure, check that
-		err = flow.Validate(session.Assets())
-		if tc.ValidationError != "" {
+		// now try to read the flow, and if we expect a read error, check that
+		flow, err := sa.Flows().Get("16f6eee7-9843-4333-bad2-1d7fd636452c")
+		if tc.ReadError != "" {
 			rootErr := errors.Cause(err)
-			assert.EqualError(t, rootErr, tc.ValidationError, "validation error mismatch in %s", testName)
+			assert.EqualError(t, rootErr, tc.ReadError, "read error mismatch in %s", testName)
 			continue
 		} else {
-			assert.NoError(t, err, "unexpected validation error in %s", testName)
+			assert.NoError(t, err, "unexpected read error in %s", testName)
 		}
 
 		// load our contact
-		contact, err := flows.ReadContact(session.Assets(), json.RawMessage(contactJSON), assets.PanicOnMissing)
+		contact, err := flows.ReadContact(sa, json.RawMessage(contactJSON), assets.PanicOnMissing)
 		require.NoError(t, err)
 
-		trigger := triggers.NewManualTrigger(utils.NewEnvironmentBuilder().Build(), flow.Reference(), contact, nil)
-		_, err = session.Start(trigger)
+		trigger := triggers.NewBuilder(envs.NewBuilder().Build(), flow.Reference(), contact).Manual().Build()
+
+		eng := test.NewEngine()
+		session, _, err := eng.NewSession(sa, trigger)
 		require.NoError(t, err)
 
-		// check results are what we expected
+		// clone test case and populate with actual values
+		actual := tc
+
+		// re-marshal the action
+		actual.Router, err = jsonx.Marshal(flow.Nodes()[0].Router())
+		require.NoError(t, err)
+
 		run := session.Runs()[0]
-		actualResultsJSON, _ := json.Marshal(run.Results())
-		expectedResultsJSON, _ := json.Marshal(tc.Results)
-		test.AssertEqualJSON(t, expectedResultsJSON, actualResultsJSON, "results mismatch in %s", testName)
+		actual.Results, _ = jsonx.Marshal(run.Results())
+		actual.Events, _ = jsonx.Marshal(run.Events())
 
-		// try marshaling the router back to JSON
-		routerJSON, err := json.Marshal(router)
-		test.AssertEqualJSON(t, tc.Router, routerJSON, "marshal mismatch in %s", testName)
-
-		// finally try inspecting this router
-		templates := flow.ExtractTemplates()
-		assert.Equal(t, tc.Inspection.Templates, templates, "inspected templates mismatch in %s", testName)
-
-		dependencies := flow.ExtractDependencies()
-		depStrings := make([]string, len(dependencies))
-		for i := range dependencies {
-			depStrings[i] = dependencies[i].String()
+		if tc.Templates != nil {
+			actual.Templates = flow.ExtractTemplates()
 		}
-		assert.Equal(t, tc.Inspection.Dependencies, depStrings, "inspected dependencies mismatch in %s", testName)
+		if tc.LocalizedText != nil {
+			actual.LocalizedText = flow.ExtractLocalizables()
+		}
+		if tc.Inspection != nil {
+			actual.Inspection, _ = jsonx.Marshal(flow.Inspect(sa))
+		}
 
-		resultNames := flow.ExtractResultNames()
-		assert.Equal(t, tc.Inspection.ResultNames, resultNames, "inspected result names mismatch in %s", testName)
+		if !test.UpdateSnapshots {
+			test.AssertEqualJSON(t, tc.Router, actual.Router, "marshal mismatch in %s", testName)
+
+			// check results are what we expected
+			test.AssertEqualJSON(t, tc.Results, actual.Results, "results mismatch in %s", testName)
+
+			// check events are what we expected
+			test.AssertEqualJSON(t, tc.Events, actual.Events, "events mismatch in %s", testName)
+
+			// check extracted templates
+			assert.Equal(t, tc.Templates, actual.Templates, "extracted templates mismatch in %s", testName)
+
+			// check extracted localized text
+			assert.Equal(t, tc.LocalizedText, actual.LocalizedText, "extracted localized text mismatch in %s", testName)
+
+			// check inspection results
+			test.AssertEqualJSON(t, tc.Inspection, actual.Inspection, "inspection mismatch in %s", testName)
+		} else {
+			tests[i] = actual
+		}
+	}
+
+	if test.UpdateSnapshots {
+		actualJSON, err := jsonx.MarshalPretty(tests)
+		require.NoError(t, err)
+
+		err = os.WriteFile(testPath, actualJSON, 0666)
+		require.NoError(t, err)
 	}
 }
 

@@ -6,30 +6,17 @@ import (
 
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
 )
 
-// Channel represents a means for sending and receiving input during a flow run. It renders as its name in a template,
-// and has the following properties which can be accessed:
-//
-//  * `uuid` the UUID of the channel
-//  * `name` the name of the channel
-//  * `address` the address of the channel
-//
-// Examples:
-//
-//   @contact.channel -> My Android Phone
-//   @contact.channel.name -> My Android Phone
-//   @contact.channel.address -> +12345671111
-//   @input.channel.uuid -> 57f1078f-88aa-46f4-a59a-948a5739c03d
-//   @(json(contact.channel)) -> {"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"}
-//
-// @context channel
+// Channel represents a means for sending and receiving input during a flow run
 type Channel struct {
 	assets.Channel
 }
 
+// NewChannel creates a new channenl
 func NewChannel(asset assets.Channel) *Channel {
 	return &Channel{Channel: asset}
 }
@@ -65,43 +52,31 @@ func (c *Channel) HasRole(role assets.ChannelRole) bool {
 	return false
 }
 
+// HasParent returns whether this channel has a parent
 func (c *Channel) HasParent() bool {
 	return c.Parent() != nil
 }
 
-// Resolve resolves the given key when this channel is referenced in an expression
-func (c *Channel) Resolve(env utils.Environment, key string) types.XValue {
-	switch strings.ToLower(key) {
-	case "uuid":
-		return types.NewXText(string(c.UUID()))
-	case "name":
-		return types.NewXText(c.Name())
-	case "address":
-		return types.NewXText(c.Address())
+// Context returns the properties available in expressions
+//
+//   __default__:text -> the name
+//   uuid:text -> the UUID of the channel
+//   name:text -> the name of the channel
+//   address:text -> the address of the channel
+//
+// @context channel
+func (c *Channel) Context(env envs.Environment) map[string]types.XValue {
+	return map[string]types.XValue{
+		"__default__": types.NewXText(c.Name()),
+		"uuid":        types.NewXText(string(c.UUID())),
+		"name":        types.NewXText(c.Name()),
+		"address":     types.NewXText(c.Address()),
 	}
-
-	return types.NewXResolveError(c, key)
-}
-
-// Describe returns a representation of this type for error messages
-func (c *Channel) Describe() string { return "channel" }
-
-// Reduce is called when this object needs to be reduced to a primitive
-func (c *Channel) Reduce(env utils.Environment) types.XPrimitive {
-	return types.NewXText(c.Name())
-}
-
-// ToXJSON is called when this type is passed to @(json(...))
-func (c *Channel) ToXJSON(env utils.Environment) types.XText {
-	return types.ResolveKeys(env, c, "uuid", "name", "address").ToXJSON(env)
 }
 
 func (c *Channel) String() string {
 	return fmt.Sprintf("%s (%s)", c.Address(), c.Name())
 }
-
-var _ types.XValue = (*Channel)(nil)
-var _ types.XResolvable = (*Channel)(nil)
 
 // ChannelAssets provides access to all channel assets
 type ChannelAssets struct {
@@ -115,9 +90,9 @@ func NewChannelAssets(channels []assets.Channel) *ChannelAssets {
 		all:    make([]*Channel, len(channels)),
 		byUUID: make(map[assets.ChannelUUID]*Channel, len(channels)),
 	}
-	for c, asset := range channels {
+	for i, asset := range channels {
 		channel := NewChannel(asset)
-		s.all[c] = channel
+		s.all[i] = channel
 		s.byUUID[channel.UUID()] = channel
 	}
 	return s
@@ -131,19 +106,26 @@ func (s *ChannelAssets) Get(uuid assets.ChannelUUID) *Channel {
 // GetForURN returns the best channel for the given URN
 func (s *ChannelAssets) GetForURN(urn *ContactURN, role assets.ChannelRole) *Channel {
 	// if caller has told us which channel to use for this URN, use that
-	if urn.Channel() != nil {
+	if urn.Channel() != nil && urn.Channel().HasRole(role) {
 		return s.getDelegate(urn.Channel(), role)
 	}
 
 	// tel is a special case because we do number based matching
 	if urn.URN().Scheme() == urns.TelScheme {
-		countryCode := utils.DeriveCountryFromTel(urn.URN().Path())
+		countryCode := envs.DeriveCountryFromTel(urn.URN().Path())
 		candidates := make([]*Channel, 0)
 
 		for _, ch := range s.all {
-			if ch.HasRole(role) && ch.SupportsScheme(urns.TelScheme) && (countryCode == "" || countryCode == ch.Country()) && !ch.HasParent() {
-				candidates = append(candidates, ch)
+			// skip if not tel and not sendable
+			if !ch.SupportsScheme(urns.TelScheme) || !ch.HasRole(role) {
+				continue
 			}
+			// skip if international and channel doesn't allow that
+			if ch.Country() != "" && countryCode != "" && countryCode != ch.Country() && !ch.AllowInternational() {
+				continue
+			}
+
+			candidates = append(candidates, ch)
 		}
 
 		var channel *Channel
@@ -174,6 +156,8 @@ func (s *ChannelAssets) GetForURN(urn *ContactURN, role assets.ChannelRole) *Cha
 		if channel != nil {
 			return s.getDelegate(channel, role)
 		}
+
+		return nil
 	}
 
 	return s.getForSchemeAndRole(urn.URN().Scheme(), role)
@@ -181,7 +165,7 @@ func (s *ChannelAssets) GetForURN(urn *ContactURN, role assets.ChannelRole) *Cha
 
 func (s *ChannelAssets) getForSchemeAndRole(scheme string, role assets.ChannelRole) *Channel {
 	for _, ch := range s.all {
-		if ch.HasRole(assets.ChannelRoleSend) && ch.SupportsScheme(scheme) {
+		if ch.HasRole(role) && ch.SupportsScheme(scheme) {
 			return s.getDelegate(ch, role)
 		}
 	}

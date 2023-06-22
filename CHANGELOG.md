@@ -1,3 +1,1354 @@
+v0.144.3
+----------
+ * Fix tests broken by new scheme addition
+
+v0.144.2
+----------
+ * Update to latest gocommon to get Instagram scheme type
+
+v0.144.1
+----------
+ * Update to latest gocommon
+
+v0.144.0
+----------
+ * Add extraction field to webhook_called events
+
+v0.143.4
+----------
+ * Use WebhookCall.ResponseJSON for @webhook and @result.*.extra
+ * Updated translations from Transifex
+
+v0.143.3
+----------
+ * Add more options for customizing contact used by test.SessionBuilder
+
+v0.143.2
+----------
+ * Add test.SessionBuilder to make it easier to build sessions for testing
+
+v0.143.1
+----------
+ * Include node on segments, revert change to add segments without destinations
+
+v0.143.0
+----------
+ * For random router results, input should be raw random number, value is the bucket
+ * Include segments with no destination
+ * Add operand and time to flows.Segment
+
+v0.142.1
+----------
+ * Put back engine.NewSprint which mailroom uses for surveyor submissions
+
+v0.142.0
+----------
+ * Add Segments() to Sprint which returns all complete segments in that sprint
+ * Simplify error message that users see if they have label action with no input
+
+v0.141.0
+----------
+ * Rework Context into Scope, expose functions via a root scope, and support shadowing
+ * Cleanup function exposure in contexts and add more tests
+ * Drop unused child.run.* and parent.run.* parts of the context except .status as used subflow splits
+ * Add support for anonymous functions in excellent
+ * Fix function equality/inequality for consistency
+ * Use syntax tree for refactoring operations
+ * Excellent evaluation should parse to syntax tree as first step
+ * Let Excellent functions know their own name to make better error messages
+ * Only msg resumes should set input, all other resumes clear it
+
+v0.140.1
+----------
+ * Update locale files (adds empty cs and mn translations)
+
+v0.140.0
+----------
+ * Add reverse excellent function
+
+v0.139.1
+----------
+ * Limit webhook URLs to 2048 chars
+
+v0.139.0
+----------
+ * Add sort() excellent function
+
+v0.138.0
+----------
+ * Add engine property for maximum resumes per session
+
+v0.137.0
+----------
+ * Simplify contactql queries after parsing
+
+v0.136.5
+----------
+ * Update to latest gocommon
+ * Update locale files
+
+v0.136.4
+----------
+ * Improve validator error message with startswith tag
+
+v0.136.3
+----------
+ * Tweak validation to work when struct doesn't use json tags
+
+v0.136.2
+----------
+ * Fix trigger docs
+
+v0.136.1
+----------
+ * Add Session.FindStep
+
+v0.136.0
+----------
+ * Rework WebhookCall and HTTPLog to overlap as much as possible
+
+v0.135.0
+----------
+ * Get rid of ticket subjects
+
+v0.134.3
+----------
+ * Add number of retries to webhook_called events
+
+v0.134.2
+----------
+ * Fix word_slice when passing custom delimiters
+
+v0.134.1
+----------
+ * Re-evaluate dynamic groups after opening tickets
+
+v0.134.0
+----------
+ * Add support for variable user references to open ticket actions
+
+v0.133.1
+----------
+ * Update to latest gocommon/phonenumbers
+
+v0.133.0
+----------
+ * If open ticket action doesn't specify a topic, default to General
+ * Expose topic instead of subject in context for ticket objects
+
+v0.132.1
+----------
+ * Update to latest gocommon and add webchat URN schemes
+
+v0.132.0
+----------
+ * Require either a subject or a topic to open a ticket but not both
+ * Add assignee as optional field to open ticket actions
+ * Add topics to tickets
+
+v0.131.1
+----------
+ * Move slot param for LUIS classifiers to last
+ * Add util cmd for testing classifier services
+
+v0.131.0
+----------
+ * Update to LUIS API v3.0
+
+v0.130.2
+----------
+ * Add support for tickets queries in elastic
+
+v0.130.1
+----------
+ * Also simplify converting queries to elastic
+
+v0.130.0
+----------
+ * Simplify parsing contact queries
+ * Add support for query property tickets
+
+v0.129.0
+----------
+ * Rework contactql to separate query parsing, validation and evaluation
+
+v0.128.0
+----------
+ * Add unique excellent function to get unique elements in an array
+
+v0.127.0
+----------
+ * Update to latest gocommon
+
+v0.126.2
+----------
+ * Updated translations from Transifex
+ * Replace usages of soon to be deprecated ioutil
+ * Allow Msg type triggers to have connections
+
+v0.126.1
+----------
+ * Update locale files
+
+v0.126.0
+----------
+ * Use latest gocommon, replace all nulls and escaped nulls when parsing bodies as JSON
+
+v0.125.2
+----------
+ * Add assignee (optional) to ticket_opened events
+ * Cleanup from linter suggestions
+
+v0.125.1
+----------
+ * Strip out invalid UTF-8 from webhook responses before trying to convert to JSON
+
+v0.125.0
+----------
+ * Update to latest gocommon
+
+v0.124.4
+----------
+ * Make users more like contacts in expressions by giving them an always non-empty default and a first_name property
+
+v0.124.3
+----------
+ * Fix inspecting user dependencies in flows
+
+v0.124.2
+----------
+ * Change default property of user objects in expressions to be the name to match contacts
+
+v0.124.1
+----------
+ * Fix remove_first_word when input contains non-ASCII
+
+v0.124.0
+----------
+ * Add User assets and use for Ticket.Assignee and Trigger.user
+
+v0.123.0
+----------
+ * Add SUM() excellent function
+ * Remove default_language from envs and usa first item of allowed_languages as the default
+
+v0.122.0
+----------
+ * Allow build failing on codecov uploads again
+ * Get rid of ticket references
+
+v0.121.0
+----------
+ * Don't generate separate completion/functions doc files
+
+v0.120.1
+----------
+ * Tweak test.AssertEqualJSON to take msgAndArgs param like asserts library
+
+v0.120.0
+----------
+ * Add ticket as property to @trigger in context
+ * Add new ticket type trigger with a closed event
+
+v0.119.0
+----------
+ * Remove legacy_extra issue type
+
+v0.118.2
+----------
+ * Add @ticket to the root context as the last opened ticket
+
+v0.118.1
+----------
+ * Add way to create new ticket reference instances and add contact tickets to editor autocompletion
+
+v0.118.0
+----------
+ * Add contact tickets to expression context
+
+v0.117.0
+----------
+ * Add WA template translations namespace
+
+v0.116.1
+----------
+ * Use standard hypenated BCP47 locale codes consistently
+
+v0.116.0
+----------
+ * Test on go 1.16.x
+ * Update to latest gocommon datefmt and pass locale to all date formatting calls
+
+v0.115.2
+----------
+ * Fix dtone API endpoint URL and use external IDs
+
+v0.115.1
+----------
+ * Fix sometimes retrying successful SMTP sends
+
+v0.115.0
+----------
+ * Add support for retrying SMTP sends
+
+v0.114.0
+----------
+ * Fully implement airtime service using new DT One API
+
+v0.113.3
+----------
+ * Fix resuming a parent run when flow is missing
+
+v0.113.2
+----------
+ * Add last missing translations for es and pt-BR
+
+v0.113.1
+----------
+ * Update Spanish locale and gocommon dependency
+
+v0.113.0
+----------
+ * Don't blow up building context if node is null
+ * Add contact language to resthook payload
+
+v0.112.2
+----------
+ * Add accessor for URN on ActivatedDialWait
+
+v0.112.1
+----------
+ * Log error event and skip when attachment is longer than 2048 limit
+
+v0.112.0
+----------
+ * Include resume and node in migration expression parsing
+ * Add dial types of waits and resumes
+
+v0.111.0
+----------
+ * Move to ElasticSearch v7 clients (backwards incompatible change)
+
+v0.110.2
+----------
+ * Remove forward_ivr action and ivr_forwarded event
+
+v0.110.1
+----------
+ * Spanish translations from transifex
+
+v0.110.0
+----------
+ * Combine the completion.json and functions.json editor support files into a single editor.json file
+ * Remove generated docs from repo
+
+v0.109.4
+----------
+ * Fix release workflow
+
+v0.109.3
+----------
+ * Fix release workflow
+
+v0.109.2
+----------
+ * Don't use fuzzy entries in po files
+
+v0.109.1
+----------
+ * Add forward_ivr action and ivr_forwarded event
+
+v0.109.0
+----------
+ * Add @node.(uuid|visit_count) to context
+
+v0.108.0
+----------
+ * Rename messaging_passive to messaging_background
+
+v0.107.2
+----------
+ * Disallow labeling actions in passive flows
+
+v0.107.1
+----------
+ * Add float64 workaround for exponent expressions with non-integer exponents
+
+v0.107.0
+----------
+ * Add new flow type for passive messaging flows
+ * Update to gocommon v1.7.1 to get fix for phone number parsing
+
+v0.106.3
+----------
+ * Engine evaluator for contact sql should support != x for number and datetime values
+
+v0.106.2
+----------
+ * Update to latest gocommon
+
+v0.106.1
+----------
+ * URN and channel modifiers should error with invalid URNs and channels
+
+v0.106.0
+----------
+ * Getting channel for URN should always consider the role on the channels
+ * Update to latest gocommon which adds rocketchat scheme
+ * SetPreferredChannel only when the channel has the send role
+
+v0.105.5
+----------
+ * Support sorting contacts by last seen on attribute
+
+v0.105.4
+----------
+ * Add support for Bengali numerals in number tests
+
+v0.105.3
+----------
+ * Add support for Eastern Arabic numerals in number tests
+
+v0.105.2
+----------
+ * Clear a run's expiration when it exits
+ * Unwind accumulated run expirations as child runs complete
+ * Include country in msg templating on msg_created events
+
+v0.105.1
+----------
+ * Update to latest gocommon v1.5.3
+
+v0.105.0
+----------
+ * Bump some deps, test on go 1.15 and fix bug found by 1.15 compiler
+
+v0.104.1
+----------
+ * Update to gocommon v1.5.1
+
+v0.104.0
+----------
+ * Use dummy value to avoid sending empty emails
+ * Rework smtpx package for sending emails in places besides flows
+ * Don't parse numbers in scientific notation
+
+v0.103.1
+----------
+ * Update to latest gocommon v1.5.0
+ * Run environment's DefaultLanguage and DefaultLocale methods should use contact language
+
+v0.103.0
+----------
+ * Update to latest gocommon
+ * Update terminology around groups with queries
+
+v0.102.1
+----------
+ * Add archived contact status
+
+v0.102.0
+----------
+ * Update to latest gocommon
+
+v0.101.2
+----------
+ * Add empty localizations for all the languages used in RapidPro
+
+v0.101.1
+----------
+ * Fix test
+
+v0.101.0
+----------
+ * Use language codes (e.g. en-us) rather than locale names (en_US) for docs directories
+
+v0.100.1
+----------
+ * Add completed pt_BR translation
+
+v0.100.0
+----------
+ * Add last_seen_on to contacts and expose in expressions and queries
+
+v0.99.0
+----------
+ * Rework elastic query generation so that all errors are caught at parsing stage
+ * Allow URN inequality in elastic searches
+
+v0.98.0
+----------
+ * Rework error handling in contactql so more errors are caught during parsing and have associated codes
+
+v0.97.0
+----------
+ * Re-add classifier_called events for backward compatibility
+ * Groups modifier should generate error if asked to operate on blocked or stopped contact
+ * Move modifiers package out of actions package
+ * ContactQL parser errors should contain more info
+
+v0.96.0
+----------
+ * Reorganize validation code so utils doesn't have to know about tags defined higher up
+ * Clone the test session during doc generation so actions always start with the same session
+ * Add action to change contact status
+ * Add historical information to triggers about the session that triggered them and use to prevent looping
+
+v0.95.1
+----------
+ * Improve documentation of call_webhook action
+
+v0.95.0
+----------
+ * Use latest wit.ai API version
+ * Allow searching with values containing single quotes
+ * Add user and origin fields to manual triggers
+ * Add builder for triggers
+ * Pass language to bothub API calls
+
+v0.94.2
+----------
+ * Use jsonx.Marshal consistently
+
+v0.94.1
+----------
+ * Add IsQueryError util
+
+v0.94.0
+----------
+ * Move all location stuff from utils to envs
+ * Simplify resolving locations from environments
+ * Refactor field modifiers to take raw values and location parsing to not require a session
+
+v0.93.1
+----------
+ * Fix clearing all URNs
+
+v0.93.0
+----------
+ * Add urns modifier to replace all the URNs on a contact
+
+v0.92.0
+----------
+ * Move elastic functionality from mailroom
+
+v0.91.1
+----------
+ * Fix clearing of fields
+
+v0.91.0
+----------
+ * Move generic PO stuff into utils/i18n
+
+v0.90.0
+----------
+ * Allow querying contacts by UUID
+ * Move i18n package under flows to avoid confusion with locales package
+ * Add completion to localized documentation
+
+v0.89.0
+----------
+ * Tweak change language functionality to allow missing translations
+ * Add country to template translations and use when resolving templates
+
+v0.88.0
+----------
+ * Add support for localized documentation
+
+v0.87.0
+----------
+ * Disallow opening tickets, starting sessions and sending broadcasts when doing batch start
+ * Add ability to change the language of a flow
+ * Update our format_datetime docs to properly show range of 01-24
+ * Fix evaluation of legacy vars in other-contacts actions
+
+v0.86.2
+----------
+ * Fix spelling of Readact
+
+v0.86.1
+----------
+ * Do redaction of access keys from HTTP logs
+
+v0.86.0
+----------
+ * Add open_ticket actions and ticket_opened events
+
+v0.85.0
+----------
+ * Add new service_called event to be used for classifiers and ticketers etc
+
+v0.84.0
+----------
+ * Replace contact blocked and stopped fields with status field
+ * Rename blocked and stopped modifiers to contact status modifier
+
+v0.83.1
+----------
+ * Fix anywhere we truncate strings to do it by rune
+
+v0.83.0
+----------
+ * Add blocked and stopped modifiers and events
+ * Add blocked and stopped fields to contact
+
+v0.82.0
+----------
+ * Fix default to understand objects with defaults
+
+v0.81.0
+----------
+ * Rework httpx to replace NewTrace with NewRequest+DoTrace
+ * Separate out the header part of response traces from the body which won't always be valid UTF-8
+
+v0.80.0
+----------
+ * ivr_created events should include language of translated text
+
+v0.79.1
+----------
+ * Include 3-char language code as extra header in PO files
+
+v0.79.0
+----------
+ * Add custom Source-Flows header to exported PO files
+ * Make router categories inspectable
+ * Importing of translations into flows
+
+v0.78.1
+----------
+ * Add decode_html Excellent function
+ * Start of i18n work
+ * Prevent XText.Slice from panicking
+
+v0.78.0
+----------
+ * Add support for extracting the "base" translation of a flow
+ * Allow queries on URNs to check if they are set or not
+ * Add Language.ToISO639_2()
+ * Make flowrunner easier to use by defaulting to first flow in the assets
+ * Default to current version in flowmigrate cmd
+ * Rework group asset loading so that parsing is not deferred
+ * Override environment country if contact has preferred channel with country
+
+v0.77.4
+----------
+ * Fix loading flow assets that are new spec but also have metadata section
+
+v0.77.3
+----------
+ * Update README
+
+v0.77.2
+----------
+ * Update README
+
+v0.77.1
+----------
+ * Fix not passing access config correctly to webhook services
+
+v0.77.0
+----------
+ * Allow http services to be configured with a list of disallowed hosts
+
+v0.76.3
+----------
+ * fix @legacy_extra issue on routers
+ * update gomobile instructions
+
+v0.76.2
+----------
+ * Add trim, trim_left and trim_right excellent functions
+
+v0.76.1
+----------
+ * Sort issues by node order
+ * Add issues to report on invalid regex and usage of @legacy_extra
+
+v0.76.0
+----------
+ * Validate language codes in contact queries
+ * Disallow group queries against group names that don't exist
+
+v0.75.1
+----------
+ * Remove contacts from broken groups
+
+v0.75.0
+----------
+ * Handle missing groups on contact creation
+ * Fix != with multiple values and add support for group attribute in contact queries
+ * Improve docs for operators
+
+v0.74.0
+----------
+ * Use jsonx functions for all JSON marshal/unmarshal
+ * Add support for removing a URN to the urns modifier
+ * Groups modifier should log errors for dynamic groups
+ * Rename snapshot flag to -update
+
+v0.73.0
+----------
+ * Include translation language with missing dependency issues
+
+v0.72.2
+----------
+ * Allow flow inspection without assets
+
+v0.72.1
+----------
+ * Quote telephone numbers in contact queries
+ * Tweak parsing of phone numbers in contact queries
+
+v0.72.0
+----------
+ * Rename "problems" to "issues"
+
+v0.71.3
+----------
+ * Implement missing_dependency as a type of problem
+ * Add framework for checking for problems during flow inspection
+
+v0.71.2
+----------
+ * Rework dependency and template extraction to include actions and routers
+
+v0.71.1
+----------
+ * Channels with no country are implicitly international
+
+v0.71.0
+----------
+ * Add field to channel assets which determines whether they should try to send internationally
+
+v0.70.0
+----------
+ * Make cloning a flow definition more deterministic
+ * Update actions to log error events when dependencies are missing
+ * Interpret contact queries which are formatted phone numbers as tel = queries
+
+v0.69.0
+----------
+ * Move JSON utils into their own package
+ * Track node UUIDs of dependencies
+
+v0.68.0
+----------
+ * Convert dependency inspection output to list of things with type attribute
+ * Replace Flow.CheckDepedencies and CheckDependenciesRecursive with passing assets to Inspect
+
+v0.67.1
+----------
+ * Update to gocommon v1.2.0
+
+v0.67.0
+----------
+ * Rename Flow.Validate to Flow.CheckDependencies for clarity
+ * Create error event when webhook response too big
+ * Rework webhook calls to use same calling code as other HTTP services
+
+v0.66.3
+----------
+ * Allow globals with empty values
+
+v0.66.2
+----------
+ * Add mobile binding for IsVersionSupported
+ * Re-add version check to ReadFlow
+
+v0.66.1
+----------
+ * Match evaluation of contact queries in ES
+
+v0.66.0
+----------
+ * Fix problems with contact searching and add support for URN as attribute
+
+v0.65.0
+----------
+ * Ignore content-type headers and try to parse all webhook responses as JSON
+ * Update ContactQL to interpret implicit conditions which are URNs as scheme=path
+
+v0.64.11
+----------
+ * Limit the size of evaluated templates and truncate anything bigger
+
+v0.64.10
+----------
+ * Stringify contactql like the queries they came from
+ * Trim webhook_called request traces to 10K same as response traces
+ * Only set extra on webhook result if less than 10000 bytes
+
+v0.64.9
+----------
+ * Allow getting current context even for ended sessions
+
+v0.64.8
+----------
+ * Fix another panic during context walking
+
+v0.64.7
+----------
+ * Fix panic in context walking
+
+v0.64.6
+----------
+ * Add support for marshaling XObjects with their defaults, and tool for walking the context to find objects
+
+v0.64.5
+----------
+ * Fix creation of no-nil interface to nil structs in context
+
+v0.64.4
+----------
+ * Make it easier to get current expression context of a waiting session
+
+v0.64.3
+----------
+ * Allow webhook calls with GET method to have bodies
+
+v0.64.2
+----------
+ * Include parent result references in flow inspection
+
+v0.64.1
+----------
+ * Add support for jitter in webhook retries
+
+v0.64.0
+----------
+ * Make http retrying available to all services which use HTTP
+ * Fix parsing out relative date value during migration of date tests
+
+v0.63.1
+----------
+ * Perform URL validation in call_webhook and skip action appropriately
+
+v0.63.0
+----------
+ * Loosen email regex used by has_email test
+ * Allow cloning of JSON flow definitions not tied to any spec version
+
+v0.62.0
+----------
+ * Render email_sent events in flowrunner
+ * Allow flowmigrate to take a target version argument
+ * Implement 13.1 migration as adding UUID to semd_msg.templating
+
+v0.61.0
+----------
+ * Implement email as a service
+
+v0.60.1
+----------
+ * Fix re-evaluating dynamic groups when query references non-existent field
+
+v0.60.0
+----------
+ * Add @globals to completion
+ * Add topic to send_msg actions
+
+v0.59.0
+----------
+ * Validate run summary JSON passed to flow action triggers
+ * Expose keyword match on trigger in context
+
+v0.58.0
+----------
+ * Give services their own HTTP clients
+ * Allow webhook service to take a map of deafult header values
+
+v0.57.0
+----------
+ * Add globals to evaluation context as @globals
+ * Add global as new asset type
+
+v0.56.3
+----------
+ * DTOne client should record http log for timeouts
+
+v0.56.2
+----------
+ * Fix migrating save actions with URN fields
+
+v0.56.1
+----------
+ * Tweak criteria for deciding whether to try reading a flow as legacy
+
+v0.56.0
+----------
+ * Fix docstring for UPPER()
+ * Rework ReadFlow to accept legacy flows too
+ * Move legacy package inside flows/definition
+
+v0.55.0
+----------
+ * Update start_session action to use escaping when evaluating the contact query
+ * Add support for escaping expressions in templates
+
+v0.54.3
+----------
+ * Relax requirement for field assets to have UUID set since engine doesn't use this
+
+v0.54.2
+----------
+ * Fix naming in mobile bindings
+
+v0.54.1
+----------
+ * Fix docstring for UPPER()
+
+v0.54.0
+----------
+ * NewEnvironmentBuilder() -> envs.NewBuilder() to match engine.NewBuilder()
+ * Include classifiers in flow dependency inspection
+
+v0.53.1
+----------
+ * Add classification service for Bothub
+
+v0.53.0
+----------
+ * Record arrays of http logs on classifier_called and airtime_transferred events
+
+v0.52.1
+----------
+ * Modify grammar to allow result names that start with underscores
+
+v0.52.0
+----------
+ * All service factory methods should return an error if service can't be returned
+ * Rework airtime transfer nodes to function more like NLU nodes
+ * Add classification service implementation for LUIS
+
+v0.51.0
+----------
+ * Add NLU support: a classify action, a classification service and various router tests
+
+v0.50.4
+----------
+ * Revert change to operands for media waits
+
+v0.50.3
+----------
+ * Fix migrating operands on rulesets waiting for media
+ * Change autocompletion type of related_run.results to any since we can't autocomplete it
+
+v0.50.2
+----------
+ * Fix migration of localization when flow has unused base translations
+
+v0.50.1
+----------
+ * Have a single HTTPClient on the engine instead of every service having its own
+
+v0.50.0
+----------
+ * Fix formatting runsummary with missing flow
+ * Add contact_query field to start_session actions
+ * Rework services so they take a session and resolve to a provider that does the work
+
+v0.49.0
+----------
+ * Rework webhook calling code as a service and fix not saving result when connection errors
+
+v0.48.2
+----------
+ * Include sender and recipient in airtime events
+
+v0.48.1
+----------
+ * Add .Source() to SessionAssets interface
+
+v0.48.0
+----------
+ * Unexport things that no longer need to be exported now that we've ditched extensions, clean up names of typed things
+ * Remove transferto extension functionality and instead have standard transfer_airtime action which defers to an airtime service
+
+v0.47.3
+----------
+ * completions.json should include section for session-less contexts
+
+v0.47.2
+----------
+ * Add FlowReference to FlowRun interface and add some more tests
+
+v0.47.1
+----------
+ * Renamed errored statuses to failed, replace fatal error events with failure events
+
+v0.47.0
+----------
+ * Allow loading of runs with missing flows
+ * A terminal enter_flow action should leave existing runs as completed instead of interrupted
+ * Make documented item titles into actual links so it's easier to get the link of a particular item in the docs
+
+v0.46.0
+----------
+ * Add UUID to assets.Field
+
+v0.45.2
+----------
+ * Fix parsing context references like foo.0
+
+v0.45.1
+----------
+ * ContactSQL query parsing should error if URN schenme used when URN redaction is enabled, and validate fields
+
+v0.45.0
+----------
+ * urn_parts should error for non-URNs and so Wrap migrated urn_parts expressions with default to catch errors
+ * Migrate non-tel URN types using urn_parts(..).path
+ * Redacted URNs should still have scheme, and format_urn should work for redacted URNs
+
+v0.44.4
+----------
+ * Set redaction policy in visitor constructor for contactql
+
+v0.44.3
+----------
+ * Fix parsing of implicit conditions in contactql
+
+v0.44.2
+----------
+ * Add UUID() to Session interface
+
+v0.44.1
+----------
+ * Make trigger.params null for trigger types that don't use it, non-null for those that do
+
+v0.44.0
+----------
+ * Add UUID field to sessions
+ * Rework trigger.params to be an XObject and always non-null in expressions
+ * Implement a week_number function which matches Excel's WEEKNUM
+
+v0.43.2
+----------
+ * rename voice trigger to be more consistent
+
+v0.43.1
+----------
+ * add ivr flow trigger constructor
+
+v0.43.0
+----------
+ * Allow array lookups like foo.0
+ * More re-organization of utils code into smaller packages
+
+v0.42.0
+----------
+ * Move Environment type and environment based date parsing to new envs package
+ * Move Date and TimeOfDay types to new dates package
+ * Do template and dependency enumeration by reflection
+
+v0.41.18
+----------
+ * Drop current template rewriting functionality which isn't used and can't be used with migrations
+ * Generate context map from docstrings
+
+v0.41.17
+----------
+ * Add SetURN function to Msg
+ * Fix localization UUID in test action holder flow
+ * Update send_email action to allow localization of subject and body
+ * Reorganize docgen code to make it easier to add new doc outputs
+
+v0.41.16
+----------
+ * Allow setting channel on a non-tel URN if it doesn't have a channel
+ * Deprecate parent.run and child.run in the context and move those fields up one level
+
+v0.41.15
+----------
+ * Tweak to goflow interfaces to allow introspection into contactql
+ * Include external ID of msg on input expression context
+
+v0.41.14
+----------
+ * Fix start_session when create_contact is true
+
+v0.41.13
+----------
+ * Fix index out of bounds panic when transation for item exists but has less strings than original
+
+v0.41.12
+----------
+ * Fix format excellent function when passed a nil
+ * Fix parsing of 12AM and 12PM times
+
+v0.41.11
+----------
+ * parse_json should error for invalid JSON
+ * Switch to faster json.Valid for checking JSON validity
+
+v0.41.10
+----------
+ * Add foreach_value function to allow us to keep legacy webhook payloads the same
+ * Make @results and @run.results the same
+
+v0.41.9
+----------
+ * NOOP if there are no rceipients for start_session and send_broadcast
+ * Update send_broadcast and start_session to accept a URN in legacy_vars
+
+v0.41.8
+----------
+ * Use std lib function to check HTTP headers
+
+v0.41.7
+----------
+ * Remapping UUIDs during cloning must include UUIDs which are values in arrays
+
+v0.41.6
+----------
+ * has_group can take optional second parameter which is group name.. used only in dependency inspection
+
+v0.41.5
+----------
+ * Fix cloning of UI sections
+
+v0.41.4
+----------
+ * Check that numbers are actually valid in our has_phone test
+
+v0.41.3
+----------
+ * Handle missing ruleset types in legacy flows
+
+v0.41.2
+----------
+ * handle no media type in our migration
+
+v0.41.1
+----------
+ * Include node UUIDs in result infos returned from flow inspection
+
+v0.41.0
+----------
+ * Legacy flow migration should just ignore invalid actionset/rule destinations
+ * Drop includeUI as an option for flow migration and just always include it
+
+v0.40.3
+----------
+ * Re-organize test utils so they're all in the test package
+
+v0.40.2
+----------
+ * Add FixedUUID4Generator for testing
+
+v0.40.1
+----------
+ * Make recursion optional again during flow validation
+
+v0.40.0
+----------
+ * Add temporary Flow.MarshalWithInfo to aid with moving mailroom to new endpoint
+ * Split up flow inspection and dependency validation and don't embed inspection results in the flow definition
+
+v0.39.4
+----------
+ * Add support for cloning flows using generic JSON representations
+
+v0.39.3
+----------
+ * Handle malformed single message campaign event flows
+
+v0.39.2
+----------
+ * Fix IsLegacyDefinition
+
+v0.39.1
+----------
+ * (Re)allow inspecting without session assets
+
+v0.39.0
+----------
+ * Allow igoring of missing flow assets like any other asset type
+ * Simplify the expression used to emulate legacy webhook payloads
+ * Do structural validation in ReadFlow so flow returned from that is always valid
+
+v0.38.3
+----------
+ * Switch to new library for UUID generation
+ * Expose current flow spec version in mobile bindings
+
+v0.38.2
+----------
+ * Fix send_broadcast and start_session actions so telephone numbers are normalized
+
+v0.38.1
+----------
+ * properly return template dependencies for flows
+
+v0.38.0
+----------
+ * Rework creating and starting sessions so sessions no longer exist in limbo state between the two
+ * Add @webhook as shortcut to .extra of last webhook result
+ * Make URLJoin honor absolute urls
+
+v0.37.3
+----------
+ * Omit empty variables in message templates
+ * Router failing to pick category should be fatal error event - not hard error
+ * Match number like .5 and 1OO (o's) as 1)
+ * Don't include quick replies and attachments whih both error and evaluate to empty
+
+v0.37.2
+----------
+ * fix text_slice for unicode strings
+
+v0.37.1
+----------
+ * @fields defaults to table like @results
+ * Add default values to @run, @parent, @parent.run, @child, @child.run
+
+v0.37.0
+----------
+ * Add TemplateIncluder to ease inclusion of templates as strings, slices or maps
+ * Remove left() and right(), replace with text_slice()
+ * Re-add defaults for several context objects
+ * Validate that switch case tests are registered XTESTs
+ * Allow passing count of replacements to replace()
+ * Allow empty results, fix empty category caltulations
+
+v0.36.2
+----------
+ * accept text/javascript as a content type in webhooks
+
+v0.36.1
+----------
+ * better error message for not being able to resume
+
+v0.36.0
+----------
+ * Bump current flow spec version to 13
+
+v0.35.0
+----------
+ * Migrate date_ tests to set delta value in UI config
+ * is_text_eq -> has_only_text
+ * @child and @parent should mirror root of context, not @run
+
+v0.34.1
+----------
+ * Add format_results and migrate @flow to @(format_results(results))
+ * Add type-aware format() function 
+
+v0.34.0
+----------
+ * dict/keys -> object/properties
+ * Split length() into count() and text_length()
+ * Support != operator in contact queries
+ * Extract operators into their own functions which can then be documented and have live examples
+
+v0.33.9
+----------
+ * Ingore broken recording dicts on legacy say actions
+ * Add is_error as a regular function and has_error as a router case test
+ * Fix JSONing time values
+
+v0.33.8
+----------
+ * Expressions refactor
+
+v0.33.7
+----------
+ * Ignore errors migrating legacy expressions
+ * Regexes for migrating context references
+
+v0.33.6
+----------
+ * Ignore empty webhook headers during flow migration and validate that header namews are valid during validation
+ * ReadFlow should maintain UI.. but as raw JSON
+ * Flowrunner improvements
+
+v0.33.5
+----------
+ * Fix routing after a timeout
+
+v0.33.4
+----------
+ * Ensure an error from a resume is logged to the run
+
+v0.33.3
+----------
+ * Fix auditing context refs like foo.0
+
+v0.33.2
+----------
+ * Add NewActivatedMsgWait
+
+v0.33.1
+----------
+ * Simplify resuming sessions so we only look at the wait on the actual node
+ * Use relative timeout value in activated wait and msg_wait event
+
+v0.33.0
+----------
+ * Add category_uuid to timeouts on waits, migrate legacy timeout rules to that
+
+v0.32.1
+----------
+ * Operand of group split should be @contact.groups
+ * Migrate a ruleset of type contact_field that splits on @contact.groups to an expression split
+ * Add hint to msg_wait event, move waits into router package
+ * Update engine to look for wait on router instead of node
+
+v0.32.0
+----------
+ * Convert almost all complex types to be represented in expressions as simple XDicts
+ * Add functional programming basics
+ * Add template assets to goflow
+
+v0.31.3
+----------
+ * Add check to call_resthook that payload is valid JSON
+
+v0.31.2
+----------
+ * CallResthookAction should error if it can't evaluiate the payload template
+ * Resthook payload should still be valid when contact URN can't be formatted
+
+v0.31.1
+----------
+ * Generate better error message when resthook payload is not valid JSON
+
+v0.31.0
+----------
+ * Better error message when marshalling a run
+ * Use dict() function to simplify default webhook payload
+ * Convert @contact.groups to be only excellent primitives
+ * Add extract and dict as excellent functions
+
+v0.30.4
+----------
+ * Add @fields as top-level shortcut to contact fields as map
+ * Add @urns as dict of highest-priority URN by scheme
+ * Make location parsing more forgiving
+
+v0.30.3
+----------
+ * Bug fix: switch router should use category from first matching rule
+ * Stringify maps with {...} and arrays with [...]
+
+v0.30.2
+----------
+ * Record exit UUIDs coming from waits in validated flow definition
+ * Match characters  intended to be combined with another character to support Thai, Bengali and Burmese properly
+ * Extract and save result categories during validation
+ * Add validation that node has > 0 exits, routers have > 0 categories, and categories have an exit
+
+v0.30.1
+----------
+ * Don't try to validate a subflow which is missing
+
+v0.30.0
+----------
+ * Fix HasDate tests to compare dates in env timezone
+ * Return missing assets from SessionAssets.Validate
+ * Replace runtime loop detection with an engine limit on steps per sprint (default 100)
+
 v0.29.11
 ----------
  * Don't trim whitespace on input to has_pattern test

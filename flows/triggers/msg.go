@@ -3,7 +3,11 @@ package triggers
 import (
 	"encoding/json"
 
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
+	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 	"github.com/nyaruka/goflow/flows/inputs"
@@ -11,13 +15,13 @@ import (
 )
 
 func init() {
-	RegisterType(TypeMsg, readMsgTrigger)
+	registerType(TypeMsg, readMsgTrigger)
 }
 
 // TypeMsg is the type for message triggered sessions
 const TypeMsg string = "msg"
 
-// MsgTrigger is used when a session was triggered by a message being recieved by the caller
+// MsgTrigger is used when a session was triggered by a message being received by the caller
 //
 //   {
 //     "type": "msg",
@@ -68,30 +72,63 @@ func NewKeywordMatch(typeName KeywordMatchType, keyword string) *KeywordMatch {
 	return &KeywordMatch{Type: typeName, Keyword: keyword}
 }
 
-// NewMsgTrigger creates a new message trigger
-func NewMsgTrigger(env utils.Environment, flow *assets.FlowReference, contact *flows.Contact, msg *flows.MsgIn, match *KeywordMatch) flows.Trigger {
-	return &MsgTrigger{
-		baseTrigger: newBaseTrigger(TypeMsg, env, flow, contact, nil, nil),
-		msg:         msg,
-		match:       match,
-	}
-}
-
 // InitializeRun performs additional initialization when we visit our first node
 func (t *MsgTrigger) InitializeRun(run flows.FlowRun, logEvent flows.EventCallback) error {
 	// update our input
-	input, err := inputs.NewMsgInput(run.Session().Assets(), t.msg, t.triggeredOn)
-	if err != nil {
-		return err
-	}
+	input := inputs.NewMsg(run.Session().Assets(), t.msg, t.triggeredOn)
 
 	run.Session().SetInput(input)
-	logEvent(events.NewMsgReceivedEvent(t.msg))
+	logEvent(events.NewMsgReceived(t.msg))
 
 	return t.baseTrigger.InitializeRun(run, logEvent)
 }
 
+// Context for msg triggers additionally exposes the keyword match
+func (t *MsgTrigger) Context(env envs.Environment) map[string]types.XValue {
+	c := t.context()
+	if t.match != nil {
+		c.keyword = t.match.Keyword
+	}
+	return c.asMap()
+}
+
 var _ flows.Trigger = (*MsgTrigger)(nil)
+
+//------------------------------------------------------------------------------------------
+// Builder
+//------------------------------------------------------------------------------------------
+
+// MsgBuilder is a builder for msg type triggers
+type MsgBuilder struct {
+	t *MsgTrigger
+}
+
+// Msg returns a msg trigger builder
+func (b *Builder) Msg(msg *flows.MsgIn) *MsgBuilder {
+	return &MsgBuilder{
+		t: &MsgTrigger{
+			baseTrigger: newBaseTrigger(TypeMsg, b.environment, b.flow, b.contact, nil, false, nil),
+			msg:         msg,
+		},
+	}
+}
+
+// WithMatch sets the keyword match for the trigger
+func (b *MsgBuilder) WithMatch(match *KeywordMatch) *MsgBuilder {
+	b.t.match = match
+	return b
+}
+
+// WithConnection sets the channel connection for the trigger
+func (b *MsgBuilder) WithConnection(channel *assets.ChannelReference, urn urns.URN) *MsgBuilder {
+	b.t.connection = flows.NewConnection(channel, urn)
+	return b
+}
+
+// Build builds the trigger
+func (b *MsgBuilder) Build() *MsgTrigger {
+	return b.t
+}
 
 //------------------------------------------------------------------------------------------
 // JSON Encoding / Decoding
@@ -132,5 +169,5 @@ func (t *MsgTrigger) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(e)
+	return jsonx.Marshal(e)
 }

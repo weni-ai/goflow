@@ -1,57 +1,52 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/utils"
 )
 
-// XValue is the base interface of all Excellent types
+// XValue is the base interface of all excellent types
 type XValue interface {
-	Describe() string
-	ToXJSON(env utils.Environment) XText
-	Reduce(env utils.Environment) XPrimitive
-}
-
-// XPrimitive is the base interface of all Excellent primitive types
-type XPrimitive interface {
-	XValue
+	// How type is rendered in console for debugging
 	fmt.Stringer
 
-	ToXText(env utils.Environment) XText
-	ToXBoolean(env utils.Environment) XBoolean
+	// How the type JSONifies
+	json.Marshaler
+
+	// Describe returns a representation for use in error messages
+	Describe() string
+
+	// Truthy determines truthiness for this type
+	Truthy() bool
+
+	// Render returns the canonical text representation
+	Render() string
+
+	// Format returns the pretty text representation
+	Format(env envs.Environment) string
+
+	// Equals returns true if this value is equal to the given value
+	Equals(XValue) bool
 }
 
-// XResolvable is the interface for types which can be keyed into, e.g. foo.bar
-type XResolvable interface {
-	Resolve(env utils.Environment, key string) XValue
+// XCountable is the interface for types which can be counted
+type XCountable interface {
+	Count() int
 }
 
-// XLengthable is the interface for types which have a length
-type XLengthable interface {
-	Length() int
+// XComparable is the interface for types which can be compared
+type XComparable interface {
+	// Compare returns -1 if this value is less, 0 if equal, +1 if greater
+	Compare(XValue) int
 }
 
-// XIndexable is the interface for types which can be indexed into, e.g. foo.0. Such objects
-// also need to be lengthable so that the engine knows what is a valid index and what isn't.
-type XIndexable interface {
-	XLengthable
-
-	Index(index int) XValue
-}
-
-// ResolveKeys is a utility function that resolves multiple keys on an XResolvable and returns the results as a map
-func ResolveKeys(env utils.Environment, resolvable XResolvable, keys ...string) XMap {
-	values := make(map[string]XValue, len(keys))
-	for _, key := range keys {
-		values[key] = resolvable.Resolve(env, key)
-	}
-	return NewXMap(values)
-}
-
-// Equals checks for equality between the two give values
-func Equals(env utils.Environment, x1 XValue, x2 XValue) bool {
+// Equals checks for equality between the two given values. This is only used for testing as x = y
+// specifically means text(x) == text(y)
+func Equals(x1 XValue, x2 XValue) bool {
 	// nil == nil
 	if utils.IsNil(x1) && utils.IsNil(x2) {
 		return true
@@ -59,53 +54,36 @@ func Equals(env utils.Environment, x1 XValue, x2 XValue) bool {
 		return false
 	}
 
-	x1 = x1.Reduce(env)
-	x2 = x2.Reduce(env)
-
 	// different types aren't equal
 	if reflect.TypeOf(x1) != reflect.TypeOf(x2) {
 		return false
 	}
 
-	// common types, do real comparisons
-	switch typed := x1.(type) {
-	case XText:
-		return typed.Equals(x2.(XText))
-	case XNumber:
-		return typed.Equals(x2.(XNumber))
-	case XBoolean:
-		return typed.Equals(x2.(XBoolean))
-	case XDateTime:
-		return typed.Equals(x2.(XDateTime))
-	case XError:
-		return typed.Equals(x2.(XError))
-	}
-
-	// for complex objects, use equality of their JSON representation
-	return x1.ToXJSON(env).Native() == x2.ToXJSON(env).Native()
+	return x1.Equals(x2)
 }
 
-// IsEmpty determines if the given value is empty
-func IsEmpty(x XValue) bool {
-	// nil is empty
-	if utils.IsNil(x) {
-		return true
+// Compare compares two given values
+func Compare(x1 XValue, x2 XValue) int {
+	// nil == nil
+	if utils.IsNil(x1) && utils.IsNil(x2) {
+		return 0
+	} else if utils.IsNil(x1) {
+		return -1
+	} else if utils.IsNil(x2) {
+		return 1
 	}
 
-	// anything with length of zero is empty
-	asLengthable, isLengthable := x.(XLengthable)
-	if isLengthable && asLengthable.Length() == 0 {
-		return true
+	// different types can't be compared
+	if reflect.TypeOf(x1) != reflect.TypeOf(x2) {
+		panic(fmt.Sprintf("can't compare a %T with a %T", x1, x2))
 	}
 
-	return false
-}
-
-func Reduce(env utils.Environment, x XValue) XPrimitive {
-	if utils.IsNil(x) {
-		return nil
+	this, isComparable := x1.(XComparable)
+	if !isComparable {
+		panic(fmt.Sprintf("type %T is not comparable", x1))
 	}
-	return x.Reduce(env)
+
+	return this.Compare(x2)
 }
 
 // Describe returns a representation of the given value for use in error messages
@@ -114,4 +92,36 @@ func Describe(x XValue) string {
 		return "null"
 	}
 	return x.Describe()
+}
+
+// Truthy determines truthiness for the given value
+func Truthy(x XValue) bool {
+	if utils.IsNil(x) {
+		return false
+	}
+	return x.Truthy()
+}
+
+// Render returns the canonical text representation
+func Render(x XValue) string {
+	if utils.IsNil(x) {
+		return ""
+	}
+	return x.Render()
+}
+
+// Format returns the pretty text representation
+func Format(env envs.Environment, x XValue) string {
+	if utils.IsNil(x) {
+		return ""
+	}
+	return x.Format(env)
+}
+
+// String returns a representation of the given value for use in debugging
+func String(x XValue) string {
+	if utils.IsNil(x) {
+		return "nil"
+	}
+	return x.String()
 }

@@ -1,8 +1,11 @@
-# Goflow [![Build Status](https://travis-ci.org/nyaruka/goflow.svg?branch=master)](https://travis-ci.org/nyaruka/goflow) [![codecov](https://codecov.io/gh/nyaruka/goflow/branch/master/graph/badge.svg)](https://codecov.io/gh/nyaruka/goflow) [![Go Report Card](https://goreportcard.com/badge/github.com/nyaruka/goflow)](https://goreportcard.com/report/github.com/nyaruka/goflow)
+# Goflow 
+[![Build Status](https://github.com/nyaruka/goflow/workflows/CI/badge.svg)](https://github.com/nyaruka/goflow/actions?query=workflow%3ACI) 
+[![codecov](https://codecov.io/gh/nyaruka/goflow/branch/main/graph/badge.svg)](https://codecov.io/gh/nyaruka/goflow) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/nyaruka/goflow)](https://goreportcard.com/report/github.com/nyaruka/goflow)
 
 ## Specification
 
-See https://nyaruka.github.io/goflow/ for the complete specification docs.
+See [here](https://textit.com/mr/docs/) for the complete specification docs.
 
 ## Basic Usage
 
@@ -14,19 +17,18 @@ import (
     "github.com/nyaruka/goflow/utils"
 )
 
+env := envs.NewBuilder().Build()
 source, _ := static.LoadSource("myassets.json")
-assets, _ := engine.NewSessionAssets(source)
+assets, _ := engine.NewSessionAssets(env, source, nil)
 contact := flows.NewContact(assets, ...)
-env := utils.NewEnvironmentBuilder().Build()
-trigger := triggers.NewManualTrigger(env, contact, flow.Reference(), nil, nil, time.Now())
-eng := engine.NewBuilder().WithDefaultUserAgent("goflow-flowrunner").Build()
-session := eng.NewSession(assets)
-session.Start(trigger)
+trigger := triggers.NewBuilder(env, contact, flow.Reference()).Manual().Build()
+eng := engine.NewBuilder().Build()
+session, sprint, err := eng.NewSession(assets, trigger)
 ```
 
 ## Sessions
 
-Sessions can easily be persisted between waits by calling `json.Marshal` on the `Session` instance to marshal it as JSON. You can inspect this JSON at https://sessions.temba.io/.
+Sessions can be persisted between waits by calling `json.Marshal` on the `Session` instance to marshal it as JSON. You can inspect this JSON at https://sessions.temba.io/.
 
 ## Utilities
 
@@ -36,7 +38,7 @@ Provides a command line interface for stepping through a given flow.
 
 ```
 % go install github.com/nyaruka/goflow/cmd/flowrunner
-% $GOPATH/bin/flowrunner test/testdata/flows/two_questions.json 615b8a0f-588c-4d20-a05f-363b0b4ce6f4
+% $GOPATH/bin/flowrunner test/testdata/runner/two_questions.json 615b8a0f-588c-4d20-a05f-363b0b4ce6f4
 Starting flow 'U-Report Registration Flow'....
 ---------------------------------------
 💬 "Hi Ben Haggerty! What is your favorite color? (red/blue) Your number is (206) 555-1212"
@@ -87,5 +89,5 @@ You can run all the tests with:
 If you've made changes to the flow engine output, regenerate the test files with:
 
 ```
-% go test github.com/nyaruka/goflow/test -write
+% go test github.com/nyaruka/goflow/test -update
 ```

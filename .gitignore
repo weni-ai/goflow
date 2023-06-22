@@ -28,8 +28,10 @@ _testmain.go
 
 debug
 .DS_Store
-dist/
+/docs
 
+deploy
+fabric
 fabfile.*
 fabconfig.*
 

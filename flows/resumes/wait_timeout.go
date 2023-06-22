@@ -3,14 +3,16 @@ package resumes
 import (
 	"encoding/json"
 
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 	"github.com/nyaruka/goflow/utils"
 )
 
 func init() {
-	RegisterType(TypeWaitTimeout, readWaitTimeoutResume)
+	registerType(TypeWaitTimeout, readWaitTimeoutResume)
 }
 
 // TypeWaitTimeout is the type for resuming a session when a wait has timed out
@@ -36,20 +38,18 @@ type WaitTimeoutResume struct {
 	baseResume
 }
 
-// NewWaitTimeoutResume creates a new timeout resume with the passed in values
-func NewWaitTimeoutResume(env utils.Environment, contact *flows.Contact) *WaitTimeoutResume {
+// NewWaitTimeout creates a new timeout resume with the passed in values
+func NewWaitTimeout(env envs.Environment, contact *flows.Contact) *WaitTimeoutResume {
 	return &WaitTimeoutResume{
 		baseResume: newBaseResume(TypeWaitTimeout, env, contact),
 	}
 }
 
 // Apply applies our state changes and saves any events to the run
-func (r *WaitTimeoutResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) error {
-	// clear the last input
-	run.Session().SetInput(nil)
-	logEvent(events.NewWaitTimedOutEvent())
+func (r *WaitTimeoutResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
+	logEvent(events.NewWaitTimedOut())
 
-	return r.baseResume.Apply(run, logEvent)
+	r.baseResume.Apply(run, logEvent)
 }
 
 var _ flows.Resume = (*WaitTimeoutResume)(nil)
@@ -81,5 +81,5 @@ func (r *WaitTimeoutResume) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(e)
+	return jsonx.Marshal(e)
 }

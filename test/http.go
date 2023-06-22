@@ -1,6 +1,8 @@
 package test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,12 +14,14 @@ import (
 func NewTestHTTPServer(port int) *httptest.Server {
 	server := httptest.NewUnstartedServer(http.HandlerFunc(testHTTPHandler))
 
-	// manually create a listener for our test server so that our output is predictable
-	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-	if err != nil {
-		panic(err.Error())
+	if port > 0 {
+		// manually create a listener for our test server so that our output is predictable
+		l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+		if err != nil {
+			panic(err.Error())
+		}
+		server.Listener = l
 	}
-	server.Listener = l
 	server.Start()
 	return server
 }
@@ -46,11 +50,16 @@ func testHTTPHandler(w http.ResponseWriter, r *http.Request) {
 		size, _ := strconv.Atoi(sizeParam)
 		data = make([]byte, size)
 		for i := 0; i < size; i++ {
-			data[i] = byte(40 + i%10)
+			data[i] = byte(i % 255)
 		}
 
 		w.Header().Set("Content-Length", sizeParam)
-
+	case "textjs":
+		contentType = "text/javascript; charset=iso-8859-1"
+		data = []byte(`{ "ok": "true" }`)
+	case "badjson":
+		contentType = "application/json"
+		data = []byte("{ \"bad\": \"null=\x00 escaped=\\u0000 double-escaped=\\\\u0000 badseq=\x80\x81\" }")
 	case "typeless":
 		w.Header().Set("Content-Type", "")
 	case "unavailable":
@@ -62,6 +71,14 @@ func testHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	case "gone":
 		statusCode = http.StatusGone
 		data = []byte(`{ "errors": ["gone"] }`)
+	case "gzipped":
+		w.Header().Set("Content-Type", "application/x-gzip")
+		w.Header().Set("Content-Encoding", "gzip")
+		b := &bytes.Buffer{}
+		w := gzip.NewWriter(b)
+		w.Write(data)
+		w.Close()
+		data = b.Bytes()
 	}
 
 	w.Header().Set("Date", "Wed, 11 Apr 2018 18:24:30 GMT")

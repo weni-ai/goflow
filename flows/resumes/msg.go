@@ -3,7 +3,9 @@ package resumes
 import (
 	"encoding/json"
 
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 	"github.com/nyaruka/goflow/flows/inputs"
@@ -11,7 +13,7 @@ import (
 )
 
 func init() {
-	RegisterType(TypeMsg, readMsgResume)
+	registerType(TypeMsg, readMsgResume)
 }
 
 // TypeMsg is the type for resuming a session with a message
@@ -45,8 +47,8 @@ type MsgResume struct {
 	msg *flows.MsgIn
 }
 
-// NewMsgResume creates a new message resume with the passed in values
-func NewMsgResume(env utils.Environment, contact *flows.Contact, msg *flows.MsgIn) *MsgResume {
+// NewMsg creates a new message resume with the passed in values
+func NewMsg(env envs.Environment, contact *flows.Contact, msg *flows.MsgIn) *MsgResume {
 	return &MsgResume{
 		baseResume: newBaseResume(TypeMsg, env, contact),
 		msg:        msg,
@@ -57,18 +59,17 @@ func NewMsgResume(env utils.Environment, contact *flows.Contact, msg *flows.MsgI
 func (r *MsgResume) Msg() *flows.MsgIn { return r.msg }
 
 // Apply applies our state changes and saves any events to the run
-func (r *MsgResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) error {
+func (r *MsgResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
+	// do base changes (contact, environment)
+	r.baseResume.Apply(run, logEvent)
+
 	// update our input
-	input, err := inputs.NewMsgInput(run.Session().Assets(), r.msg, r.ResumedOn())
-	if err != nil {
-		return err
-	}
+	input := inputs.NewMsg(run.Session().Assets(), r.msg, r.ResumedOn())
 
 	run.Session().SetInput(input)
 	run.ResetExpiration(nil)
-	logEvent(events.NewMsgReceivedEvent(r.msg))
 
-	return r.baseResume.Apply(run, logEvent)
+	logEvent(events.NewMsgReceived(r.msg))
 }
 
 var _ flows.Resume = (*MsgResume)(nil)
@@ -109,5 +110,5 @@ func (r *MsgResume) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(e)
+	return jsonx.Marshal(e)
 }

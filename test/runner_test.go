@@ -4,87 +4,97 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"net/http"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/httpx"
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
-	"github.com/nyaruka/goflow/assets/static"
-	_ "github.com/nyaruka/goflow/extensions/transferto"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
 	"github.com/nyaruka/goflow/flows/resumes"
 	"github.com/nyaruka/goflow/flows/triggers"
-	"github.com/nyaruka/goflow/utils"
+	"github.com/nyaruka/goflow/services/airtime/dtone"
+	"github.com/nyaruka/goflow/services/email/smtp"
+	"github.com/nyaruka/goflow/services/webhooks"
+	"github.com/nyaruka/goflow/utils/smtpx"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var flowTests = []struct {
-	assets string
-	output string
-}{
-	{"airtime.json", "airtime_disabled_test.json"},
-	{"all_actions.json", "all_actions_test.json"},
-	{"brochure.json", "brochure_test.json"},
-	{"date_parse.json", "date_parse_test.json"},
-	{"default_result.json", "default_result_test.json"},
-	{"dynamic_groups_correction.json", "dynamic_groups_correction_test.json"},
-	{"dynamic_groups.json", "dynamic_groups_test.json"},
-	{"empty.json", "empty_test.json"},
-	{"initial_wait.json", "initial_wait_test.json"},
-	{"legacy_extra.json", "legacy_extra_test.json"},
-	{"no_contact.json", "no_contact_test.json"},
-	{"node_loop.json", "node_loop_test.json"},
-	{"redact_urns.json", "redact_urns_test.json"},
-	{"resthook.json", "resthook_test.json"},
-	{"router_tests.json", "router_tests_test.json"},
-	{"subflow_loop_with_wait.json", "subflow_loop_with_wait_test.json"},
-	{"enter_flow_loop.json", "enter_flow_loop_test.json"},
-	{"enter_flow_terminal.json", "enter_flow_terminal_test.json"},
-	{"subflow_other.json", "subflow_other_test.json"},
-	{"subflow.json", "subflow_test.json"},
-	{"subflow.json", "subflow_resume_with_expiration_test.json"},
-	{"triggered.json", "triggered_test.json"},
-	{"two_questions.json", "two_questions_test.json"},
-	{"two_questions.json", "two_questions_resume_with_expiration_test.json"},
-	{"two_questions_offline.json", "two_questions_offline_test.json"},
-	{"webhook_migrated.json", "webhook_migrated_test.json"},
-	{"webhook_persists.json", "webhook_persists_test.json"},
-}
-
-var writeOutput bool
-var serverURL = ""
+var includeTests string
+var testFilePattern = regexp.MustCompile(`(\w+)\.(\w+)\.json`)
 
 func init() {
-	flag.BoolVar(&writeOutput, "write", false, "whether to rewrite test output")
+	flag.StringVar(&includeTests, "include", "", "include only test names containing")
 }
 
-func marshalEventLog(eventLog []flows.Event) ([]json.RawMessage, error) {
-	marshaled := make([]json.RawMessage, len(eventLog))
-	var err error
+type runnerTest struct {
+	testName   string
+	assetsName string
+	outputFile string
+	assetsFile string
+}
 
-	for i := range eventLog {
-		marshaled[i], err = utils.JSONMarshal(eventLog[i])
-		if err != nil {
-			return nil, errors.Wrap(err, "error marshaling event")
+func (t runnerTest) String() string {
+	return fmt.Sprintf("%s.%s", t.assetsName, t.testName)
+}
+
+func loadTestCases() ([]runnerTest, error) {
+	directory := "testdata/runner/"
+	files, err := os.ReadDir(directory)
+	if err != nil {
+		return nil, errors.Wrap(err, "error reading test directory")
+	}
+
+	tests := make([]runnerTest, 0)
+
+	for _, file := range files {
+		groups := testFilePattern.FindStringSubmatch(file.Name())
+		if groups != nil {
+			testName := groups[2]
+			assetsName := groups[1]
+			assetsFile := directory + assetsName + ".json"
+			outputFile := directory + groups[0]
+
+			if includeTests == "" || strings.Contains(assetsName+"."+testName, includeTests) {
+				tests = append(tests, runnerTest{testName, assetsName, outputFile, assetsFile})
+			}
 		}
 	}
-	return marshaled, nil
+
+	return tests, nil
+}
+
+func marshalEventLog(eventLog []flows.Event) []json.RawMessage {
+	marshaled := make([]json.RawMessage, len(eventLog))
+
+	for i := range eventLog {
+		marshaled[i] = jsonx.MustMarshal(eventLog[i])
+	}
+	return marshaled
 }
 
 type Output struct {
-	Session json.RawMessage   `json:"session"`
-	Events  []json.RawMessage `json:"events"`
+	Session  json.RawMessage   `json:"session"`
+	Events   []json.RawMessage `json:"events"`
+	Segments json.RawMessage   `json:"segments"`
 }
 
 type FlowTest struct {
-	Trigger json.RawMessage   `json:"trigger"`
-	Resumes []json.RawMessage `json:"resumes"`
-	Outputs []json.RawMessage `json:"outputs"`
+	Trigger   json.RawMessage      `json:"trigger"`
+	Resumes   []json.RawMessage    `json:"resumes"`
+	Outputs   []json.RawMessage    `json:"outputs"`
+	HTTPMocks *httpx.MockRequestor `json:"http_mocks,omitempty"`
 }
 
 type runResult struct {
@@ -94,30 +104,33 @@ type runResult struct {
 
 func runFlow(assetsPath string, rawTrigger json.RawMessage, rawResumes []json.RawMessage) (runResult, error) {
 	// load the test specific assets
-	testAssetsJSON, err := ioutil.ReadFile(fmt.Sprintf("testdata/flows/%s", assetsPath))
+	sa, err := LoadSessionAssets(envs.NewBuilder().Build(), assetsPath)
 	if err != nil {
 		return runResult{}, err
 	}
 
-	// rewrite the URL on any webhook actions
-	testAssetsJSONStr := strings.Replace(string(testAssetsJSON), "http://localhost", serverURL, -1)
-
-	source, err := static.NewSource(json.RawMessage(testAssetsJSONStr))
-	if err != nil {
-		return runResult{}, errors.Wrapf(err, "error reading test assets '%s'", assetsPath)
-	}
-
-	sessionAssets, _ := engine.NewSessionAssets(source)
-
-	trigger, err := triggers.ReadTrigger(sessionAssets, rawTrigger, assets.PanicOnMissing)
+	trigger, err := triggers.ReadTrigger(sa, rawTrigger, assets.PanicOnMissing)
 	if err != nil {
 		return runResult{}, errors.Wrapf(err, "error unmarshalling trigger")
 	}
 
-	eng := engine.NewBuilder().WithDefaultUserAgent("goflow-testing").Build()
-	session := eng.NewSession(sessionAssets)
+	eng := engine.NewBuilder().
+		WithEmailServiceFactory(func(flows.Session) (flows.EmailService, error) {
+			return smtp.NewService("smtp://nyaruka:pass123@mail.temba.io?from=flows@temba.io", nil)
+		}).
+		WithWebhookServiceFactory(webhooks.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 100000)).
+		WithClassificationServiceFactory(func(s flows.Session, c *flows.Classifier) (flows.ClassificationService, error) {
+			return newClassificationService(c), nil
+		}).
+		WithAirtimeServiceFactory(func(flows.Session) (flows.AirtimeService, error) {
+			return dtone.NewService(http.DefaultClient, nil, "nyaruka", "123456789"), nil
+		}).
+		WithTicketServiceFactory(func(s flows.Session, t *flows.Ticketer) (flows.TicketService, error) {
+			return NewTicketService(t), nil
+		}).
+		Build()
 
-	sprint, err := session.Start(trigger)
+	session, sprint, err := eng.NewSession(sa, trigger)
 	if err != nil {
 		return runResult{}, err
 	}
@@ -125,29 +138,29 @@ func runFlow(assetsPath string, rawTrigger json.RawMessage, rawResumes []json.Ra
 	outputs := make([]*Output, 0)
 
 	// try to resume the session for each of the provided resumes
-	for r, rawResume := range rawResumes {
-		sessionJSON, err := utils.JSONMarshalPretty(session)
+	for i, rawResume := range rawResumes {
+		sessionJSON, err := jsonx.MarshalPretty(session)
 		if err != nil {
 			return runResult{}, errors.Wrap(err, "error marshalling output")
 		}
-		marshalledEvents, err := marshalEventLog(sprint.Events())
-		if err != nil {
-			return runResult{}, err
-		}
 
-		outputs = append(outputs, &Output{sessionJSON, marshalledEvents})
+		outputs = append(outputs, &Output{
+			Session:  sessionJSON,
+			Events:   marshalEventLog(sprint.Events()),
+			Segments: jsonx.MustMarshal(sprint.Segments()),
+		})
 
-		session, err = eng.ReadSession(sessionAssets, sessionJSON, assets.PanicOnMissing)
+		session, err = eng.ReadSession(sa, sessionJSON, assets.PanicOnMissing)
 		if err != nil {
 			return runResult{}, errors.Wrap(err, "error marshalling output")
 		}
 
 		// if we aren't at a wait, that's an error
 		if session.Wait() == nil {
-			return runResult{}, errors.Errorf("did not stop at expected wait, have unused resumes: %#v", rawResumes[r:])
+			return runResult{}, errors.Errorf("did not stop at expected wait, have unused resumes: %d", len(rawResumes[i:]))
 		}
 
-		resume, err := resumes.ReadResume(sessionAssets, rawResume, assets.PanicOnMissing)
+		resume, err := resumes.ReadResume(sa, rawResume, assets.PanicOnMissing)
 		if err != nil {
 			return runResult{}, err
 		}
@@ -158,68 +171,79 @@ func runFlow(assetsPath string, rawTrigger json.RawMessage, rawResumes []json.Ra
 		}
 	}
 
-	sessionJSON, err := utils.JSONMarshalPretty(session)
+	sessionJSON, err := jsonx.MarshalPretty(session)
 	if err != nil {
 		return runResult{}, errors.Wrap(err, "error marshalling output")
 	}
 
-	marshalledEvents, err := marshalEventLog(sprint.Events())
-	if err != nil {
-		return runResult{}, err
-	}
-
-	outputs = append(outputs, &Output{sessionJSON, marshalledEvents})
+	outputs = append(outputs, &Output{
+		Session:  sessionJSON,
+		Events:   marshalEventLog(sprint.Events()),
+		Segments: jsonx.MustMarshal(sprint.Segments()),
+	})
 
 	return runResult{session, outputs}, nil
 }
 
 func TestFlows(t *testing.T) {
-	server := NewTestHTTPServer(49999)
-	defer server.Close()
-	defer utils.SetUUIDGenerator(utils.DefaultUUIDGenerator)
-	defer utils.SetTimeSource(utils.DefaultTimeSource)
+	testCases, err := loadTestCases()
+	require.NoError(t, err)
+	require.True(t, len(testCases) > 0)
 
-	// save away our server URL so we can rewrite our URLs
-	serverURL = server.URL
+	defer uuids.SetGenerator(uuids.DefaultGenerator)
+	defer dates.SetNowSource(dates.DefaultNowSource)
+	defer httpx.SetRequestor(httpx.DefaultRequestor)
+	defer smtpx.SetSender(smtpx.DefaultSender)
 
-	for _, tc := range flowTests {
-		utils.SetUUIDGenerator(utils.NewSeededUUID4Generator(123456))
-		utils.SetTimeSource(utils.NewSequentialTimeSource(time.Date(2018, 7, 6, 12, 30, 0, 123456789, time.UTC)))
+	for _, tc := range testCases {
+		var httpMocksCopy *httpx.MockRequestor
+		fmt.Printf("running %s\n", tc)
 
-		testJSON, err := ioutil.ReadFile(fmt.Sprintf("testdata/flows/%s", tc.output))
-		require.NoError(t, err, "Error reading output file for flow '%s' and output '%s': %s", tc.assets, tc.output, err)
+		uuids.SetGenerator(uuids.NewSeededGenerator(123456))
+		dates.SetNowSource(dates.NewSequentialNowSource(time.Date(2018, 7, 6, 12, 30, 0, 123456789, time.UTC)))
+		smtpx.SetSender(smtpx.NewMockSender(nil, nil, nil, nil, nil, nil))
+
+		testJSON, err := os.ReadFile(tc.outputFile)
+		require.NoError(t, err, "error reading output file %s", tc.outputFile)
 
 		flowTest := &FlowTest{}
-		err = json.Unmarshal(json.RawMessage(testJSON), &flowTest)
-		require.NoError(t, err, "Error unmarshalling output for flow '%s' and output '%s': %s", tc.assets, tc.output, err)
+		err = jsonx.Unmarshal(json.RawMessage(testJSON), &flowTest)
+		require.NoError(t, err, "error unmarshalling output file %s", tc.outputFile)
+
+		if flowTest.HTTPMocks != nil {
+			httpx.SetRequestor(flowTest.HTTPMocks)
+			httpMocksCopy = flowTest.HTTPMocks.Clone()
+		} else {
+			httpx.SetRequestor(httpx.DefaultRequestor)
+			httpMocksCopy = nil
+		}
 
 		// run our flow
-		runResult, err := runFlow(tc.assets, flowTest.Trigger, flowTest.Resumes)
+		runResult, err := runFlow(tc.assetsFile, flowTest.Trigger, flowTest.Resumes)
 		if err != nil {
-			t.Errorf("Error running flow for flow '%s' and output '%s': %s", tc.assets, tc.output, err)
+			t.Errorf("error running flow for flow '%s' and output '%s': %s", tc.assetsFile, tc.outputFile, err)
 			continue
 		}
 
-		if writeOutput {
+		if UpdateSnapshots {
 			// we are writing new outputs, we write new files but don't test anything
 			rawOutputs := make([]json.RawMessage, len(runResult.outputs))
 			for i := range runResult.outputs {
-				rawOutputs[i], err = utils.JSONMarshal(runResult.outputs[i])
+				rawOutputs[i], err = jsonx.Marshal(runResult.outputs[i])
 				require.NoError(t, err)
 			}
-			flowTest := &FlowTest{Trigger: flowTest.Trigger, Resumes: flowTest.Resumes, Outputs: rawOutputs}
-			testJSON, err := utils.JSONMarshalPretty(flowTest)
+			flowTest := &FlowTest{Trigger: flowTest.Trigger, Resumes: flowTest.Resumes, Outputs: rawOutputs, HTTPMocks: httpMocksCopy}
+			testJSON, err := jsonx.MarshalPretty(flowTest)
 			require.NoError(t, err, "Error marshalling test definition: %s", err)
 
 			testJSON, _ = NormalizeJSON(testJSON)
 
 			// write our output
-			outputFilename := fmt.Sprintf("testdata/flows/%s", tc.output)
-			err = ioutil.WriteFile(outputFilename, testJSON, 0644)
-			require.NoError(t, err, "Error writing test file to %s: %s", outputFilename, err)
+			err = os.WriteFile(tc.outputFile, testJSON, 0644)
+			require.NoError(t, err, "Error writing test file to %s: %s", tc.outputFile, err)
 		} else {
 			// start by checking we have the expected number of outputs
-			if !assert.Equal(t, len(flowTest.Outputs), len(runResult.outputs), "wrong number of outputs for flow test %s", tc.assets) {
+			if !assert.Equal(t, len(flowTest.Outputs), len(runResult.outputs), "wrong number of outputs in %s", tc) {
 				continue
 			}
 
@@ -227,21 +251,44 @@ func TestFlows(t *testing.T) {
 			for i, actual := range runResult.outputs {
 				// unmarshal our expected outputsinto session+events
 				expected := &Output{}
-				err := json.Unmarshal(flowTest.Outputs[i], expected)
+				err := jsonx.Unmarshal(flowTest.Outputs[i], expected)
 				require.NoError(t, err, "error unmarshalling output")
 
 				// first the session
-				if !AssertEqualJSON(t, expected.Session, actual.Session, fmt.Sprintf("session is different in output[%d] for flow test %s", i, tc.assets)) {
+				if !AssertEqualJSON(t, expected.Session, actual.Session, "session is different in output[%d] in %s", i, tc) {
 					break
 				}
 
 				// and then each event
-				for e := range actual.Events {
-					if !AssertEqualJSON(t, expected.Events[e], actual.Events[e], fmt.Sprintf("event[%d] is different in output[%d] for flow test %s", e, i, tc.assets)) {
+				for j := range actual.Events {
+					if !AssertEqualJSON(t, expected.Events[j], actual.Events[j], "event[%d] is different in output[%d] in %s", j, i, tc) {
 						break
 					}
 				}
+
+				// and finally the path segments
+				if !AssertEqualJSON(t, expected.Segments, actual.Segments, "segments are different in output[%d] in %s", i, tc) {
+					break
+				}
 			}
+		}
+	}
+}
+
+func BenchmarkFlows(b *testing.B) {
+	testCases, _ := loadTestCases()
+
+	for n := 0; n < b.N; n++ {
+		for _, tc := range testCases {
+			testJSON, err := os.ReadFile(tc.outputFile)
+			require.NoError(b, err, "error reading output file %s", tc.outputFile)
+
+			flowTest := &FlowTest{}
+			err = jsonx.Unmarshal(json.RawMessage(testJSON), &flowTest)
+			require.NoError(b, err, "error unmarshalling output file %s", tc.outputFile)
+
+			_, err = runFlow(tc.assetsFile, flowTest.Trigger, flowTest.Resumes)
+			require.NoError(b, err, "error running flow %s", tc.testName)
 		}
 	}
 }

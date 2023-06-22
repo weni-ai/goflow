@@ -4,34 +4,44 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/contactql"
+	"github.com/nyaruka/goflow/envs"
+	"github.com/nyaruka/goflow/excellent"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
 )
 
 // NodeUUID is a UUID of a flow node
-type NodeUUID utils.UUID
+type NodeUUID uuids.UUID
+
+// CategoryUUID is the UUID of a node category
+type CategoryUUID uuids.UUID
 
 // ExitUUID is the UUID of a node exit
-type ExitUUID utils.UUID
+type ExitUUID uuids.UUID
 
 // ActionUUID is the UUID of an action
-type ActionUUID utils.UUID
+type ActionUUID uuids.UUID
 
 // ContactID is the ID of a contact
 type ContactID int64
 
 // ContactUUID is the UUID of a contact
-type ContactUUID utils.UUID
+type ContactUUID uuids.UUID
 
 // RunUUID is the UUID of a flow run
-type RunUUID utils.UUID
+type RunUUID uuids.UUID
 
 // StepUUID is the UUID of a run step
-type StepUUID utils.UUID
+type StepUUID uuids.UUID
 
 // InputUUID is the UUID of an input
-type InputUUID utils.UUID
+type InputUUID uuids.UUID
+
+// SessionUUID is the UUID of a session
+type SessionUUID uuids.UUID
 
 // MsgID is the ID of a message
 type MsgID int64
@@ -40,30 +50,7 @@ type MsgID int64
 const NilMsgID = MsgID(0)
 
 // MsgUUID is the UUID of a message
-type MsgUUID utils.UUID
-
-// FlowType represents the different types of flows
-type FlowType string
-
-// UINodeType tells the editor how to render a particular node
-type UINodeType string
-
-// UINodeConfig contains config unique to its type
-type UINodeConfig map[string]interface{}
-
-// Sticky is a migrated note
-type Sticky map[string]interface{}
-
-const (
-	// FlowTypeMessaging is a flow that is run over a messaging channel
-	FlowTypeMessaging FlowType = "messaging"
-
-	// FlowTypeMessagingOffline is a flow which is run over an offline messaging client like Surveyor
-	FlowTypeMessagingOffline FlowType = "messaging_offline"
-
-	// FlowTypeVoice is a flow which is run over IVR
-	FlowTypeVoice FlowType = "voice"
-)
+type MsgUUID uuids.UUID
 
 // SessionStatus represents the current status of the engine session
 type SessionStatus string
@@ -78,8 +65,8 @@ const (
 	// SessionStatusWaiting represents a session which is waiting for something from the caller
 	SessionStatusWaiting SessionStatus = "waiting"
 
-	// SessionStatusErrored represents a session that encountered an error
-	SessionStatusErrored SessionStatus = "errored"
+	// SessionStatusFailed represents a session that encountered an unrecoverable error
+	SessionStatusFailed SessionStatus = "failed"
 )
 
 // RunStatus represents the current status of the flow run
@@ -95,201 +82,178 @@ const (
 	// RunStatusWaiting represents a run which is waiting for something from the caller
 	RunStatusWaiting RunStatus = "waiting"
 
-	// RunStatusErrored represents a run that encountered an error
-	RunStatusErrored RunStatus = "errored"
+	// RunStatusFailed represents a run that encountered an unrecoverable error
+	RunStatusFailed RunStatus = "failed"
 
 	// RunStatusExpired represents a run that expired due to inactivity
 	RunStatusExpired RunStatus = "expired"
-
-	// RunStatusInterrupted represents a run that was interrupted by another flow
-	RunStatusInterrupted RunStatus = "interrupted"
 )
 
+// FlowAssets provides access to flow assets
 type FlowAssets interface {
 	Get(assets.FlowUUID) (Flow, error)
 }
 
 // SessionAssets is the assets available to a session
 type SessionAssets interface {
+	contactql.Resolver
+
+	Source() assets.Source
+
 	Channels() *ChannelAssets
+	Classifiers() *ClassifierAssets
 	Fields() *FieldAssets
 	Flows() FlowAssets
+	Globals() *GlobalAssets
 	Groups() *GroupAssets
 	Labels() *LabelAssets
 	Locations() *LocationAssets
 	Resthooks() *ResthookAssets
+	Templates() *TemplateAssets
+	Ticketers() *TicketerAssets
+	Topics() *TopicAssets
+	Users() *UserAssets
 }
 
+// Localizable is anything in the flow definition which can be localized and therefore needs a UUID
 type Localizable interface {
-	LocalizationUUID() utils.UUID
+	LocalizationUUID() uuids.UUID
 }
 
-type Inspectable interface {
-	Inspect(func(Inspectable))
-	EnumerateTemplates(Localization, func(string))
-	RewriteTemplates(Localization, func(string) string)
-	EnumerateDependencies(Localization, func(assets.Reference))
-	EnumerateResultNames(func(string))
-}
-
-// Flow describes the ordered logic of actions and routers. It renders as its name in a template, and has the following
-// properties which can be accessed:
-//
-//  * `uuid` the UUID of the flow
-//  * `name` the name of the flow
-//  * `revision` the revision number of the flow
-//
-// Examples:
-//
-//   @run.flow -> Registration
-//   @child.flow -> Collect Age
-//   @run.flow.uuid -> 50c3706e-fedb-42c0-8eab-dda3335714b7
-//   @(json(run.flow)) -> {"name":"Registration","revision":123,"uuid":"50c3706e-fedb-42c0-8eab-dda3335714b7"}
-//
-// @context flow
+// Flow describes the ordered logic of actions and routers
 type Flow interface {
-	types.XValue
-	types.XResolvable
+	Contextable
 
 	// spec properties
 	UUID() assets.FlowUUID
 	Name() string
 	Revision() int
-	Language() utils.Language
+	Language() envs.Language
 	Type() FlowType
 	ExpireAfterMinutes() int
 	Localization() Localization
-
-	// optional spec properties
-	UI() UI
-
-	Validate(SessionAssets) error
-	ValidateRecursively(SessionAssets) error
+	UI() json.RawMessage
 	Nodes() []Node
 	GetNode(uuid NodeUUID) Node
 	Reference() *assets.FlowReference
 
+	Inspect(sa SessionAssets) *Inspection
 	ExtractTemplates() []string
-	RewriteTemplates(func(string) string)
-	ExtractDependencies() []assets.Reference
-	ExtractResultNames() []string
+	ExtractLocalizables() []string
+	ChangeLanguage(envs.Language) (Flow, error)
 }
 
 // Node is a single node in a flow
 type Node interface {
-	Inspectable
-
 	UUID() NodeUUID
 	Actions() []Action
 	Router() Router
 	Exits() []Exit
-	Wait() Wait
 
-	AddAction(Action)
-	SetRouter(Router)
+	Validate(Flow, map[uuids.UUID]bool) error
 
-	Validate(Flow, map[utils.UUID]bool) error
+	EnumerateTemplates(Localization, func(Action, Router, envs.Language, string))
+	EnumerateDependencies(Localization, func(Action, Router, envs.Language, assets.Reference))
+	EnumerateResults(func(Action, Router, *ResultInfo))
+	EnumerateLocalizables(func(uuids.UUID, string, []string, func([]string)))
 }
 
 // Action is an action within a flow node
 type Action interface {
 	utils.Typed
 	Localizable
-	Inspectable
+	FlowTypeRestricted
 
 	UUID() ActionUUID
 	Execute(FlowRun, Step, ModifierCallback, EventCallback) error
 	Validate() error
-	AllowedFlowTypes() []FlowType
 }
 
+// Category is how routers map results to exits
+type Category interface {
+	Localizable
+
+	UUID() CategoryUUID
+	Name() string
+	ExitUUID() ExitUUID
+}
+
+// Router is a router on a note which can pick an exit
 type Router interface {
 	utils.Typed
-	Inspectable
 
-	PickRoute(FlowRun, []Exit, Step) (*string, Route, error)
-	Validate([]Exit) error
+	Wait() Wait
+	Categories() []Category
 	ResultName() string
+
+	Validate(Flow, []Exit) error
+	AllowTimeout() bool
+	Route(FlowRun, Step, EventCallback) (ExitUUID, string, error)
+	RouteTimeout(FlowRun, Step, EventCallback) (ExitUUID, error)
+
+	EnumerateTemplates(Localization, func(envs.Language, string))
+	EnumerateDependencies(Localization, func(envs.Language, assets.Reference))
+	EnumerateResults(func(*ResultInfo))
+	EnumerateLocalizables(func(uuids.UUID, string, []string, func([]string)))
 }
 
+// Exit is a route out of a node and optionally to another node
 type Exit interface {
 	UUID() ExitUUID
-	DestinationNodeUUID() NodeUUID
-	Name() string
+	DestinationUUID() NodeUUID
 }
 
+// Timeout is a way to skip a wait after X amount of time
+type Timeout interface {
+	Seconds() int
+	CategoryUUID() CategoryUUID
+}
+
+// Wait tells the engine that the session requires input from the user
 type Wait interface {
 	utils.Typed
+	FlowTypeRestricted
 
-	Timeout() *int
-	TimeoutOn() *time.Time
+	Timeout() Timeout
 
-	Begin(FlowRun, EventCallback) bool
-	End(Resume, Node) error
+	Begin(FlowRun, EventCallback) ActivatedWait
+	End(Resume) error
 }
 
+// ActivatedWait is a wait once it has been activated in a session
+type ActivatedWait interface {
+	utils.Typed
+
+	TimeoutSeconds() *int
+}
+
+// Hint tells the caller what type of input the flow is expecting
 type Hint interface {
 	utils.Typed
 }
 
 // Localization provide a way to get the translations for a specific language
 type Localization interface {
-	AddItemTranslation(utils.Language, utils.UUID, string, []string)
-	GetTranslations(utils.Language) Translations
-	Languages() []utils.Language
+	GetItemTranslation(envs.Language, uuids.UUID, string) []string
+	SetItemTranslation(envs.Language, uuids.UUID, string, []string)
+	Languages() []envs.Language
 }
 
-// Translations provide a way to get the translation for a specific language for a uuid/key pair
-type Translations interface {
-	GetTextArray(utils.UUID, string) []string
-	SetTextArray(utils.UUID, string, []string)
-}
-
-// UI is a optional section in a flow definition with editor specific information
-type UI interface {
-	AddNode(uuid NodeUUID, details UINodeDetails)
-	AddSticky(sticky Sticky)
-
-	GetNode(uuid NodeUUID) UINodeDetails
-}
-
-// UINodeDetails is the top level ui details for a node
-type UINodeDetails interface {
-	Position() Position
-}
-
-// Position holds coordinates for a node
-type Position interface {
-	Left() int
-	Top() int
-}
-
-// Trigger represents something which can initiate a session with the flow engine. It has several properties which can be
-// accessed in expressions:
-//
-//  * `type` the type of the trigger, one of "manual" or "flow"
-//  * `params` the parameters passed to the trigger
-//
-// Examples:
-//
-//   @trigger.type -> flow_action
-//   @trigger.params -> {"source": "website","address": {"state": "WA"}}
-//   @(json(trigger)) -> {"params":{"source":"website","address":{"state":"WA"}},"type":"flow_action"}
-//
-// @context trigger
+// Trigger represents something which can initiate a session with the flow engine
 type Trigger interface {
 	utils.Typed
-	types.XValue
-	types.XResolvable
+	Contextable
 
 	Initialize(Session, EventCallback) error
 	InitializeRun(FlowRun, EventCallback) error
 
-	Environment() utils.Environment
+	Environment() envs.Environment
 	Flow() *assets.FlowReference
 	Contact() *Contact
 	Connection() *Connection
-	Params() types.XValue
+	Batch() bool
+	Params() *types.XObject
+	History() *SessionHistory
 	TriggeredOn() time.Time
 }
 
@@ -303,10 +267,11 @@ type TriggerWithRun interface {
 // Resume represents something which can resume a session with the flow engine
 type Resume interface {
 	utils.Typed
+	Contextable
 
-	Apply(FlowRun, EventCallback) error
+	Apply(FlowRun, EventCallback)
 
-	Environment() utils.Environment
+	Environment() envs.Environment
 	Contact() *Contact
 	ResumedOn() time.Time
 }
@@ -315,7 +280,7 @@ type Resume interface {
 type Modifier interface {
 	utils.Typed
 
-	Apply(utils.Environment, SessionAssets, *Contact, EventCallback)
+	Apply(envs.Environment, SessionAssets, *Contact, EventCallback)
 }
 
 // ModifierCallback is a callback invoked when a modifier has been generated
@@ -333,41 +298,19 @@ type Event interface {
 // EventCallback is a callback invoked when an event has been generated
 type EventCallback func(Event)
 
-// Input describes input from the contact and currently we only support one type of input: `msg`. Any input has the following
-// properties which can be accessed:
-//
-//  * `uuid` the UUID of the input
-//  * `type` the type of the input, e.g. `msg`
-//  * `channel` the [channel](#context:channel) that the input was received on
-//  * `created_on` the time when the input was created
-//
-// An input of type `msg` renders as its text and attachments in a template, and has the following additional properties:
-//
-//  * `text` the text of the message
-//  * `attachments` any [attachments](#context:attachment) on the message
-//  * `urn` the [URN](#context:urn) that the input was received on
-//
-// Examples:
-//
-//   @input -> Hi there\nhttp://s3.amazon.com/bucket/test.jpg\nhttp://s3.amazon.com/bucket/test.mp3
-//   @input.type -> msg
-//   @input.text -> Hi there
-//   @input.attachments -> http://s3.amazon.com/bucket/test.jpg, http://s3.amazon.com/bucket/test.mp3
-//   @(json(input)) -> {"attachments":[{"content_type":"image/jpeg","url":"http://s3.amazon.com/bucket/test.jpg"},{"content_type":"audio/mp3","url":"http://s3.amazon.com/bucket/test.mp3"}],"channel":{"address":"+12345671111","name":"My Android Phone","uuid":"57f1078f-88aa-46f4-a59a-948a5739c03d"},"created_on":"2017-12-31T11:35:10.035757-02:00","text":"Hi there","type":"msg","urn":{"display":"(206) 555-1212","path":"+12065551212","scheme":"tel"},"uuid":"9bf91c2b-ce58-4cef-aacc-281e03f69ab5"}
-//
-// @context input
+// Input describes input from the contact and currently we only support one type of input: `msg`
 type Input interface {
-	types.XValue
 	utils.Typed
+	Contextable
 
 	UUID() InputUUID
 	CreatedOn() time.Time
 	Channel() *Channel
 }
 
+// Step is a single step in the path thru a flow
 type Step interface {
-	types.XValue
-	types.XResolvable
+	Contextable
 
 	UUID() StepUUID
 	NodeUUID() NodeUUID
@@ -377,33 +320,44 @@ type Step interface {
 	Leave(ExitUUID)
 }
 
+// Engine provides callers with session starting and resuming
 type Engine interface {
-	NewSession(SessionAssets) Session
+	NewSession(SessionAssets, Trigger) (Session, Sprint, error)
 	ReadSession(SessionAssets, json.RawMessage, assets.MissingCallback) (Session, error)
 
-	HTTPClient() *utils.HTTPClient
-	DisableWebhooks() bool
-	MaxWebhookResponseBytes() int
+	Services() Services
 	MaxStepsPerSprint() int
+	MaxResumesPerSession() int
+	MaxTemplateChars() int
+}
+
+// Segment is a movement on the flow graph from an exit to another node
+type Segment interface {
+	Flow() Flow
+	Node() Node
+	Exit() Exit
+	Operand() string
+	Destination() Node
+	Time() time.Time
 }
 
 // Sprint is an interaction with the engine - i.e. a start or resume of a session
 type Sprint interface {
 	Modifiers() []Modifier
-	LogModifier(Modifier)
 	Events() []Event
-	LogEvent(Event)
+	Segments() []Segment
 }
 
 // Session represents the session of a flow run which may contain many runs
 type Session interface {
 	Assets() SessionAssets
 
+	UUID() SessionUUID
 	Type() FlowType
 	SetType(FlowType)
 
-	Environment() utils.Environment
-	SetEnvironment(utils.Environment)
+	Environment() envs.Environment
+	SetEnvironment(envs.Environment)
 
 	Contact() *Contact
 	SetContact(*Contact)
@@ -413,15 +367,19 @@ type Session interface {
 
 	Status() SessionStatus
 	Trigger() Trigger
+	CurrentResume() Resume
+	BatchStart() bool
 	PushFlow(Flow, FlowRun, bool)
-	Wait() Wait
+	Wait() ActivatedWait
 
-	Start(Trigger) (Sprint, error)
 	Resume(Resume) (Sprint, error)
 	Runs() []FlowRun
 	GetRun(RunUUID) (FlowRun, error)
+	FindStep(uuid StepUUID) (FlowRun, Step)
 	GetCurrentChild(FlowRun) FlowRun
 	ParentRun() RunSummary
+	CurrentContext() *types.XObject
+	History() *SessionHistory
 
 	Engine() Engine
 }
@@ -436,55 +394,37 @@ type RunSummary interface {
 	Results() Results
 }
 
-// RunEnvironment is a run specific environment which adds location functionality required by some router tests
-type RunEnvironment interface {
-	utils.Environment
-
-	FindLocations(string, utils.LocationLevel, *utils.Location) ([]*utils.Location, error)
-	FindLocationsFuzzy(string, utils.LocationLevel, *utils.Location) ([]*utils.Location, error)
-	LookupLocation(LocationPath) (*utils.Location, error)
-}
-
-// FlowRun is a single contact's journey through a flow. It records the path they have taken, and the results that have been
-// collected. It has several properties which can be accessed in expressions:
-//
-//  * `uuid` the UUID of the run
-//  * `flow` the [flow](#context:flow) of the run
-//  * `contact` the [contact](#context:contact) of the flow run
-//  * `input` the [input](#context:input) of the current run
-//  * `results` the results that have been saved for this run
-//  * `results.[snaked_result_name]` the value of the specific result, e.g. `results.age`
-//
-// Examples:
-//
-//   @run.flow.name -> Registration
-//
-// @context run
+// FlowRun is a single contact's journey through a flow. It records the path they have taken,
+// and the results that have been collected.
 type FlowRun interface {
-	types.XValue
-	types.XResolvable
+	Contextable
 	RunSummary
+	FlowReference() *assets.FlowReference
 
-	Environment() RunEnvironment
+	Environment() envs.Environment
 	Session() Session
-	Context() types.XValue
 	SaveResult(*Result)
 	SetStatus(RunStatus)
-
-	LogEvent(Step, Event)
-	LogError(Step, error)
+	Webhook() types.XValue
+	SetWebhook(types.XValue)
 
 	CreateStep(Node) Step
 	Path() []Step
 	PathLocation() (Step, Node, error)
+
+	LogEvent(Step, Event)
+	LogError(Step, error)
 	Events() []Event
+	ReceivedInput() bool
 
-	EvaluateTemplateValue(template string) (types.XValue, error)
-	EvaluateTemplate(template string) (string, error)
+	EvaluateTemplateValue(string) (types.XValue, error)
+	EvaluateTemplateText(string, excellent.Escaping, bool) (string, error)
+	EvaluateTemplate(string) (string, error)
+	RootContext(envs.Environment) map[string]types.XValue
 
-	GetText(utils.UUID, string, string) string
-	GetTextArray(utils.UUID, string, []string) []string
-	GetTranslatedTextArray(utils.UUID, string, []string, []utils.Language) []string
+	GetText(uuids.UUID, string, string) string
+	GetTextArray(uuids.UUID, string, []string) ([]string, envs.Language)
+	GetTranslatedTextArray(uuids.UUID, string, []string, []envs.Language) []string
 
 	Snapshot() RunSummary
 	Parent() RunSummary
@@ -502,4 +442,20 @@ type FlowRun interface {
 // LegacyExtraContributor is something which contributes results for constructing @legacy_extra
 type LegacyExtraContributor interface {
 	LegacyExtra() Results
+}
+
+type Dependency interface {
+	Reference() assets.Reference
+	Type() string
+	Missing() bool
+}
+
+// Issue is a problem found during flow inspection
+type Issue interface {
+	utils.Typed
+
+	NodeUUID() NodeUUID
+	ActionUUID() ActionUUID
+	Language() envs.Language
+	Description() string
 }

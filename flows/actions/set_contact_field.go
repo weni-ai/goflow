@@ -5,12 +5,12 @@ import (
 
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
-	"github.com/nyaruka/goflow/flows/actions/modifiers"
 	"github.com/nyaruka/goflow/flows/events"
+	"github.com/nyaruka/goflow/flows/modifiers"
 )
 
 func init() {
-	RegisterType(TypeSetContactField, func() flows.Action { return &SetContactFieldAction{} })
+	registerType(TypeSetContactField, func() flows.Action { return &SetContactFieldAction{} })
 }
 
 // TypeSetContactField is the type for the set contact field action
@@ -29,17 +29,17 @@ const TypeSetContactField string = "set_contact_field"
 //
 // @action set_contact_field
 type SetContactFieldAction struct {
-	BaseAction
+	baseAction
 	universalAction
 
 	Field *assets.FieldReference `json:"field" validate:"required"`
-	Value string                 `json:"value"`
+	Value string                 `json:"value" engine:"evaluated"`
 }
 
-// NewSetContactFieldAction creates a new set channel action
-func NewSetContactFieldAction(uuid flows.ActionUUID, field *assets.FieldReference, value string) *SetContactFieldAction {
+// NewSetContactField creates a new set channel action
+func NewSetContactField(uuid flows.ActionUUID, field *assets.FieldReference, value string) *SetContactFieldAction {
 	return &SetContactFieldAction{
-		BaseAction: NewBaseAction(TypeSetContactField, uuid),
+		baseAction: newBaseAction(TypeSetContactField, uuid),
 		Field:      field,
 		Value:      value,
 	}
@@ -48,40 +48,26 @@ func NewSetContactFieldAction(uuid flows.ActionUUID, field *assets.FieldReferenc
 // Execute runs this action
 func (a *SetContactFieldAction) Execute(run flows.FlowRun, step flows.Step, logModifier flows.ModifierCallback, logEvent flows.EventCallback) error {
 	if run.Contact() == nil {
-		logEvent(events.NewErrorEventf("can't execute action in session without a contact"))
+		logEvent(events.NewErrorf("can't execute action in session without a contact"))
 		return nil
 	}
 
-	rawValue, err := run.EvaluateTemplate(a.Value)
-	rawValue = strings.TrimSpace(rawValue)
+	value, err := run.EvaluateTemplate(a.Value)
+	value = strings.TrimSpace(value)
 
 	// if we received an error, log it
 	if err != nil {
-		logEvent(events.NewErrorEvent(err))
+		logEvent(events.NewError(err))
 		return nil
 	}
 
 	fields := run.Session().Assets().Fields()
 	field := fields.Get(a.Field.Key)
 
-	newValue := run.Contact().Fields().Parse(run.Environment(), fields, field, rawValue)
-
-	a.applyModifier(run, modifiers.NewFieldModifier(field, newValue), logModifier, logEvent)
+	if field != nil {
+		a.applyModifier(run, modifiers.NewField(field, value), logModifier, logEvent)
+	} else {
+		logEvent(events.NewDependencyError(a.Field))
+	}
 	return nil
-}
-
-// Inspect inspects this object and any children
-func (a *SetContactFieldAction) Inspect(inspect func(flows.Inspectable)) {
-	inspect(a)
-	flows.InspectReference(a.Field, inspect)
-}
-
-// EnumerateTemplates enumerates all expressions on this object and its children
-func (a *SetContactFieldAction) EnumerateTemplates(localization flows.Localization, include func(string)) {
-	include(a.Value)
-}
-
-// RewriteTemplates rewrites all templates on this object and its children
-func (a *SetContactFieldAction) RewriteTemplates(localization flows.Localization, rewrite func(string) string) {
-	a.Value = rewrite(a.Value)
 }

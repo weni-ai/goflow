@@ -2,14 +2,17 @@ package triggers
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/utils"
 )
 
 func init() {
-	RegisterType(TypeFlowAction, readFlowActionTrigger)
+	registerType(TypeFlowAction, readFlowActionTrigger)
 }
 
 // TypeFlowAction is a constant for sessions triggered by flow actions in other sessions
@@ -20,6 +23,11 @@ const TypeFlowAction string = "flow_action"
 //   {
 //     "type": "flow_action",
 //     "flow": {"uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d", "name": "Collect Age"},
+//     "history": {
+//       "parent_uuid": "a5b25fb0-75fd-4898-a34f-5ff14fc19078",
+//       "ancestors": 3,
+//       "ancestors_since_input": 1
+//     },
 //     "triggered_on": "2000-01-01T00:00:00.000000000-00:00",
 //     "run_summary": {
 //       "uuid": "b7cf0d83-f1c9-411c-96fd-c511a4cfa86d",
@@ -49,18 +57,50 @@ type FlowActionTrigger struct {
 	runSummary json.RawMessage
 }
 
-// NewFlowActionTrigger creates a new flow action trigger with the passed in values
-func NewFlowActionTrigger(env utils.Environment, flow *assets.FlowReference, contact *flows.Contact, runSummary json.RawMessage) *FlowActionTrigger {
-	return &FlowActionTrigger{
-		baseTrigger: newBaseTrigger(TypeFlowAction, env, flow, contact, nil, nil),
-		runSummary:  runSummary,
-	}
-}
-
 // RunSummary returns the summary of the run that triggered this session
 func (t *FlowActionTrigger) RunSummary() json.RawMessage { return t.runSummary }
 
 var _ flows.TriggerWithRun = (*FlowActionTrigger)(nil)
+
+//------------------------------------------------------------------------------------------
+// Builder
+//------------------------------------------------------------------------------------------
+
+// FlowActionBuilder is a builder for flow action type triggers
+type FlowActionBuilder struct {
+	t *FlowActionTrigger
+}
+
+// FlowAction returns a flow action trigger builder
+func (b *Builder) FlowAction(history *flows.SessionHistory, runSummary json.RawMessage) *FlowActionBuilder {
+	if !json.Valid(runSummary) {
+		panic(fmt.Sprintf("invalid run summary JSON: %s", string(runSummary)))
+	}
+
+	return &FlowActionBuilder{
+		t: &FlowActionTrigger{
+			baseTrigger: newBaseTrigger(TypeFlowAction, b.environment, b.flow, b.contact, nil, false, history),
+			runSummary:  runSummary,
+		},
+	}
+}
+
+// WithConnection sets the channel connection for the trigger
+func (b *FlowActionBuilder) WithConnection(channel *assets.ChannelReference, urn urns.URN) *FlowActionBuilder {
+	b.t.connection = flows.NewConnection(channel, urn)
+	return b
+}
+
+// AsBatch sets batch mode on for the trigger
+func (b *FlowActionBuilder) AsBatch() *FlowActionBuilder {
+	b.t.batch = true
+	return b
+}
+
+// Build builds the trigger
+func (b *FlowActionBuilder) Build() *FlowActionTrigger {
+	return b.t
+}
 
 //------------------------------------------------------------------------------------------
 // JSON Encoding / Decoding
@@ -68,7 +108,7 @@ var _ flows.TriggerWithRun = (*FlowActionTrigger)(nil)
 
 type flowActionTriggerEnvelope struct {
 	baseTriggerEnvelope
-	RunSummary json.RawMessage `json:"run_summary"`
+	RunSummary json.RawMessage `json:"run_summary" validate:"required"`
 }
 
 func readFlowActionTrigger(sessionAssets flows.SessionAssets, data json.RawMessage, missing assets.MissingCallback) (flows.Trigger, error) {
@@ -98,5 +138,5 @@ func (t *FlowActionTrigger) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(e)
+	return jsonx.Marshal(e)
 }

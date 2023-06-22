@@ -1,13 +1,13 @@
 package runs
 
 import (
-	"encoding/json"
-	"strings"
 	"time"
 
+	"github.com/nyaruka/gocommon/jsonx"
+	"github.com/nyaruka/gocommon/uuids"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/flows"
-	"github.com/nyaruka/goflow/utils"
 )
 
 type step struct {
@@ -20,7 +20,7 @@ type step struct {
 // NewStep creates a new step
 func NewStep(node flows.Node, arrivedOn time.Time) flows.Step {
 	return &step{
-		stepUUID:  flows.StepUUID(utils.NewUUID()),
+		stepUUID:  flows.StepUUID(uuids.New()),
 		nodeUUID:  node.UUID(),
 		arrivedOn: arrivedOn,
 	}
@@ -35,61 +35,29 @@ func (s *step) Leave(exit flows.ExitUUID) {
 	s.exitUUID = exit
 }
 
-func (s *step) Resolve(env utils.Environment, key string) types.XValue {
-	switch strings.ToLower(key) {
-	case "uuid":
-		return types.NewXText(string(s.UUID()))
-	case "node_uuid":
-		return types.NewXText(string(s.NodeUUID()))
-	case "arrived_on":
-		return types.NewXDateTime(s.ArrivedOn())
-	case "exit_uuid":
-		return types.NewXText(string(s.ExitUUID()))
-	default:
-		return types.NewXResolveError(s, key)
+// Context returns the properties available in expressions
+func (s *step) Context(env envs.Environment) map[string]types.XValue {
+	return map[string]types.XValue{
+		"uuid":       types.NewXText(string(s.UUID())),
+		"node_uuid":  types.NewXText(string(s.NodeUUID())),
+		"arrived_on": types.NewXDateTime(s.ArrivedOn()),
+		"exit_uuid":  types.NewXText(string(s.ExitUUID())),
 	}
-}
-
-// Describe returns a representation of this type for error messages
-func (s *step) Describe() string { return "step" }
-
-func (s *step) Reduce(env utils.Environment) types.XPrimitive {
-	return types.NewXText(string(s.UUID()))
-}
-
-func (s *step) ToXJSON(env utils.Environment) types.XText {
-	return types.ResolveKeys(env, s, "uuid", "node_uuid", "arrived_on", "exit_uuid").ToXJSON(env)
 }
 
 var _ flows.Step = (*step)(nil)
 
+// Path is the steps taken in a run
 type Path []flows.Step
 
-func (p Path) Length() int {
-	return len(p)
-}
-
-func (p Path) Index(index int) types.XValue {
-	return p[index]
-}
-
-// Describe returns a representation of this type for error messages
-func (p Path) Describe() string { return "path" }
-
-func (p Path) Reduce(env utils.Environment) types.XPrimitive {
-	array := types.NewXArray()
-	for _, step := range p {
-		array.Append(step)
+// ToXValue returns a representation of this object for use in expressions
+func (p Path) ToXValue(env envs.Environment) types.XValue {
+	array := make([]types.XValue, len(p))
+	for i, step := range p {
+		array[i] = flows.Context(env, step)
 	}
-	return array
+	return types.NewXArray(array...)
 }
-
-func (p Path) ToXJSON(env utils.Environment) types.XText {
-	return p.Reduce(env).ToXJSON(env)
-}
-
-var _ types.XValue = (Path)(nil)
-var _ types.XIndexable = (Path)(nil)
 
 //------------------------------------------------------------------------------------------
 // JSON Encoding / Decoding
@@ -105,9 +73,8 @@ type stepEnvelope struct {
 // UnmarshalJSON unmarshals a run step from the given JSON
 func (s *step) UnmarshalJSON(data []byte) error {
 	var se stepEnvelope
-	var err error
 
-	err = json.Unmarshal(data, &se)
+	err := jsonx.Unmarshal(data, &se)
 	if err != nil {
 		return err
 	}
@@ -121,7 +88,7 @@ func (s *step) UnmarshalJSON(data []byte) error {
 
 // MarshalJSON marshals this run step into JSON
 func (s *step) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&stepEnvelope{
+	return jsonx.Marshal(&stepEnvelope{
 		UUID:      s.stepUUID,
 		NodeUUID:  s.nodeUUID,
 		ExitUUID:  s.exitUUID,

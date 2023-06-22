@@ -14,14 +14,26 @@ func TestIsNil(t *testing.T) {
 	assert.False(t, utils.IsNil(""))
 }
 
+func TestMaxInt(t *testing.T) {
+	assert.Equal(t, 1, utils.MaxInt(0, 1))
+	assert.Equal(t, 1, utils.MaxInt(1, 0))
+	assert.Equal(t, 1, utils.MaxInt(1, -1))
+}
+
 func TestMinInt(t *testing.T) {
 	assert.Equal(t, 0, utils.MinInt(0, 1))
 	assert.Equal(t, 0, utils.MinInt(1, 0))
 	assert.Equal(t, -1, utils.MinInt(1, -1))
 }
 
-func TestDeriveCountryFromTel(t *testing.T) {
-	assert.Equal(t, "RW", utils.DeriveCountryFromTel("+250788383383"))
-	assert.Equal(t, "EC", utils.DeriveCountryFromTel("+593979000000"))
-	assert.Equal(t, "", utils.DeriveCountryFromTel("1234"))
+func TestReadTypeFromJSON(t *testing.T) {
+	_, err := utils.ReadTypeFromJSON([]byte(`{}`))
+	assert.EqualError(t, err, "field 'type' is required")
+
+	_, err = utils.ReadTypeFromJSON([]byte(`{"type": ""}`))
+	assert.EqualError(t, err, "field 'type' is required")
+
+	typeName, err := utils.ReadTypeFromJSON([]byte(`{"thing": 2, "type": "foo"}`))
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", typeName)
 }

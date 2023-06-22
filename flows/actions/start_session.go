@@ -1,16 +1,18 @@
 package actions
 
 import (
-	"encoding/json"
-
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 )
 
+// max number of times a session can trigger another session without there being input from the contact
+const maxAncestorsSinceInput = 5
+
 func init() {
-	RegisterType(TypeStartSession, func() flows.Action { return &StartSessionAction{} })
+	registerType(TypeStartSession, func() flows.Action { return &StartSessionAction{} })
 }
 
 // TypeStartSession is the type for the start session action
@@ -30,7 +32,7 @@ const TypeStartSession string = "start_session"
 //
 // @action start_session
 type StartSessionAction struct {
-	BaseAction
+	baseAction
 	onlineAction
 	otherContactsAction
 
@@ -38,10 +40,10 @@ type StartSessionAction struct {
 	CreateContact bool                  `json:"create_contact,omitempty"`
 }
 
-// NewStartSessionAction creates a new start session action
-func NewStartSessionAction(uuid flows.ActionUUID, flow *assets.FlowReference, urns []urns.URN, contacts []*flows.ContactReference, groups []*assets.GroupReference, legacyVars []string, createContact bool) *StartSessionAction {
+// NewStartSession creates a new start session action
+func NewStartSession(uuid flows.ActionUUID, flow *assets.FlowReference, urns []urns.URN, contacts []*flows.ContactReference, groups []*assets.GroupReference, legacyVars []string, createContact bool) *StartSessionAction {
 	return &StartSessionAction{
-		BaseAction: NewBaseAction(TypeStartSession, uuid),
+		baseAction: newBaseAction(TypeStartSession, uuid),
 		otherContactsAction: otherContactsAction{
 			URNs:       urns,
 			Contacts:   contacts,
@@ -55,39 +57,36 @@ func NewStartSessionAction(uuid flows.ActionUUID, flow *assets.FlowReference, ur
 
 // Execute runs our action
 func (a *StartSessionAction) Execute(run flows.FlowRun, step flows.Step, logModifier flows.ModifierCallback, logEvent flows.EventCallback) error {
-	urnList, contactRefs, groupRefs, err := a.resolveContactsAndGroups(run, a.URNs, a.Contacts, a.Groups, a.LegacyVars, logEvent)
+	groupRefs, contactRefs, contactQuery, urnList, err := a.resolveRecipients(run, logEvent)
 	if err != nil {
 		return err
 	}
 
-	runSnapshot, err := json.Marshal(run.Snapshot())
+	// batch footgun prevention
+	if run.Session().BatchStart() && (len(groupRefs) > 0 || contactQuery != "") {
+		logEvent(events.NewErrorf("can't start new sessions for groups or queries during batch starts"))
+		return nil
+	}
+
+	// loop footgun prevention
+	ref := run.Session().History()
+	if ref.AncestorsSinceInput >= maxAncestorsSinceInput {
+		logEvent(events.NewErrorf("too many sessions have been spawned since the last time input was received"))
+		return nil
+	}
+
+	// if we don't have any recipients, noop
+	if !(len(urnList) > 0 || len(groupRefs) > 0 || len(contactRefs) > 0 || a.ContactQuery != "" || a.CreateContact) {
+		return nil
+	}
+
+	runSnapshot, err := jsonx.Marshal(run.Snapshot())
 	if err != nil {
 		return err
 	}
 
-	logEvent(events.NewSessionTriggeredEvent(a.Flow, urnList, contactRefs, groupRefs, a.CreateContact, runSnapshot))
+	history := flows.NewChildHistory(run.Session())
+
+	logEvent(events.NewSessionTriggered(a.Flow, groupRefs, contactRefs, contactQuery, a.CreateContact, urnList, runSnapshot, history))
 	return nil
-}
-
-// Inspect inspects this object and any children
-func (a *StartSessionAction) Inspect(inspect func(flows.Inspectable)) {
-	inspect(a)
-	flows.InspectReference(a.Flow, inspect)
-
-	for _, g := range a.Groups {
-		flows.InspectReference(g, inspect)
-	}
-	for _, c := range a.Contacts {
-		flows.InspectReference(c, inspect)
-	}
-}
-
-// EnumerateTemplates enumerates all expressions on this object and its children
-func (a *StartSessionAction) EnumerateTemplates(localization flows.Localization, include func(string)) {
-	flows.EnumerateTemplateArray(a.LegacyVars, include)
-}
-
-// RewriteTemplates rewrites all templates on this object and its children
-func (a *StartSessionAction) RewriteTemplates(localization flows.Localization, rewrite func(string) string) {
-	flows.RewriteTemplateArray(a.LegacyVars, rewrite)
 }

@@ -4,64 +4,60 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/urns"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/contactql"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
+	"github.com/shopspring/decimal"
 
 	"github.com/pkg/errors"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
-// Contact represents a person who is interacting with the flow. It renders as the person's name
-// (or perferred URN if name isn't set) in a template, and has the following properties which can be accessed:
-//
-//  * `uuid` the UUID of the contact
-//  * `name` the full name of the contact
-//  * `first_name` the first name of the contact
-//  * `language` the [ISO-639-3](http://www-01.sil.org/iso639-3/) language code of the contact
-//  * `timezone` the timezone name of the contact
-//  * `created_on` the datetime when the contact was created
-//  * `urns` all [URNs](#context:urn) the contact has set
-//  * `urns.[scheme]` all the [URNs](#context:urn) the contact has set for the particular URN scheme
-//  * `urn` shorthand for `@(format_urn(c.urns.0))`, i.e. the contact's preferred [URN](#context:urn) in friendly formatting
-//  * `groups` all the [groups](#context:group) that the contact belongs to
-//  * `fields` all the custom contact fields the contact has set
-//  * `fields.[snaked_field_name]` the value of the specific field
-//  * `channel` shorthand for `contact.urns[0].channel`, i.e. the [channel](#context:channel) of the contact's preferred URN
-//
-// Examples:
-//
-//   @contact -> Ryan Lewis
-//   @contact.name -> Ryan Lewis
-//   @contact.first_name -> Ryan
-//   @contact.language -> eng
-//   @contact.timezone -> America/Guayaquil
-//   @contact.created_on -> 2018-06-20T11:40:30.123456Z
-//   @contact.urns -> tel:+12065551212, twitterid:54784326227#nyaruka, mailto:foo@bar.com
-//   @(contact.urns[0]) -> tel:+12065551212
-//   @contact.urns.tel -> tel:+12065551212
-//   @(contact.urns.mailto[0]) -> mailto:foo@bar.com
-//   @contact.urn -> tel:+12065551212
-//   @contact.groups -> Testers, Males
-//   @contact.fields -> activation_token: AACC55\nage: 23\ngender: Male\njoin_date: 2017-12-02T00:00:00.000000-02:00\nnot_set:\x20
-//   @contact.fields.activation_token -> AACC55
-//   @contact.fields.gender -> Male
-//
-// @context contact
+func init() {
+	utils.RegisterValidatorAlias("contact_status", "eq=active|eq=blocked|eq=stopped|eq=archived", func(validator.FieldError) string {
+		return "is not a valid contact status"
+	})
+}
+
+// ContactStatus is status in which a contact is in
+type ContactStatus string
+
+const (
+	// ContactStatusActive is the contact status of active
+	ContactStatusActive ContactStatus = "active"
+
+	// ContactStatusBlocked is the contact status of blocked
+	ContactStatusBlocked ContactStatus = "blocked"
+
+	// ContactStatusStopped is the contact status of stopped
+	ContactStatusStopped ContactStatus = "stopped"
+
+	// ContactStatusArchived is the contact status of archived
+	ContactStatusArchived ContactStatus = "archived"
+)
+
+// Contact represents a person who is interacting with the flow
 type Contact struct {
-	uuid      ContactUUID
-	id        ContactID
-	name      string
-	language  utils.Language
-	timezone  *time.Location
-	createdOn time.Time
-	urns      URNList
-	groups    *GroupList
-	fields    FieldValues
+	uuid       ContactUUID
+	id         ContactID
+	name       string
+	language   envs.Language
+	status     ContactStatus
+	timezone   *time.Location
+	createdOn  time.Time
+	lastSeenOn *time.Time
+	urns       URNList
+	groups     *GroupList
+	fields     FieldValues
+	tickets    *TicketList
 
 	// transient fields
 	assets SessionAssets
@@ -73,54 +69,58 @@ func NewContact(
 	uuid ContactUUID,
 	id ContactID,
 	name string,
-	language utils.Language,
+	language envs.Language,
+	status ContactStatus,
 	timezone *time.Location,
 	createdOn time.Time,
+	lastSeenOn *time.Time,
 	urns []urns.URN,
-	groups []assets.Group,
-	fields map[string]*Value) (*Contact, error) {
+	groups []*assets.GroupReference,
+	fields map[string]*Value,
+	tickets []*Ticket,
+	missing assets.MissingCallback) (*Contact, error) {
 
-	urnList, err := ReadURNList(sa, urns, assets.IgnoreMissing)
+	urnList, err := ReadURNList(sa, urns, missing)
 	if err != nil {
 		return nil, err
 	}
 
-	groupList, err := NewGroupListFromAssets(sa, groups)
-	if err != nil {
-		return nil, err
-	}
-
-	fieldValues, err := NewFieldValues(sa, fields, assets.IgnoreMissing)
-	if err != nil {
-		return nil, err
-	}
+	groupList := NewGroupList(sa, groups, missing)
+	fieldValues := NewFieldValues(sa, fields, missing)
+	ticketList := NewTicketList(tickets)
 
 	return &Contact{
-		uuid:      uuid,
-		id:        id,
-		name:      name,
-		language:  language,
-		timezone:  timezone,
-		createdOn: createdOn,
-		urns:      urnList,
-		groups:    groupList,
-		fields:    fieldValues,
-		assets:    sa,
+		uuid:       uuid,
+		id:         id,
+		name:       name,
+		language:   language,
+		status:     status,
+		timezone:   timezone,
+		createdOn:  createdOn,
+		lastSeenOn: lastSeenOn,
+		urns:       urnList,
+		groups:     groupList,
+		fields:     fieldValues,
+		tickets:    ticketList,
+		assets:     sa,
 	}, nil
 }
 
 // NewEmptyContact creates a new empy contact with the passed in name, language and location
-func NewEmptyContact(sa SessionAssets, name string, language utils.Language, timezone *time.Location) *Contact {
+func NewEmptyContact(sa SessionAssets, name string, language envs.Language, timezone *time.Location) *Contact {
 	return &Contact{
-		uuid:      ContactUUID(utils.NewUUID()),
-		name:      name,
-		language:  language,
-		timezone:  timezone,
-		createdOn: utils.Now(),
-		urns:      URNList{},
-		groups:    NewGroupList([]*Group{}),
-		fields:    make(FieldValues),
-		assets:    sa,
+		uuid:       ContactUUID(uuids.New()),
+		name:       name,
+		language:   language,
+		status:     ContactStatusActive,
+		timezone:   timezone,
+		createdOn:  dates.Now(),
+		lastSeenOn: nil,
+		urns:       URNList{},
+		groups:     NewGroupList(sa, nil, assets.IgnoreMissing),
+		fields:     make(FieldValues),
+		tickets:    NewTicketList([]*Ticket{}),
+		assets:     sa,
 	}
 }
 
@@ -131,23 +131,26 @@ func (c *Contact) Clone() *Contact {
 	}
 
 	return &Contact{
-		uuid:      c.uuid,
-		id:        c.id,
-		name:      c.name,
-		language:  c.language,
-		timezone:  c.timezone,
-		createdOn: c.createdOn,
-		urns:      c.urns.clone(),
-		groups:    c.groups.clone(),
-		fields:    c.fields.clone(),
-		assets:    c.assets,
+		uuid:       c.uuid,
+		id:         c.id,
+		name:       c.name,
+		language:   c.language,
+		status:     c.status,
+		timezone:   c.timezone,
+		createdOn:  c.createdOn,
+		lastSeenOn: c.lastSeenOn,
+		urns:       c.urns.clone(),
+		groups:     c.groups.clone(),
+		fields:     c.fields.clone(),
+		tickets:    c.tickets.clone(),
+		assets:     c.assets,
 	}
 }
 
 // Equal returns true if this instance is equal to the given instance
 func (c *Contact) Equal(other *Contact) bool {
-	asJSON1, _ := json.Marshal(c)
-	asJSON2, _ := json.Marshal(other)
+	asJSON1, _ := jsonx.Marshal(c)
+	asJSON2, _ := jsonx.Marshal(other)
 	return string(asJSON1) == string(asJSON2)
 }
 
@@ -158,10 +161,36 @@ func (c *Contact) UUID() ContactUUID { return c.uuid }
 func (c *Contact) ID() ContactID { return c.id }
 
 // SetLanguage sets the language for this contact
-func (c *Contact) SetLanguage(lang utils.Language) { c.language = lang }
+func (c *Contact) SetLanguage(lang envs.Language) { c.language = lang }
 
 // Language gets the language for this contact
-func (c *Contact) Language() utils.Language { return c.language }
+func (c *Contact) Language() envs.Language { return c.language }
+
+// Country gets the country for this contact..
+//
+// TODO: currently this is taken from their preferred channel but probably should become an explicit field at some point
+func (c *Contact) Country() envs.Country {
+	ch := c.PreferredChannel()
+	if ch != nil && ch.Country() != envs.NilCountry {
+		return ch.Country()
+	}
+	return envs.NilCountry
+}
+
+// Locale gets the locale for this contact, using the environment country if contact doesn't have one
+func (c *Contact) Locale(env envs.Environment) envs.Locale {
+	country := c.Country()
+	if country == envs.NilCountry {
+		country = env.DefaultCountry()
+	}
+	return envs.NewLocale(c.language, country)
+}
+
+// Status returns the contact status
+func (c *Contact) Status() ContactStatus { return c.status }
+
+// SetStatus sets the status of this contact (blocked, stopped or active)
+func (c *Contact) SetStatus(status ContactStatus) { c.status = status }
 
 // SetTimezone sets the timezone of this contact
 func (c *Contact) SetTimezone(tz *time.Location) {
@@ -171,13 +200,14 @@ func (c *Contact) SetTimezone(tz *time.Location) {
 // Timezone returns the timezone of this contact
 func (c *Contact) Timezone() *time.Location { return c.timezone }
 
-// SetCreatedOn sets the created on time of this contact
-func (c *Contact) SetCreatedOn(createdOn time.Time) {
-	c.createdOn = createdOn
-}
-
 // CreatedOn returns the created on time of this contact
 func (c *Contact) CreatedOn() time.Time { return c.createdOn }
+
+// LastSeenOn returns the last seen on time of this contact
+func (c *Contact) LastSeenOn() *time.Time { return c.lastSeenOn }
+
+// SetLastSeenOn sets the last seen on time of this contact
+func (c *Contact) SetLastSeenOn(t time.Time) { c.lastSeenOn = &t }
 
 // SetName sets the name of this contact
 func (c *Contact) SetName(name string) { c.name = name }
@@ -188,13 +218,37 @@ func (c *Contact) Name() string { return c.name }
 // URNs returns the URNs of this contact
 func (c *Contact) URNs() URNList { return c.urns }
 
+// ClearURNs clears the URNs on this contact
+func (c *Contact) ClearURNs() bool {
+	hadURNS := len(c.urns) > 0
+	c.urns = URNList{}
+	return hadURNS
+}
+
 // AddURN adds a new URN to this contact
-func (c *Contact) AddURN(urn *ContactURN) bool {
-	if c.HasURN(urn.URN()) {
+func (c *Contact) AddURN(urn urns.URN, channel *Channel) bool {
+	if c.HasURN(urn) {
 		return false
 	}
 
-	c.urns = append(c.urns, urn)
+	c.urns = append(c.urns, NewContactURN(urn, channel))
+	return true
+}
+
+// RemoveURN adds a new URN to this contact
+func (c *Contact) RemoveURN(urn urns.URN) bool {
+	if !c.HasURN(urn) {
+		return false
+	}
+
+	newURNs := make([]*ContactURN, 0, len(c.urns)-1)
+	for _, u := range c.urns {
+		if u.URN().Identity() != urn.Identity() {
+			newURNs = append(newURNs, u)
+		}
+	}
+
+	c.urns = URNList(newURNs)
 	return true
 }
 
@@ -210,11 +264,14 @@ func (c *Contact) HasURN(urn urns.URN) bool {
 	return false
 }
 
+// Fields returns this contact's field values
+func (c *Contact) Fields() FieldValues { return c.fields }
+
 // Groups returns the groups that this contact belongs to
 func (c *Contact) Groups() *GroupList { return c.groups }
 
-// Fields returns this contact's field values
-func (c *Contact) Fields() FieldValues { return c.fields }
+// Tickets returns the tickets that this contact has open
+func (c *Contact) Tickets() *TicketList { return c.tickets }
 
 // Reference returns a reference to this contact
 func (c *Contact) Reference() *ContactReference {
@@ -225,14 +282,14 @@ func (c *Contact) Reference() *ContactReference {
 }
 
 // Format returns a friendly string version of this contact depending on what fields are set
-func (c *Contact) Format(env utils.Environment) string {
+func (c *Contact) Format(env envs.Environment) string {
 	// if contact has a name set, use that
 	if c.name != "" {
 		return c.name
 	}
 
-	// otherwise use either id or the higest priority URN depending on the env
-	if env.RedactionPolicy() == utils.RedactionPolicyURNs {
+	// otherwise use either id or the highest priority URN depending on the env
+	if env.RedactionPolicy() == envs.RedactionPolicyURNs {
 		return strconv.Itoa(int(c.id))
 	}
 	if len(c.urns) > 0 {
@@ -242,60 +299,63 @@ func (c *Contact) Format(env utils.Environment) string {
 	return ""
 }
 
-// Resolve resolves the given key when this contact is referenced in an expression
-func (c *Contact) Resolve(env utils.Environment, key string) types.XValue {
-	switch strings.ToLower(key) {
-	case "uuid":
-		return types.NewXText(string(c.uuid))
-	case "id":
-		return types.NewXNumberFromInt(int(c.id))
-	case "name":
-		return types.NewXText(c.name)
-	case "first_name":
-		names := utils.TokenizeString(c.name)
-		if len(names) >= 1 {
-			return types.NewXText(names[0])
-		}
-		return nil
-	case "language":
-		return types.NewXText(string(c.language))
-	case "timezone":
-		if c.timezone != nil {
-			return types.NewXText(c.timezone.String())
-		}
-		return nil
-	case "created_on":
-		return types.NewXDateTime(c.createdOn)
-	case "urns":
-		return c.urns
-	case "urn":
-		return c.PreferredURN()
-	case "groups":
-		return c.groups
-	case "fields":
-		return c.fields
-	case "channel":
-		return c.PreferredChannel()
+// Context returns the properties available in expressions
+//
+//   __default__:text -> the name or URN
+//   uuid:text -> the UUID of the contact
+//   id:text -> the numeric ID of the contact
+//   first_name:text -> the first name of the contact
+//   name:text -> the name of the contact
+//   language:text -> the language of the contact as 3-letter ISO code
+//   created_on:datetime -> the creation date of the contact
+//   last_seen_on:any -> the last seen date of the contact
+//   urns:[]text -> the URNs belonging to the contact
+//   urn:text -> the preferred URN of the contact
+//   groups:[]group -> the groups the contact belongs to
+//   fields:fields -> the custom field values of the contact
+//   channel:channel -> the preferred channel of the contact
+//   tickets:[]ticket -> the open tickets of the contact
+//
+// @context contact
+func (c *Contact) Context(env envs.Environment) map[string]types.XValue {
+	var firstName, urn, timezone, lastSeenOn types.XValue
+
+	if c.timezone != nil {
+		timezone = types.NewXText(c.timezone.String())
 	}
 
-	return types.NewXResolveError(c, key)
+	preferredURN := c.PreferredURN()
+	if preferredURN != nil {
+		urn = preferredURN.ToXValue(env)
+	}
+
+	names := utils.TokenizeString(c.name)
+	if len(names) >= 1 {
+		firstName = types.NewXText(names[0])
+	}
+
+	if c.lastSeenOn != nil {
+		lastSeenOn = types.NewXDateTime(*c.lastSeenOn)
+	}
+
+	return map[string]types.XValue{
+		"__default__":  types.NewXText(c.Format(env)),
+		"uuid":         types.NewXText(string(c.uuid)),
+		"id":           types.NewXText(strconv.Itoa(int(c.id))),
+		"name":         types.NewXText(c.name),
+		"first_name":   firstName,
+		"language":     types.NewXText(string(c.language)),
+		"timezone":     timezone,
+		"created_on":   types.NewXDateTime(c.createdOn),
+		"last_seen_on": lastSeenOn,
+		"urns":         c.urns.ToXValue(env),
+		"urn":          urn,
+		"groups":       c.groups.ToXValue(env),
+		"fields":       Context(env, c.Fields()),
+		"channel":      Context(env, c.PreferredChannel()),
+		"tickets":      c.tickets.ToXValue(env),
+	}
 }
-
-// Describe returns a representation of this type for error messages
-func (c *Contact) Describe() string { return "contact" }
-
-// Reduce is called when this object needs to be reduced to a primitive
-func (c *Contact) Reduce(env utils.Environment) types.XPrimitive {
-	return types.NewXText(c.Format(env))
-}
-
-// ToXJSON is called when this type is passed to @(json(...))
-func (c *Contact) ToXJSON(env utils.Environment) types.XText {
-	return types.ResolveKeys(env, c, "uuid", "name", "language", "timezone", "created_on", "urns", "groups", "fields", "channel").ToXJSON(env)
-}
-
-var _ types.XValue = (*Contact)(nil)
-var _ types.XResolvable = (*Contact)(nil)
 
 // Destination is a sendable channel and URN pair
 type Destination struct {
@@ -347,12 +407,22 @@ func (c *Contact) UpdatePreferredChannel(channel *Channel) bool {
 			urn.SetChannel(nil)
 		}
 	} else {
+		if !channel.HasRole(assets.ChannelRoleSend) {
+			return false
+		}
+
 		priorityURNs := make([]*ContactURN, 0)
 		otherURNs := make([]*ContactURN, 0)
 
 		for _, urn := range c.urns {
 			// tel URNs can be re-assigned, other URN schemes are considered channel specific
 			if urn.URN().Scheme() == urns.TelScheme && channel.SupportsScheme(urns.TelScheme) {
+				urn.SetChannel(channel)
+			}
+
+			// If URN doesn't have a channel and is a scheme supported by the channel, then we can set its
+			// channel. This may result in unsendable URN/channel pairing but can't do much about that.
+			if urn.Channel() == nil && channel.SupportsScheme(urn.URN().Scheme()) {
 				urn.SetChannel(channel)
 			}
 
@@ -370,21 +440,19 @@ func (c *Contact) UpdatePreferredChannel(channel *Channel) bool {
 	return !oldURNs.Equal(c.urns)
 }
 
-// ReevaluateDynamicGroups reevaluates membership of all dynamic groups for this contact
-func (c *Contact) ReevaluateDynamicGroups(env utils.Environment, allGroups *GroupAssets) ([]*Group, []*Group, []error) {
+// ReevaluateQueryBasedGroups reevaluates membership of all query based groups for this contact
+func (c *Contact) ReevaluateQueryBasedGroups(env envs.Environment) ([]*Group, []*Group) {
 	added := make([]*Group, 0)
 	removed := make([]*Group, 0)
-	errors := make([]error, 0)
 
-	for _, group := range allGroups.All() {
-		if !group.IsDynamic() {
+	for _, group := range c.assets.Groups().All() {
+		if !group.UsesQuery() {
 			continue
 		}
 
-		qualifies, err := group.CheckDynamicMembership(env, c)
-		if err != nil {
-			errors = append(errors, err)
-		} else if qualifies {
+		qualifies := group.CheckQueryBasedMembership(env, c)
+
+		if qualifies {
 			if c.groups.Add(group) {
 				added = append(added, group)
 			}
@@ -395,53 +463,67 @@ func (c *Contact) ReevaluateDynamicGroups(env utils.Environment, allGroups *Grou
 		}
 	}
 
-	return added, removed, errors
+	return added, removed
 }
 
-// ResolveQueryKey resolves a contact query search key for this contact
-func (c *Contact) ResolveQueryKey(env utils.Environment, key string) []interface{} {
-	switch key {
-	case "name":
-		if c.name != "" {
-			return []interface{}{c.name}
-		}
-		return nil
-	case "language":
-		if c.language != utils.NilLanguage {
-			return []interface{}{string(c.language)}
-		}
-		return nil
-	case "created_on":
-		return []interface{}{c.createdOn}
-	}
-
-	// try as a URN scheme
-	if urns.IsValidScheme(key) {
-		if env.RedactionPolicy() != utils.RedactionPolicyURNs {
-			urnsWithScheme := c.urns.WithScheme(key)
-			vals := make([]interface{}, len(urnsWithScheme))
-			for u := range urnsWithScheme {
-				vals[u] = string(urnsWithScheme[u].URN())
+// QueryProperty resolves a contact query search key for this contact
+func (c *Contact) QueryProperty(env envs.Environment, key string, propType contactql.PropertyType) []interface{} {
+	if propType == contactql.PropertyTypeAttribute {
+		switch key {
+		case contactql.AttributeUUID:
+			return []interface{}{string(c.uuid)}
+		case contactql.AttributeID:
+			if c.id != 0 {
+				return []interface{}{fmt.Sprintf("%d", c.id)}
+			}
+			return nil
+		case contactql.AttributeName:
+			if c.name != "" {
+				return []interface{}{c.name}
+			}
+			return nil
+		case contactql.AttributeLanguage:
+			if c.language != envs.NilLanguage {
+				return []interface{}{string(c.language)}
+			}
+			return nil
+		case contactql.AttributeURN:
+			vals := make([]interface{}, len(c.URNs()))
+			for i, urn := range c.URNs() {
+				vals[i] = urn.URN().Path()
 			}
 			return vals
+		case contactql.AttributeGroup:
+			vals := make([]interface{}, c.Groups().Count())
+			for i, group := range c.Groups().All() {
+				vals[i] = group.Name()
+			}
+			return vals
+		case contactql.AttributeTickets:
+			return []interface{}{decimal.NewFromInt(int64(c.tickets.Count()))}
+		case contactql.AttributeCreatedOn:
+			return []interface{}{c.createdOn}
+		case contactql.AttributeLastSeenOn:
+			if c.lastSeenOn != nil {
+				return []interface{}{*c.lastSeenOn}
+			}
+			return nil
+		default:
+			return nil
 		}
-		return nil
+	} else if propType == contactql.PropertyTypeScheme {
+		urnsWithScheme := c.urns.WithScheme(key)
+		vals := make([]interface{}, len(urnsWithScheme))
+		for i := range urnsWithScheme {
+			vals[i] = urnsWithScheme[i].URN().Path()
+		}
+		return vals
 	}
 
 	// try as a contact field
-	var nativeValue interface{}
-
-	switch typed := c.fields[key].TypedValue().(type) {
-	case nil:
+	nativeValue := c.fields[key].QueryValue()
+	if nativeValue == nil {
 		return nil
-	case LocationPath:
-		nativeValue = typed.Name()
-	case types.XText:
-		nativeValue = typed.Native()
-	case types.XNumber:
-		nativeValue = typed.Native()
-	case types.XDateTime:
-		nativeValue = typed.Native()
 	}
 
 	return []interface{}{nativeValue}
@@ -486,15 +568,20 @@ var _ assets.Reference = (*ContactReference)(nil)
 //------------------------------------------------------------------------------------------
 
 type contactEnvelope struct {
-	UUID      ContactUUID              `json:"uuid" validate:"required,uuid4"`
-	ID        ContactID                `json:"id,omitempty"`
-	Name      string                   `json:"name,omitempty"`
-	Language  utils.Language           `json:"language,omitempty"`
-	Timezone  string                   `json:"timezone,omitempty"`
-	CreatedOn time.Time                `json:"created_on" validate:"required"`
-	URNs      []urns.URN               `json:"urns,omitempty" validate:"dive,urn"`
-	Groups    []*assets.GroupReference `json:"groups,omitempty" validate:"dive"`
-	Fields    map[string]*Value        `json:"fields,omitempty"`
+	UUID       ContactUUID              `json:"uuid"                validate:"required,uuid4"`
+	ID         ContactID                `json:"id,omitempty"`
+	Name       string                   `json:"name,omitempty"`
+	Language   envs.Language            `json:"language,omitempty"`
+	Status     ContactStatus            `json:"status,omitempty"    validate:"omitempty,contact_status"`
+	Stopped    bool                     `json:"stopped,omitempty"`
+	Blocked    bool                     `json:"blocked,omitempty"`
+	Timezone   string                   `json:"timezone,omitempty"`
+	CreatedOn  time.Time                `json:"created_on"          validate:"required"`
+	LastSeenOn *time.Time               `json:"last_seen_on,omitempty"`
+	URNs       []urns.URN               `json:"urns,omitempty"      validate:"dive,urn"`
+	Groups     []*assets.GroupReference `json:"groups,omitempty"    validate:"dive"`
+	Fields     map[string]*Value        `json:"fields,omitempty"`
+	Tickets    []json.RawMessage        `json:"tickets,omitempty"`
 }
 
 // ReadContact decodes a contact from the passed in JSON
@@ -507,12 +594,19 @@ func ReadContact(sa SessionAssets, data json.RawMessage, missing assets.MissingC
 	}
 
 	c := &Contact{
-		uuid:      envelope.UUID,
-		id:        envelope.ID,
-		name:      envelope.Name,
-		language:  envelope.Language,
-		createdOn: envelope.CreatedOn,
-		assets:    sa,
+		uuid:       envelope.UUID,
+		id:         envelope.ID,
+		name:       envelope.Name,
+		language:   envelope.Language,
+		status:     envelope.Status,
+		createdOn:  envelope.CreatedOn,
+		lastSeenOn: envelope.LastSeenOn,
+		assets:     sa,
+	}
+
+	// it's possible older sessions won't have contact status
+	if c.status == "" {
+		c.status = ContactStatusActive
 	}
 
 	if envelope.Timezone != "" {
@@ -529,46 +623,47 @@ func ReadContact(sa SessionAssets, data json.RawMessage, missing assets.MissingC
 		}
 	}
 
-	if envelope.Groups == nil {
-		c.groups = NewGroupList([]*Group{})
-	} else {
-		groups := make([]*Group, 0, len(envelope.Groups))
-		for _, g := range envelope.Groups {
-			group := sa.Groups().Get(g.UUID)
-			if group == nil {
-				missing(g)
-			} else {
-				groups = append(groups, group)
-			}
-		}
-		c.groups = NewGroupList(groups)
-	}
+	c.groups = NewGroupList(sa, envelope.Groups, missing)
+	c.fields = NewFieldValues(sa, envelope.Fields, missing)
 
-	if c.fields, err = NewFieldValues(sa, envelope.Fields, missing); err != nil {
-		return nil, errors.Wrap(err, "error reading fields")
+	tickets := make([]*Ticket, len(envelope.Tickets))
+	for i := range envelope.Tickets {
+		tickets[i], err = ReadTicket(sa, envelope.Tickets[i], missing)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to read ticket")
+		}
 	}
+	c.tickets = NewTicketList(tickets)
 
 	return c, nil
 }
 
 // MarshalJSON marshals this contact into JSON
 func (c *Contact) MarshalJSON() ([]byte, error) {
-	ce := &contactEnvelope{
-		Name:      c.name,
-		UUID:      c.uuid,
-		ID:        c.id,
-		Language:  c.language,
-		CreatedOn: c.createdOn,
+	var err error
+	tickets := make([]json.RawMessage, len(c.tickets.tickets))
+	for i, ticket := range c.tickets.tickets {
+		tickets[i], err = jsonx.Marshal(ticket)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	ce.URNs = c.urns.RawURNs()
+	ce := &contactEnvelope{
+		Name:       c.name,
+		UUID:       c.uuid,
+		ID:         c.id,
+		Status:     c.status,
+		Language:   c.language,
+		CreatedOn:  c.createdOn,
+		LastSeenOn: c.lastSeenOn,
+		URNs:       c.urns.RawURNs(),
+		Groups:     c.groups.references(),
+		Tickets:    tickets,
+	}
+
 	if c.timezone != nil {
 		ce.Timezone = c.timezone.String()
-	}
-
-	ce.Groups = make([]*assets.GroupReference, c.groups.Count())
-	for g, group := range c.groups.All() {
-		ce.Groups[g] = group.Reference()
 	}
 
 	ce.Fields = make(map[string]*Value)
@@ -578,5 +673,5 @@ func (c *Contact) MarshalJSON() ([]byte, error) {
 		}
 	}
 
-	return json.Marshal(ce)
+	return jsonx.Marshal(ce)
 }

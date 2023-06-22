@@ -3,6 +3,7 @@ package triggers
 import (
 	"encoding/json"
 
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/excellent/types"
@@ -11,30 +12,27 @@ import (
 )
 
 func init() {
-	RegisterType(TypeChannel, readChannelTrigger)
+	registerType(TypeChannel, readChannelTrigger)
 }
 
 // TypeChannel is the type for sessions triggered by channel events
 const TypeChannel string = "channel"
 
-// ChannelEventType is the type of event that occured on the channel
+// ChannelEventType is the type of event that occurred on the channel
 type ChannelEventType string
 
 // different channel event types
 const (
-	ChannelEventTypeNewConversation ChannelEventType = "new_conversation"
 	ChannelEventTypeIncomingCall    ChannelEventType = "incoming_call"
+	ChannelEventTypeMissedCall      ChannelEventType = "missed_call"
+	ChannelEventTypeNewConversation ChannelEventType = "new_conversation"
+	ChannelEventTypeReferral        ChannelEventType = "referral"
 )
 
 // ChannelEvent describes the specific event on the channel that triggered the session
 type ChannelEvent struct {
 	Type    ChannelEventType         `json:"type" validate:"required"`
 	Channel *assets.ChannelReference `json:"channel" validate:"required,dive"`
-}
-
-// NewChannelEvent creates a new channel event
-func NewChannelEvent(typeName ChannelEventType, channel *assets.ChannelReference) *ChannelEvent {
-	return &ChannelEvent{Type: typeName, Channel: channel}
 }
 
 // ChannelTrigger is used when a session was triggered by a channel event
@@ -60,31 +58,43 @@ type ChannelTrigger struct {
 	event *ChannelEvent
 }
 
-// NewChannelTrigger creates a new channel trigger with the passed in values
-func NewChannelTrigger(env utils.Environment, flow *assets.FlowReference, contact *flows.Contact, event *ChannelEvent, params types.XValue) *ChannelTrigger {
-	return &ChannelTrigger{
-		baseTrigger: newBaseTrigger(TypeChannel, env, flow, contact, nil, params),
-		event:       event,
-	}
-}
-
-// NewIncomingCallTrigger creates a new channel trigger with the passed in values
-func NewIncomingCallTrigger(env utils.Environment, flow *assets.FlowReference, contact *flows.Contact, urn urns.URN, channel *assets.ChannelReference) *ChannelTrigger {
-	event := NewChannelEvent(ChannelEventTypeIncomingCall, channel)
-	connection := flows.NewConnection(channel, urn)
-
-	return &ChannelTrigger{
-		baseTrigger: newBaseTrigger(TypeChannel, env, flow, contact, connection, nil),
-		event:       event,
-	}
-}
-
-// ToXJSON is called when this type is passed to @(json(...))
-func (t *ChannelTrigger) ToXJSON(env utils.Environment) types.XText {
-	return types.ResolveKeys(env, t, "type", "params").ToXJSON(env)
-}
-
 var _ flows.Trigger = (*ChannelTrigger)(nil)
+
+//------------------------------------------------------------------------------------------
+// Builder
+//------------------------------------------------------------------------------------------
+
+// ChannelBuilder is a builder for channel type triggers
+type ChannelBuilder struct {
+	t *ChannelTrigger
+}
+
+// Channel returns a channel trigger builder
+func (b *Builder) Channel(channel *assets.ChannelReference, eventType ChannelEventType) *ChannelBuilder {
+	return &ChannelBuilder{
+		t: &ChannelTrigger{
+			baseTrigger: newBaseTrigger(TypeChannel, b.environment, b.flow, b.contact, nil, false, nil),
+			event:       &ChannelEvent{Type: eventType, Channel: channel},
+		},
+	}
+}
+
+// WithConnection sets the channel connection for the trigger
+func (b *ChannelBuilder) WithConnection(urn urns.URN) *ChannelBuilder {
+	b.t.connection = flows.NewConnection(b.t.event.Channel, urn)
+	return b
+}
+
+// WithParams sets the params for the trigger
+func (b *ChannelBuilder) WithParams(params *types.XObject) *ChannelBuilder {
+	b.t.params = params
+	return b
+}
+
+// Build builds the trigger
+func (b *ChannelBuilder) Build() *ChannelTrigger {
+	return b.t
+}
 
 //------------------------------------------------------------------------------------------
 // JSON Encoding / Decoding
@@ -122,5 +132,5 @@ func (t *ChannelTrigger) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(e)
+	return jsonx.Marshal(e)
 }
