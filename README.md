@@ -1,7 +1,7 @@
 # Goflow 
-[![Build Status](https://github.com/nyaruka/goflow/workflows/CI/badge.svg)](https://github.com/nyaruka/goflow/actions?query=workflow%3ACI) 
-[![codecov](https://codecov.io/gh/nyaruka/goflow/branch/main/graph/badge.svg)](https://codecov.io/gh/nyaruka/goflow) 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nyaruka/goflow)](https://goreportcard.com/report/github.com/nyaruka/goflow)
+[![Build Status](https://github.com/weni-ai/goflow/workflows/CI/badge.svg)](https://github.com/weni-ai/goflow/actions?query=workflow%3ACI) 
+[![codecov](https://codecov.io/gh/weni-ai/goflow/branch/main/graph/badge.svg)](https://codecov.io/gh/weni-ai/goflow) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/weni-ai/goflow)](https://goreportcard.com/report/github.com/weni-ai/goflow)
 
 ## Specification
 
@@ -37,7 +37,7 @@ Sessions can be persisted between waits by calling `json.Marshal` on the `Sessio
 Provides a command line interface for stepping through a given flow.
 
 ```
-% go install github.com/nyaruka/goflow/cmd/flowrunner
+% go install github.com//goflow/cmd/flowrunner
 % $GOPATH/bin/flowrunner test/testdata/runner/two_questions.json 615b8a0f-588c-4d20-a05f-363b0b4ce6f4
 Starting flow 'U-Report Registration Flow'....
 ---------------------------------------
@@ -63,7 +63,7 @@ If the `-repro` flag is set, it will dump the triggers and resumes it used which
 Takes a legacy flow definition as piped input and outputs the migrated definition:
 
 ```
-% go install github.com/nyaruka/goflow/cmd/flowmigrate
+% go install github.com//goflow/cmd/flowmigrate
 % cat legacy_flow.json | $GOPATH/bin/flowmigrate
 % cat legacy_export.json | jq '.flows[0]' | $GOPATH/bin/flowmigrate
 ```
