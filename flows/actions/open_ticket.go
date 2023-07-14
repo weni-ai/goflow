@@ -88,8 +88,9 @@ func (a *OpenTicketAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		fmt.Println("empty ticket")
 		if strings.HasPrefix(evaluatedBody, `{"id":`) {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
+		} else {
+			a.saveResult(run, step, a.ResultName, "", CategoryFailure, "", "", nil, logEvent)
 		}
-		a.saveResult(run, step, a.ResultName, "", CategoryFailure, "", "", nil, logEvent)
 	}
 
 	return nil
