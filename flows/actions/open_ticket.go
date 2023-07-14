@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"strings"
+
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -16,21 +18,21 @@ const TypeOpenTicket string = "open_ticket"
 
 // OpenTicketAction is used to open a ticket for the contact.
 //
-//   {
-//     "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
-//     "type": "open_ticket",
-//     "ticketer": {
-//       "uuid": "19dc6346-9623-4fe4-be80-538d493ecdf5",
-//       "name": "Support Tickets"
-//     },
-//     "topic": {
-//       "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
-//       "name": "Weather"
-//     },
-//     "body": "@input",
-//     "assignee": {"email": "bob@nyaruka.com", "name": "Bob McTickets"},
-//     "result_name": "Help Ticket"
-//   }
+//	{
+//	  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
+//	  "type": "open_ticket",
+//	  "ticketer": {
+//	    "uuid": "19dc6346-9623-4fe4-be80-538d493ecdf5",
+//	    "name": "Support Tickets"
+//	  },
+//	  "topic": {
+//	    "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+//	    "name": "Weather"
+//	  },
+//	  "body": "@input",
+//	  "assignee": {"email": "bob@nyaruka.com", "name": "Bob McTickets"},
+//	  "result_name": "Help Ticket"
+//	}
 //
 // @action open_ticket
 type OpenTicketAction struct {
@@ -82,7 +84,11 @@ func (a *OpenTicketAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 	if ticket != nil {
 		a.saveResult(run, step, a.ResultName, string(ticket.UUID()), CategorySuccess, "", "", nil, logEvent)
 	} else {
-		a.saveResult(run, step, a.ResultName, "", CategoryFailure, "", "", nil, logEvent)
+		if strings.HasPrefix(evaluatedBody, `{"id":`) && ticketer.Type() == "zendesk" {
+			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
+		} else {
+			a.saveResult(run, step, a.ResultName, "", CategoryFailure, "", "", nil, logEvent)
+		}
 	}
 
 	return nil
