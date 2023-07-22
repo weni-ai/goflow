@@ -37,6 +37,7 @@ type baseResume struct {
 	environment envs.Environment
 	contact     *flows.Contact
 	resumedOn   time.Time
+	params      *types.XObject
 }
 
 // creates a new base resume
@@ -50,6 +51,9 @@ func (r *baseResume) Type() string { return r.type_ }
 func (r *baseResume) Environment() envs.Environment { return r.environment }
 func (r *baseResume) Contact() *flows.Contact       { return r.contact }
 func (r *baseResume) ResumedOn() time.Time          { return r.resumedOn }
+func (r *baseResume) Params() *types.XObject        { return r.params }
+
+func (r *baseResume) SetParams(params *types.XObject) { r.params = params }
 
 // Apply applies our state changes and saves any events to the run
 func (r *baseResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
@@ -99,7 +103,7 @@ func (r *baseResume) context() *Context {
 
 // Context returns the properties available in expressions
 //
-//   type:text -> the type of resume that resumed this session
+//	type:text -> the type of resume that resumed this session
 //
 // @context resume
 func (r *baseResume) Context(env envs.Environment) map[string]types.XValue {
@@ -115,6 +119,7 @@ type baseResumeEnvelope struct {
 	Environment json.RawMessage `json:"environment,omitempty"`
 	Contact     json.RawMessage `json:"contact,omitempty"`
 	ResumedOn   time.Time       `json:"resumed_on" validate:"required"`
+	Params      json.RawMessage `json:"params,omitempty"`
 }
 
 // ReadResume reads a resume from the given JSON
@@ -147,6 +152,11 @@ func (r *baseResume) unmarshal(sessionAssets flows.SessionAssets, e *baseResumeE
 			return errors.Wrap(err, "unable to read contact")
 		}
 	}
+	if e.Params != nil {
+		if r.params, err = types.ReadXObject(e.Params); err != nil {
+			return errors.Wrap(err, "unable to read params")
+		}
+	}
 	return nil
 }
 
@@ -163,6 +173,12 @@ func (r *baseResume) marshal(e *baseResumeEnvelope) error {
 	}
 	if r.contact != nil {
 		e.Contact, err = jsonx.Marshal(r.contact)
+		if err != nil {
+			return err
+		}
+	}
+	if r.params != nil {
+		e.Params, err = jsonx.Marshal(r.params)
 		if err != nil {
 			return err
 		}

@@ -476,6 +476,7 @@
             },
             "created_on": "2017-12-31T11:35:10.035757-02:00",
             "external_id": "",
+            "order": null,
             "text": "Hi there",
             "type": "msg",
             "urn": "tel:+12065551212",
