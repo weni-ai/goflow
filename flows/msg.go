@@ -7,6 +7,7 @@ import (
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/envs"
+	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
 
 	validator "gopkg.in/go-playground/validator.v9"
@@ -44,7 +45,8 @@ type BaseMsg struct {
 type MsgIn struct {
 	BaseMsg
 
-	ExternalID_ string `json:"external_id,omitempty"`
+	ExternalID_ string         `json:"external_id,omitempty"`
+	Order_      *types.XObject `json:"order,omitempty"`
 }
 
 // MsgOut represents a outgoing message to the session contact
@@ -131,6 +133,10 @@ func (m *BaseMsg) Text() string { return m.Text_ }
 
 // Attachments returns the attachments of this message
 func (m *BaseMsg) Attachments() []utils.Attachment { return m.Attachments_ }
+
+func (m *MsgIn) Order() *types.XObject { return m.Order_ }
+
+func (m *MsgIn) SetOrder(order *types.XObject) { m.Order_ = order }
 
 // ExternalID returns the optional external ID of this incoming message
 func (m *MsgIn) ExternalID() string { return m.ExternalID_ }
