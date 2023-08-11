@@ -46,7 +46,7 @@ func TestCatalogMsg(t *testing.T) {
 		],
 		"text": "",
 		"topic": "none",
-		"urn": "asd",
+		"urn": "whatsapp:+558299988776655",
 		"uuid": "1ae96956-4b34-433e-8d1a-f05fe6923d6d"
 	}`), marshaled, "JSON mismatch")
 }

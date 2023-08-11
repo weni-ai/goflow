@@ -53,7 +53,7 @@ type createMsgCatalogAction struct {
 // NewSendMsgCatalog creates a new send msg catalog action
 func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer string, products []string, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
-		baseAction: newBaseAction(TypeSendMsg, uuid),
+		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
 			Header:   header,
 			Body:     body,
