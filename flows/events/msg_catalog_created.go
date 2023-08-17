@@ -20,8 +20,11 @@ const TypeMsgCatalogCreated string = "msg_catalog_created"
 //	    "uuid": "2d611e17-fb22-457f-b802-b8f7ec5cda5b",
 //	    "channel": {"uuid": "61602f3e-f603-4c70-8a8f-c477505bf4bf", "name": "Twilio"},
 //	    "urn": "tel:+12065551212",
-//	    "text": "hi there",
-//	    "attachments": ["image/jpeg:https://s3.amazon.com/mybucket/attachment.jpg"]
+//			"header": "header text",
+//			"body": "body text",
+//			"footer": "footer text",
+//			"products": ["c68c2f54-3b25-4d94-8be9-f449bd7744d8"],
+//			"action": "View Products"
 //	  }
 //	}
 //

@@ -48,10 +48,11 @@ type createMsgCatalogAction struct {
 	Body     string   `json:"body" engine:"localized,evaluated"`
 	Footer   string   `json:"footer" engine:"localized,evaluated"`
 	Products []string `json:"products"`
+	Action   string   `json:"action"`
 }
 
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer string, products []string, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action string, products []string, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
@@ -59,6 +60,7 @@ func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer string, produ
 			Body:     body,
 			Footer:   footer,
 			Products: products,
+			Action:   action,
 		},
 		AllURNs: allURNs,
 	}
@@ -82,14 +84,14 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Topic)
+		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Action, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Topic)
+		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Action, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
