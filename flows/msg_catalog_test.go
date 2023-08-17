@@ -26,6 +26,7 @@ func TestCatalogMsg(t *testing.T) {
 			"524580ca-406d-491b-b97e-b07113e322db",
 			"ee48c9ed-6e52-4a76-8e7b-70c5046c559a",
 		},
+		"View Products",
 		flows.MsgTopic("none"),
 	)
 
@@ -33,6 +34,7 @@ func TestCatalogMsg(t *testing.T) {
 	require.NoError(t, err)
 
 	test.AssertEqualJSON(t, []byte(`{
+		"action": "View Products",
 		"body": "Body text",
 		"channel": {
 				"name": "My WPP Cloud",
