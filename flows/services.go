@@ -57,6 +57,13 @@ type WebhookService interface {
 	Call(session Session, request *http.Request) (*WebhookCall, error)
 }
 
+// ZeroshotCall is the result of a zeroshot call
+type ZeroshotCall struct {
+	*httpx.Trace
+	ResponseJSON    []byte
+	ResponseCleaned bool // whether response had to be cleaned to make it valid JSON
+}
+
 // ExtractedIntent models an intent match
 type ExtractedIntent struct {
 	Name       string          `json:"name"`
