@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/random"
 	"github.com/nyaruka/gocommon/uuids"
@@ -75,6 +76,12 @@ func testRouterType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 		dates.SetNowSource(dates.NewFixedNowSource(time.Date(2018, 10, 18, 14, 20, 30, 123456, time.UTC)))
 		uuids.SetGenerator(uuids.NewSeededGenerator(12345))
 		random.SetGenerator(random.NewSeededGenerator(123456))
+
+		// mock for zeroshot request in smart router
+		routers.SetToken("token")
+		httpx.SetRequestor(httpx.NewMockRequestor(map[string][]httpx.MockResponse{
+			"https://api.bothub.it/v2/repository/nlp/zeroshot/zeroshot-fast-predict": {
+				httpx.NewMockResponse(200, nil, `{"text":"Price"}`)}}))
 
 		testName := fmt.Sprintf("test '%s' for router type '%s'", tc.Description, typeName)
 

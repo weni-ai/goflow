@@ -196,7 +196,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}
 
 	client := &http.Client{}
-	response := struct {
+	response := &struct {
 		Text string `json:"text"`
 	}{
 		Text: "",
