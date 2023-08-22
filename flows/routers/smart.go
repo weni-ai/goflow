@@ -141,10 +141,10 @@ type errorResponse struct {
 	} `json:"errors"`
 }
 
-var validationToken string
+var token string
 
 func SetToken(t string) {
-	validationToken = t
+	token = t
 }
 
 func SetAPIURL(url string) {
@@ -160,7 +160,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 			Option   string   `json:"option"`
 			Synonyms []string `json:"synonyms"`
 		} `json:"categories"`
-		ValidationToken string `json:"validation_token"`
+		Token string `json:"token"`
 	}{
 		Text: r.operand,
 	}
@@ -177,8 +177,8 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		}
 	}
 
-	if validationToken != "" {
-		body.ValidationToken = validationToken
+	if token != "" {
+		body.Token = token
 	} else {
 		run.LogError(step, fmt.Errorf("validation token cannot be empty"))
 		status = flows.CallStatusConnectionError
