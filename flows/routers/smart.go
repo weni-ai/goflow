@@ -86,7 +86,7 @@ func (r *SmartRouter) Validate(flow flows.Flow, exits []flows.Exit) error {
 		}
 
 		// and each case test is valid
-		if c.Type != "has_any_words" {
+		if c.Type != "has_any_word" {
 			return errors.Errorf("case must be of type 'has_any_words', not %s", c.Type)
 		}
 	}

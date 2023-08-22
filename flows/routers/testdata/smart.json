@@ -25,7 +25,7 @@
             "cases": [
                 {
                     "uuid": "98503572-25bf-40ce-ad72-8836b6549a38",
-                    "type": "has_any_words",
+                    "type": "has_any_word",
                     "arguments": [
                         "price"
                     ],
@@ -33,7 +33,7 @@
                 },
                 {
                     "uuid": "a51e5c8c-c891-401d-9c62-15fc37278c94",
-                    "type": "has_any_words",
+                    "type": "has_any_word",
                     "arguments": [
                         "delivery"
                     ],
