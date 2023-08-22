@@ -162,7 +162,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		} `json:"categories"`
 		Token string `json:"token"`
 	}{
-		Text: r.operand,
+		Text: operand,
 	}
 
 	for _, c := range r.cases {
