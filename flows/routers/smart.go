@@ -165,13 +165,22 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		Text: operand,
 	}
 
+	args := make(map[string][]string)
 	for _, c := range r.cases {
-		for _, category := range r.categories {
-			if category.UUID() == c.CategoryUUID {
+		if _, ok := args[string(c.CategoryUUID)]; ok {
+			args[string(c.CategoryUUID)] = append(args[string(c.CategoryUUID)], c.Arguments...)
+		} else {
+			args[string(c.CategoryUUID)] = c.Arguments
+		}
+	}
+
+	for category, arg := range args {
+		for _, c := range r.categories {
+			if string(c.UUID()) == category {
 				body.Categories = append(body.Categories, struct {
 					Option   string   "json:\"option\""
 					Synonyms []string "json:\"synonyms\""
-				}{Option: category.Name(), Synonyms: c.Arguments})
+				}{Option: c.Name(), Synonyms: arg})
 				break
 			}
 		}
