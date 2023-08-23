@@ -27,7 +27,8 @@
                     "uuid": "98503572-25bf-40ce-ad72-8836b6549a38",
                     "type": "has_any_word",
                     "arguments": [
-                        "price"
+                        "price",
+                        "photos"
                     ],
                     "category_uuid": "598ae7a5-2f81-48f1-afac-595262514aa1"
                 },
@@ -35,7 +36,8 @@
                     "uuid": "a51e5c8c-c891-401d-9c62-15fc37278c94",
                     "type": "has_any_word",
                     "arguments": [
-                        "delivery"
+                        "delivery",
+                        "address"
                     ],
                     "category_uuid": "c70fe86c-9aac-4cc2-a5cb-d35cbe3fed6e"
                 }
@@ -57,7 +59,7 @@
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "elapsed_ms": 0,
                 "extraction": "valid",
-                "request": "POST /v2/repository/nlp/zeroshot/zeroshot-fast-predict HTTP/1.1\r\nHost: api.bothub.it\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 150\r\nAccept-Encoding: gzip\r\n\r\n{\"text\":\"How much does it cost?\",\"categories\":[{\"option\":\"Price\",\"synonyms\":[\"price\"]},{\"option\":\"Delivery\",\"synonyms\":[\"delivery\"]}],\"token\":\"token\"}",
+                "request": "POST /v2/repository/nlp/zeroshot/zeroshot-fast-predict HTTP/1.1\r\nHost: api.bothub.it\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 169\r\nAccept-Encoding: gzip\r\n\r\n{\"text\":\"How much does it cost?\",\"categories\":[{\"option\":\"Price\",\"synonyms\":[\"price\",\"photos\"]},{\"option\":\"Delivery\",\"synonyms\":[\"delivery\",\"address\"]}],\"token\":\"token\"}",
                 "response": "HTTP/1.0 200 OK\r\nContent-Length: 16\r\n\r\n{\"text\":\"Price\"}",
                 "retries": 0,
                 "status": "success",
@@ -79,11 +81,15 @@
         "templates": [
             "@(\"How much does it cost?\")",
             "price",
-            "delivery"
+            "photos",
+            "delivery",
+            "address"
         ],
         "localizables": [
             "price",
+            "photos",
             "delivery",
+            "address",
             "Price",
             "Delivery",
             "Other"
