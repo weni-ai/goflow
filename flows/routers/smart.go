@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/jsonx"
@@ -133,14 +134,6 @@ func (r *SmartRouter) Route(run flows.FlowRun, step flows.Step, logEvent flows.E
 	return exit, operandAsStr, err
 }
 
-// error response contains errors when a request fails
-type errorResponse struct {
-	Errors []struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	} `json:"errors"`
-}
-
 var token string
 
 func SetToken(t string) {
@@ -167,11 +160,28 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	args := make(map[string][]string)
 	for _, c := range r.cases {
-		if _, ok := args[string(c.CategoryUUID)]; ok {
-			args[string(c.CategoryUUID)] = append(args[string(c.CategoryUUID)], c.Arguments...)
-		} else {
-			args[string(c.CategoryUUID)] = c.Arguments
+		var evaluatedArgs []string
+		localizedArgs, _ := run.GetTextArray(c.UUID, "arguments", c.Arguments)
+		for i := range c.Arguments {
+			test := localizedArgs[i]
+			arg, err := run.EvaluateTemplateValue(test)
+			if err != nil {
+				run.LogError(step, err)
+			}
+
+			resultAsStr, xerr := types.ToXText(run.Environment(), arg)
+			if xerr != nil {
+				run.LogError(step, xerr)
+			}
+
+			results := strings.Split(resultAsStr.Native(), ",")
+
+			for _, result := range results {
+				evaluatedArgs = append(evaluatedArgs, strings.TrimSpace(result))
+			}
 		}
+
+		args[string(c.CategoryUUID)] = evaluatedArgs
 	}
 
 	for category, arg := range args {
@@ -217,9 +227,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}
 
 	if trace.Response.StatusCode >= 400 {
-		err := &errorResponse{}
-		jsonx.Unmarshal(trace.ResponseBody, err)
-		return "", "", errors.New(err.Errors[0].Message)
+		return "", "", errors.New(string(trace.ResponseBody))
 	}
 
 	err = jsonx.Unmarshal(trace.ResponseBody, response)
