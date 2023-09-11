@@ -213,13 +213,15 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		run.LogError(step, err)
 		status = flows.CallStatusConnectionError
 	}
+	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	response := &struct {
-		Text string `json:"text"`
+		Output string `json:"output"`
 	}{
-		Text: "",
+		Output: "",
 	}
+
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
 	if err != nil {
 		run.LogError(step, err)
@@ -239,7 +241,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	var categoryUUID flows.CategoryUUID
 	categoryUUID = ""
 	for _, category := range r.categories {
-		if category.Name() == response.Text {
+		if category.Name() == response.Output {
 			categoryUUID = category.UUID()
 		}
 	}
@@ -252,7 +254,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	logEvent(events.NewZeroshotCalled(call, status, ""))
 
-	return response.Text, categoryUUID, nil
+	return response.Output, categoryUUID, nil
 
 }
 
