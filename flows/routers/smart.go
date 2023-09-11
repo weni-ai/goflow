@@ -218,6 +218,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	client := &http.Client{}
 	response := &struct {
 		Output string `json:"output"`
+		Other  bool   `json:"other"`
 	}{
 		Output: "",
 	}
@@ -238,21 +239,25 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		return "", "", err
 	}
 
-	var categoryUUID flows.CategoryUUID
-	categoryUUID = ""
-	for _, category := range r.categories {
-		if category.Name() == response.Output {
-			categoryUUID = category.UUID()
-		}
-	}
-
 	call := &flows.ZeroshotCall{
 		Trace:           trace,
 		ResponseJSON:    trace.ResponseBody,
 		ResponseCleaned: false,
 	}
-
 	logEvent(events.NewZeroshotCalled(call, status, ""))
+
+	var categoryUUID flows.CategoryUUID
+	categoryUUID = ""
+
+	if response.Other {
+		return "", categoryUUID, nil
+	}
+
+	for _, category := range r.categories {
+		if category.Name() == response.Output {
+			categoryUUID = category.UUID()
+		}
+	}
 
 	return response.Output, categoryUUID, nil
 
