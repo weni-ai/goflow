@@ -81,7 +81,7 @@ func testRouterType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 		routers.SetToken("token")
 		httpx.SetRequestor(httpx.NewMockRequestor(map[string][]httpx.MockResponse{
 			"https://api.bothub.it/v2/repository/nlp/zeroshot/zeroshot-fast-predict": {
-				httpx.NewMockResponse(200, nil, `{"text":"Price"}`)}}))
+				httpx.NewMockResponse(200, nil, `{"output":"Price","other":false}`)}}))
 
 		testName := fmt.Sprintf("test '%s' for router type '%s'", tc.Description, typeName)
 
