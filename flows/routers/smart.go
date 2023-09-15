@@ -217,11 +217,14 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	client := &http.Client{}
 	response := &struct {
-		Output string `json:"output"`
-		Other  bool   `json:"other"`
-	}{
-		Output: "",
-	}
+		Output struct {
+			Classification string `json:"classification"`
+			Other          bool   `json:"other"`
+		}
+	}{Output: struct {
+		Classification string "json:\"classification\""
+		Other          bool   "json:\"other\""
+	}{Classification: ""}}
 
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
 	if err != nil {
@@ -249,17 +252,17 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	var categoryUUID flows.CategoryUUID
 	categoryUUID = ""
 
-	if response.Other {
+	if response.Output.Other {
 		return "", categoryUUID, nil
 	}
 
 	for _, category := range r.categories {
-		if category.Name() == response.Output {
+		if category.Name() == response.Output.Classification {
 			categoryUUID = category.UUID()
 		}
 	}
 
-	return response.Output, categoryUUID, nil
+	return response.Output.Classification, categoryUUID, nil
 
 }
 
