@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/nyaruka/gocommon/httpx"
@@ -26,6 +27,10 @@ func init() {
 
 // TypeSmart is the constant for our smart router
 const TypeSmart string = "smart"
+
+// Regex pattern for category and argument
+const CategoryRegex string = `^[A-Za-z]+$`
+const ArgumentsRegex string = `^[A-Za-z@.,]+$`
 
 var apiUrl = "https://api.bothub.it"
 
@@ -177,7 +182,12 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 			results := strings.Split(resultAsStr.Native(), ",")
 
 			for _, result := range results {
-				evaluatedArgs = append(evaluatedArgs, strings.TrimSpace(result))
+				arg := strings.TrimSpace(result)
+				if res, err := RegexMatch(arg, ArgumentsRegex, false); res && err == nil {
+					evaluatedArgs = append(evaluatedArgs, arg)
+				} else {
+					run.LogError(step, err)
+				}
 			}
 		}
 
@@ -187,11 +197,15 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	for category, arg := range args {
 		for _, c := range r.categories {
 			if string(c.UUID()) == category {
-				body.Categories = append(body.Categories, struct {
-					Option   string   "json:\"option\""
-					Synonyms []string "json:\"synonyms\""
-				}{Option: c.Name(), Synonyms: arg})
-				break
+				if res, err := RegexMatch(c.Name(), CategoryRegex, true); res && err == nil {
+					body.Categories = append(body.Categories, struct {
+						Option   string   "json:\"option\""
+						Synonyms []string "json:\"synonyms\""
+					}{Option: c.Name(), Synonyms: arg})
+					break
+				} else {
+					run.LogError(step, err)
+				}
 			}
 		}
 	}
@@ -264,6 +278,23 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	return response.Output.Classification, categoryUUID, nil
 
+}
+
+func RegexMatch(input string, regexPattern string, isCategory bool) (bool, error) {
+	regex, err := regexp.Compile(regexPattern)
+	if err != nil {
+		return false, err
+	}
+
+	if regex.MatchString(input) {
+		if len(input) <= 20 && isCategory || !isCategory {
+			return true, nil
+		} else {
+			return false, fmt.Errorf("error when combining input \"%s\" with regex", input)
+		}
+	} else {
+		return false, fmt.Errorf("error when combining input \"%s\" with regex", input)
+	}
 }
 
 // EnumerateTemplates enumerates all expressions on this object and its children
