@@ -92,7 +92,7 @@ func (r *SmartRouter) Validate(flow flows.Flow, exits []flows.Exit) error {
 		}
 
 		// and each case test is valid
-		if c.Type != "has_any_word" {
+		if c.Type != "has_any_word" && c.Type != "has_category" {
 			return errors.Errorf("case must be of type 'has_any_words', not %s", c.Type)
 		}
 	}
@@ -119,19 +119,11 @@ func (r *SmartRouter) Route(run flows.FlowRun, step flows.Step, logEvent flows.E
 
 	// classify text between categories
 	categoryName, categoryUUID, err := r.classifyText(run, step, operandAsStr, logEvent)
-	if err != nil {
-		return "", "", err
-	}
-
-	// none of our cases matched, so try to use the default
-	if categoryUUID == "" && r.defaultCategoryUUID != "" {
-		// evaluate our operand as a string
-		value, xerr := types.ToXText(env, operand)
-		if xerr != nil {
-			run.LogError(step, xerr)
-		}
-
-		categoryName = value.Native()
+	if err != nil && r.defaultCategoryUUID != "" {
+		categoryName = "Failure"
+		categoryUUID = r.defaultCategoryUUID
+	} else if categoryUUID == "" && r.defaultCategoryUUID != "" {
+		categoryName = "All Responses"
 		categoryUUID = r.defaultCategoryUUID
 	}
 
@@ -150,6 +142,10 @@ func SetAPIURL(url string) {
 }
 
 func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand string, logEvent flows.EventCallback) (string, flows.CategoryUUID, error) {
+	if len(r.categories) == 1 && len(r.cases) == 0 {
+		return "", "", nil
+	}
+
 	url := apiUrl + "/v2/repository/nlp/zeroshot/zeroshot-fast-predict"
 	status := flows.CallStatusSuccess
 	body := struct {
@@ -253,7 +249,6 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	err = jsonx.Unmarshal(trace.ResponseBody, response)
 	if err != nil {
 		run.LogError(step, err)
-		return "", "", err
 	}
 
 	call := &flows.ZeroshotCall{
@@ -266,8 +261,14 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	var categoryUUID flows.CategoryUUID
 	categoryUUID = ""
 
+	// case with 'other' option
 	if response.Output.Other {
-		return "", categoryUUID, nil
+		for _, c := range r.cases {
+			if c.Type == "has_category" {
+				categoryUUID = c.CategoryUUID
+			}
+		}
+		return "Other", categoryUUID, nil
 	}
 
 	for _, category := range r.categories {
