@@ -17,11 +17,6 @@
                 },
                 {
                     "uuid": "78ae8f05-f92e-43b2-a886-406eaea1b8e0",
-                    "name": "Supercalifragilisticexpialidocious",
-                    "exit_uuid": "22654595-af24-4be4-928e-ed1c268daeb3"
-                },
-                {
-                    "uuid": "78ae8f05-f92e-43b2-a886-406eaea1b8e0",
                     "name": "Other",
                     "exit_uuid": "b787ffe3-c21a-46ad-9475-954614b52477"
                 }
@@ -109,7 +104,6 @@
             "país",
             "Price",
             "Delivery",
-            "Supercalifragilisticexpialidocious",
             "Other"
         ],
         "inspection": {
@@ -122,7 +116,6 @@
                     "categories": [
                         "Price",
                         "Delivery",
-                        "Supercalifragilisticexpialidocious",
                         "Other"
                     ],
                     "node_uuids": [
