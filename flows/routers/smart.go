@@ -29,8 +29,8 @@ func init() {
 const TypeSmart string = "smart"
 
 // Regex pattern for category and argument
-const CategoryRegex string = `^[A-Za-z]+$`
-const ArgumentsRegex string = `^[A-Za-z@.,]+$`
+const CategoryRegex string = `^[A-Za-zÀ-ÖØ-öø-ÿ]+$`
+const ArgumentsRegex string = `^[A-Za-zÀ-ÖØ-öø-ÿ@.,]+$`
 
 var apiUrl = "https://api.bothub.it"
 
@@ -161,6 +161,9 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	args := make(map[string][]string)
 	for _, c := range r.cases {
+		if c.Type == "has_category" {
+			continue
+		}
 		var evaluatedArgs []string
 		localizedArgs, _ := run.GetTextArray(c.UUID, "arguments", c.Arguments)
 		for i := range c.Arguments {
@@ -237,26 +240,25 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}{Classification: ""}}
 
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
-	if err != nil {
-		run.LogError(step, err)
-		status = flows.CallStatusConnectionError
+	call := &flows.WebhookCall{
+		Trace:           trace,
+		ResponseJSON:    trace.ResponseBody,
+		ResponseCleaned: false,
 	}
 
 	if trace.Response.StatusCode >= 400 {
-		return "", "", errors.New(string(trace.ResponseBody))
+		run.LogError(step, err)
+		status = flows.CallStatusConnectionError
+		logEvent(events.NewWebhookCalled(call, status, ""))
+		return "", "", err
+	} else {
+		logEvent(events.NewWebhookCalled(call, status, ""))
 	}
 
 	err = jsonx.Unmarshal(trace.ResponseBody, response)
 	if err != nil {
 		run.LogError(step, err)
 	}
-
-	call := &flows.ZeroshotCall{
-		Trace:           trace,
-		ResponseJSON:    trace.ResponseBody,
-		ResponseCleaned: false,
-	}
-	logEvent(events.NewZeroshotCalled(call, status, ""))
 
 	var categoryUUID flows.CategoryUUID
 	categoryUUID = ""
