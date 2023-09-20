@@ -1,3 +1,7 @@
+0.2.0-goflow-0.144.3
+----------
+ * Add Smart Router as new router type
+
 0.1.2-goflow-0.144.3
 ----------
  * Add support for session.input.order and resume.params
