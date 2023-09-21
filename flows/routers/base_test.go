@@ -78,7 +78,7 @@ func testRouterType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 		random.SetGenerator(random.NewSeededGenerator(123456))
 
 		// mock for zeroshot request in smart router
-		routers.SetToken("token")
+		routers.SetZeroshotToken("token")
 		httpx.SetRequestor(httpx.NewMockRequestor(map[string][]httpx.MockResponse{
 			"https://api.bothub.it/v2/repository/nlp/zeroshot/zeroshot-fast-predict": {
 				httpx.NewMockResponse(200, nil, `{"output":{"classification":"Price","other":false}}`)}}))

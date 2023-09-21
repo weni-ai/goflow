@@ -133,11 +133,11 @@ func (r *SmartRouter) Route(run flows.FlowRun, step flows.Step, logEvent flows.E
 
 var token string
 
-func SetToken(t string) {
+func SetZeroshotToken(t string) {
 	token = t
 }
 
-func SetAPIURL(url string) {
+func SetZeroshotAPIURL(url string) {
 	apiUrl = url
 }
 
@@ -178,13 +178,13 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 				run.LogError(step, xerr)
 			}
 
-			results := strings.Split(resultAsStr.Native(), ",")
+			results := customSplit(resultAsStr.Native())
 
 			for _, result := range results {
 				arg := strings.TrimSpace(result)
 				if res, err := RegexMatch(arg, ArgumentsRegex, false); res && err == nil {
 					evaluatedArgs = append(evaluatedArgs, arg)
-				} else {
+				} else if err != nil {
 					run.LogError(step, err)
 				}
 			}
@@ -240,6 +240,10 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}{Classification: ""}}
 
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
+	if err != nil {
+		run.LogError(step, err)
+	}
+
 	call := &flows.WebhookCall{
 		Trace:           trace,
 		ResponseJSON:    trace.ResponseBody,
@@ -247,13 +251,12 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}
 
 	if trace.Response.StatusCode >= 400 {
-		run.LogError(step, err)
 		status = flows.CallStatusConnectionError
 		logEvent(events.NewWebhookCalled(call, status, ""))
-		return "", "", err
-	} else {
-		logEvent(events.NewWebhookCalled(call, status, ""))
+		return "", "", fmt.Errorf("error: status code equals '%d' and not 200", trace.Response.StatusCode)
 	}
+
+	logEvent(events.NewWebhookCalled(call, status, ""))
 
 	err = jsonx.Unmarshal(trace.ResponseBody, response)
 	if err != nil {
@@ -298,6 +301,12 @@ func RegexMatch(input string, regexPattern string, isCategory bool) (bool, error
 	} else {
 		return false, fmt.Errorf("error when combining input \"%s\" with regex", input)
 	}
+}
+
+func customSplit(input string) []string {
+	return strings.FieldsFunc(input, func(r rune) bool {
+		return r == ',' || r == ' '
+	})
 }
 
 // EnumerateTemplates enumerates all expressions on this object and its children
