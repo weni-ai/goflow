@@ -178,7 +178,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 				run.LogError(step, xerr)
 			}
 
-			results := strings.Split(resultAsStr.Native(), ",")
+			results := customSplit(resultAsStr.Native())
 
 			for _, result := range results {
 				arg := strings.TrimSpace(result)
@@ -298,6 +298,12 @@ func RegexMatch(input string, regexPattern string, isCategory bool) (bool, error
 	} else {
 		return false, fmt.Errorf("error when combining input \"%s\" with regex", input)
 	}
+}
+
+func customSplit(input string) []string {
+	return strings.FieldsFunc(input, func(r rune) bool {
+		return r == ',' || r == ' '
+	})
 }
 
 // EnumerateTemplates enumerates all expressions on this object and its children
