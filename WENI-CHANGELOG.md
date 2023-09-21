@@ -1,3 +1,7 @@
+0.2.1-goflow-0.144.3
+----------
+ * Fixes and improvements for smart router
+
 0.2.0-goflow-0.144.3
 ----------
  * Add Smart Router as new router type
