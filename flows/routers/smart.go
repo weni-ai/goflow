@@ -133,11 +133,11 @@ func (r *SmartRouter) Route(run flows.FlowRun, step flows.Step, logEvent flows.E
 
 var token string
 
-func SetToken(t string) {
+func SetZeroshotToken(t string) {
 	token = t
 }
 
-func SetAPIURL(url string) {
+func SetZeroshotAPIURL(url string) {
 	apiUrl = url
 }
 
