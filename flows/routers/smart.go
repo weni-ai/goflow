@@ -184,7 +184,7 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 				arg := strings.TrimSpace(result)
 				if res, err := RegexMatch(arg, ArgumentsRegex, false); res && err == nil {
 					evaluatedArgs = append(evaluatedArgs, arg)
-				} else {
+				} else if err != nil {
 					run.LogError(step, err)
 				}
 			}
@@ -240,6 +240,10 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}{Classification: ""}}
 
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
+	if err != nil {
+		run.LogError(step, err)
+	}
+
 	call := &flows.WebhookCall{
 		Trace:           trace,
 		ResponseJSON:    trace.ResponseBody,
@@ -247,13 +251,12 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}
 
 	if trace.Response.StatusCode >= 400 {
-		run.LogError(step, err)
 		status = flows.CallStatusConnectionError
 		logEvent(events.NewWebhookCalled(call, status, ""))
-		return "", "", err
-	} else {
-		logEvent(events.NewWebhookCalled(call, status, ""))
+		return "", "", fmt.Errorf("error: status code equals '%d' and not 200", trace.Response.StatusCode)
 	}
+
+	logEvent(events.NewWebhookCalled(call, status, ""))
 
 	err = jsonx.Unmarshal(trace.ResponseBody, response)
 	if err != nil {
