@@ -11,7 +11,7 @@ func init() {
 	registerType(TypeSendMsgCatalog, func() flows.Action { return &SendMsgCatalogAction{} })
 }
 
-// TypeSendMsg is the type for the send message action
+// TypeSendMsgCatalog is the type for the send message catalog action
 const TypeSendMsgCatalog string = "send_msg_catalog"
 
 // SendMsgAction can be used to send a catalog of products or services to the current contact in a flow. The header, body or footer fields may contain templates. The action
@@ -20,17 +20,25 @@ const TypeSendMsgCatalog string = "send_msg_catalog"
 //
 // A [event:msg_catalog_created] event will be created with the evaluated fields.
 //
-//	{
-//	  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
-//	  "type": "send_msg_catalog",
-//	  "text": "",
-//	  "header": "Header text",
-//	  "body": "Body text",
-//	  "footer": "Footer text",
-//	  "products": ["e3e84fc4-5320-4321-bd3c-0dd2bd068189"],
-//	  "topic": "event"
-//	  "all_urns": false,
-//	}
+//		{
+//		  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
+//		  "type": "send_msg_catalog",
+//		  "products": [
+//	        {
+//						  "product_retailer_id": "e3e84fc4-5320-4321-bd3c-0dd2bd068189"
+//			    }
+//			],
+//			"productViewSettings": {
+//				"header": "Header text",
+//				"body": "Body text",
+//				"footer": "Footer text",
+//			  "action": "view",
+//			},
+//		  "topic": "event",
+//			"automaticProductSearch": "false",
+//			"productSearch": "some product",
+//	    "result_name": "Result"
+//		}
 //
 // @action send_msg_catalog
 type SendMsgCatalogAction struct {
@@ -41,26 +49,35 @@ type SendMsgCatalogAction struct {
 	AllURNs    bool           `json:"all_urns,omitempty"`
 	Templating *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
 	Topic      flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	ResultName string         `json:"result_name,omitempty"`
 }
 
 type createMsgCatalogAction struct {
-	Header   string   `json:"header" engine:"localized,evaluated"`
-	Body     string   `json:"body" engine:"localized,evaluated"`
-	Footer   string   `json:"footer" engine:"localized,evaluated"`
-	Products []string `json:"products"`
-	Action   string   `json:"action"`
+	Products            []map[string]string `json:"products"`
+	AutomaticSearch     bool                `json:"automaticProductSearch"`
+	ProductViewSettings ProductViewSettings `json:"productViewSettings"`
+}
+
+type ProductViewSettings struct {
+	Header string `json:"header" engine:"evaluated"`
+	Body   string `json:"body" engine:"evaluated"`
+	Footer string `json:"footer" engine:"evaluated"`
+	Action string `json:"action"`
 }
 
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action string, products []string, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action string, products []map[string]string, automaticSearch, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
-			Header:   header,
-			Body:     body,
-			Footer:   footer,
-			Products: products,
-			Action:   action,
+			ProductViewSettings: ProductViewSettings{
+				Header: header,
+				Body:   body,
+				Footer: footer,
+				Action: action,
+			},
+			Products:        products,
+			AutomaticSearch: automaticSearch,
 		},
 		AllURNs: allURNs,
 	}
@@ -73,9 +90,17 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		return nil
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.Header, a.Body, a.Footer, logEvent)
+	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
+
+	var products []string
+	for _, p := range a.Products {
+		v, found := p["product_retailer_id"]
+		if found {
+			products = append(products, v)
+		}
+	}
 
 	// create a new message for each URN+channel destination
 	for _, dest := range destinations {
@@ -84,16 +109,22 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Action, a.Topic)
+		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.Products, a.Action, a.Topic)
+		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	return nil
+}
+
+var msgCatalogCategories = []string{CategorySuccess, CategoryFailure}
+
+func (a *SendMsgCatalogAction) Results(include func(*flows.ResultInfo)) {
+	include(flows.NewResultInfo(a.ResultName, msgCatalogCategories))
 }
