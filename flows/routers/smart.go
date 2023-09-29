@@ -154,7 +154,6 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 			Option   string   `json:"option"`
 			Synonyms []string `json:"synonyms"`
 		} `json:"categories"`
-		Token string `json:"token"`
 	}{
 		Text: operand,
 	}
@@ -209,13 +208,6 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		}
 	}
 
-	if token != "" {
-		body.Token = token
-	} else {
-		run.LogError(step, fmt.Errorf("validation token cannot be empty"))
-		status = flows.CallStatusConnectionError
-	}
-
 	bodyJSON, err := json.Marshal(body)
 	if err != nil {
 		run.LogError(step, err)
@@ -227,6 +219,13 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		status = flows.CallStatusConnectionError
 	}
 	req.Header.Add("Content-Type", "application/json")
+
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	} else {
+		run.LogError(step, fmt.Errorf("validation token cannot be empty"))
+		status = flows.CallStatusConnectionError
+	}
 
 	client := &http.Client{}
 	response := &struct {
