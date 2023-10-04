@@ -669,13 +669,9 @@ func (s *session) MarshalJSON() ([]byte, error) {
 	}
 
 	// debug
-	isOrder := strings.HasPrefix(s.trigger.Params().Render(), `{"order":`)
 
 	if s.trigger != nil {
 		fmt.Println("ENTROU na TRIGGER")
-		if isOrder {
-			fmt.Println("É order")
-		}
 		if e.Trigger, err = jsonx.Marshal(s.trigger); err != nil {
 			return nil, err
 		}
