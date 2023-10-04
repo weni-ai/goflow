@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/nyaruka/gocommon/jsonx"
@@ -666,17 +667,27 @@ func (s *session) MarshalJSON() ([]byte, error) {
 		}
 		e.Contact = &contactJSON
 	}
+
+	// debug
+	isOrder := strings.HasPrefix(s.trigger.Params().Render(), `{"order":`)
+
 	if s.trigger != nil {
+		fmt.Println("ENTROU na TRIGGER")
+		if isOrder {
+			fmt.Println("É order")
+		}
 		if e.Trigger, err = jsonx.Marshal(s.trigger); err != nil {
 			return nil, err
 		}
 	}
 	if s.wait != nil {
+		fmt.Println("ENTROU no WAIT")
 		if e.Wait, err = jsonx.Marshal(s.wait); err != nil {
 			return nil, err
 		}
 	}
 	if s.input != nil {
+		fmt.Println("ENTROU no INPUT")
 		e.Input, err = jsonx.Marshal(s.input)
 		if err != nil {
 			return nil, err
