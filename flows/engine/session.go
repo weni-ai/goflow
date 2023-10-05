@@ -672,7 +672,11 @@ func (s *session) MarshalJSON() ([]byte, error) {
 
 	if s.trigger != nil {
 		fmt.Println("ENTROU na TRIGGER")
-		fmt.Printf("Trigger: %+v\n", s.trigger)
+		if s.trigger.Params() != nil {
+			fmt.Printf("Trigger: %+v\n", s.trigger.Params().String())
+			fmt.Println(s.trigger.Params().String())
+		}
+
 		if e.Trigger, err = jsonx.Marshal(s.trigger); err != nil {
 			fmt.Println("erro")
 			return nil, err
