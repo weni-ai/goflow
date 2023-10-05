@@ -64,9 +64,9 @@ func (r *MsgResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
 	// do base changes (contact, environment)
 	r.baseResume.Apply(run, logEvent)
 
-	params := r.Params()
-	if params != nil {
-		r.msg.SetOrder(params)
+	order := r.Order()
+	if order != nil {
+		r.msg.SetOrder(order)
 	}
 
 	// update our input
