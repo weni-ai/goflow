@@ -175,5 +175,7 @@ func (t *MsgTrigger) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
+	e.Msg.Order_ = nil
+
 	return jsonx.Marshal(e)
 }
