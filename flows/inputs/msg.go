@@ -29,7 +29,7 @@ type MsgInput struct {
 	text        string
 	attachments []utils.Attachment
 	externalID  string
-	order       *types.XObject
+	order       *flows.Order
 }
 
 // NewMsg creates a new user input based on a message
@@ -85,7 +85,7 @@ func (i *MsgInput) Context(env envs.Environment) map[string]types.XValue {
 		"text":        types.NewXText(i.text),
 		"attachments": types.NewXArray(attachments...),
 		"external_id": types.NewXText(i.externalID),
-		"order":       i.order,
+		"order":       flows.Context(env, i.order),
 	}
 }
 
@@ -112,7 +112,7 @@ type msgInputEnvelope struct {
 	Text        string             `json:"text"`
 	Attachments []utils.Attachment `json:"attachments,omitempty"`
 	ExternalID  string             `json:"external_id,omitempty"`
-	Order       *types.XObject     `json:"order,omitempty"`
+	Order       *flows.Order       `json:"order,omitempty"`
 }
 
 func readMsgInput(sessionAssets flows.SessionAssets, data json.RawMessage, missing assets.MissingCallback) (flows.Input, error) {

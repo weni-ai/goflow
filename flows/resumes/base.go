@@ -37,7 +37,7 @@ type baseResume struct {
 	environment envs.Environment
 	contact     *flows.Contact
 	resumedOn   time.Time
-	params      *types.XObject
+	order       *flows.Order
 }
 
 // creates a new base resume
@@ -51,9 +51,7 @@ func (r *baseResume) Type() string { return r.type_ }
 func (r *baseResume) Environment() envs.Environment { return r.environment }
 func (r *baseResume) Contact() *flows.Contact       { return r.contact }
 func (r *baseResume) ResumedOn() time.Time          { return r.resumedOn }
-func (r *baseResume) Params() *types.XObject        { return r.params }
-
-func (r *baseResume) SetParams(params *types.XObject) { r.params = params }
+func (r *baseResume) Order() *flows.Order           { return r.order }
 
 // Apply applies our state changes and saves any events to the run
 func (r *baseResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
@@ -119,7 +117,7 @@ type baseResumeEnvelope struct {
 	Environment json.RawMessage `json:"environment,omitempty"`
 	Contact     json.RawMessage `json:"contact,omitempty"`
 	ResumedOn   time.Time       `json:"resumed_on" validate:"required"`
-	Params      json.RawMessage `json:"params,omitempty"`
+	Order       json.RawMessage `json:"order,omitempty"`
 }
 
 // ReadResume reads a resume from the given JSON
@@ -152,9 +150,9 @@ func (r *baseResume) unmarshal(sessionAssets flows.SessionAssets, e *baseResumeE
 			return errors.Wrap(err, "unable to read contact")
 		}
 	}
-	if e.Params != nil {
-		if r.params, err = types.ReadXObject(e.Params); err != nil {
-			return errors.Wrap(err, "unable to read params")
+	if e.Order != nil {
+		if r.order, err = flows.ReadOrder(sessionAssets, e.Order, missing); err != nil {
+			return errors.Wrap(err, "unable to read order")
 		}
 	}
 	return nil
@@ -177,8 +175,8 @@ func (r *baseResume) marshal(e *baseResumeEnvelope) error {
 			return err
 		}
 	}
-	if r.params != nil {
-		e.Params, err = jsonx.Marshal(r.params)
+	if r.order != nil {
+		e.Order, err = jsonx.Marshal(r.order)
 		if err != nil {
 			return err
 		}
