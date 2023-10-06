@@ -1,3 +1,8 @@
+0.2.2-goflow-0.144.3
+----------
+ * Fix msg and resume order
+ * Add token for zeroshot in request header
+
 0.2.1-goflow-0.144.3
 ----------
  * Fixes and improvements for smart router
