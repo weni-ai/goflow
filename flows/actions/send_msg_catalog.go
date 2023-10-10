@@ -55,6 +55,7 @@ type SendMsgCatalogAction struct {
 type createMsgCatalogAction struct {
 	Products            []map[string]string `json:"products"`
 	AutomaticSearch     bool                `json:"automaticProductSearch"`
+	ProductSearch       string              `json:"productSearch"`
 	ProductViewSettings ProductViewSettings `json:"productViewSettings"`
 }
 
@@ -66,7 +67,7 @@ type ProductViewSettings struct {
 }
 
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action string, products []map[string]string, automaticSearch, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
@@ -78,6 +79,7 @@ func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action strin
 			},
 			Products:        products,
 			AutomaticSearch: automaticSearch,
+			ProductSearch:   productSearch,
 		},
 		AllURNs: allURNs,
 	}
@@ -109,14 +111,14 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, a.ProductSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, a.ProductSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 

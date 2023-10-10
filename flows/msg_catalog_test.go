@@ -22,11 +22,12 @@ func TestCatalogMsg(t *testing.T) {
 		"Header text",
 		"Body text",
 		"Footer text",
+		"View Products",
+		"",
 		[]string{
 			"524580ca-406d-491b-b97e-b07113e322db",
 			"ee48c9ed-6e52-4a76-8e7b-70c5046c559a",
 		},
-		"View Products",
 		false,
 		flows.MsgTopic("none"),
 	)
@@ -65,8 +66,9 @@ func TestCatalogMsgSmart(t *testing.T) {
 		"Header text",
 		"Body text",
 		"Footer text",
-		[]string{},
 		"View Products",
+		"product search text",
+		[]string{},
 		true,
 		flows.MsgTopic("none"),
 	)
@@ -83,6 +85,7 @@ func TestCatalogMsgSmart(t *testing.T) {
 		},
 		"footer": "Footer text",
 		"header": "Header text",
+		"product_search": "product search text",
 		"smart": true,
 		"text": "",
 		"topic": "none",
