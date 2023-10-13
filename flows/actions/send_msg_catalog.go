@@ -92,6 +92,14 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		return nil
 	}
 
+	evaluatedSearch, err := run.EvaluateTemplate(a.ProductSearch)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedSearch == "" {
+		logEvent(events.NewErrorf("search text evaluated to empty string"))
+	}
+
 	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
@@ -111,16 +119,19 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, a.ProductSearch, products, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, a.ProductSearch, products, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
+
+	// TODO: saveResult with CategoryFailure
+	a.saveResult(run, step, a.ResultName, "SUCCESS RESULT", CategorySuccess, "", "SUCCESS RESULT", nil, logEvent)
 
 	return nil
 }
