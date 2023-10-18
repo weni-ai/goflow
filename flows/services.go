@@ -21,6 +21,7 @@ type Services interface {
 	Ticket(Session, *Ticketer) (TicketService, error)
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
+	WeniGPT(Session) (WeniGPTService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -43,6 +44,8 @@ const (
 
 	// CallStatusSubscriberGone represents a special state of resthook responses which indicate the caller must remove that subscriber
 	CallStatusSubscriberGone CallStatus = "subscriber_gone"
+
+	CallStatusResponseOtherWeniGPT CallStatus = "other"
 )
 
 // WebhookCall is the result of a webhook call
@@ -96,6 +99,17 @@ type TicketService interface {
 
 type ExternalServiceService interface {
 	Call(sesion Session, callAction assets.ExternalServiceCallAction, params []assets.ExternalServiceParam, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
+}
+
+// WeniGPTCall is the result of a wenigpt call
+type WeniGPTCall struct {
+	*httpx.Trace
+	ResponseJSON    []byte
+	ResponseCleaned bool // whether response had to be cleaned to make it valid JSON
+}
+
+type WeniGPTService interface {
+	Call(session Session, input string, kb string, token string, url string) (*WeniGPTCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer

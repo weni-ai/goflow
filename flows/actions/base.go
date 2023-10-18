@@ -28,9 +28,10 @@ const maxAttachmentLength = 2048
 
 // common category names
 const (
-	CategorySuccess = "Success"
-	CategorySkipped = "Skipped"
-	CategoryFailure = "Failure"
+	CategorySuccess      = "Success"
+	CategorySkipped      = "Skipped"
+	CategoryFailure      = "Failure"
+	CategoryOtherWeniGPT = "Other"
 )
 
 var webhookCategories = []string{CategorySuccess, CategoryFailure}
@@ -39,6 +40,15 @@ var webhookStatusCategories = map[flows.CallStatus]string{
 	flows.CallStatusResponseError:   CategoryFailure,
 	flows.CallStatusConnectionError: CategoryFailure,
 	flows.CallStatusSubscriberGone:  CategoryFailure,
+}
+
+var weniGPTCategories = []string{CategorySuccess, CategoryFailure, CategoryOtherWeniGPT}
+var weniGPTStatusCategories = map[flows.CallStatus]string{
+	flows.CallStatusSuccess:              CategorySuccess,
+	flows.CallStatusResponseError:        CategoryFailure,
+	flows.CallStatusConnectionError:      CategoryFailure,
+	flows.CallStatusSubscriberGone:       CategoryFailure,
+	flows.CallStatusResponseOtherWeniGPT: CategoryOtherWeniGPT,
 }
 
 var registeredTypes = map[string](func() flows.Action){}
@@ -158,6 +168,35 @@ func (a *baseAction) updateWebhook(run flows.FlowRun, call *flows.WebhookCall) {
 	default:
 		run.SetWebhook(typed)
 	}
+}
+
+func (a *baseAction) updateWeniGPT(run flows.FlowRun, call *flows.WeniGPTCall) {
+	parsed := types.JSONToXValue(call.ResponseJSON)
+
+	switch typed := parsed.(type) {
+	case nil, types.XError:
+		run.SetWebhook(types.XObjectEmpty)
+	default:
+		run.SetWebhook(typed)
+	}
+}
+
+// helper to save a run result based on a wenigpt call and log it as an event
+func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name string, call *flows.WeniGPTCall, status flows.CallStatus, logEvent flows.EventCallback) {
+	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
+	value := "0"
+	category := weniGPTStatusCategories[status]
+	var extra json.RawMessage
+
+	if call.Response != nil {
+		value = strconv.Itoa(call.Response.StatusCode)
+
+		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
+			extra = call.ResponseJSON
+		}
+	}
+
+	a.saveResult(run, step, name, value, category, "", input, extra, logEvent)
 }
 
 // helper to apply a contact modifier

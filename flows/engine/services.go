@@ -24,6 +24,9 @@ type AirtimeServiceFactory func(flows.Session) (flows.AirtimeService, error)
 // ExternalServiceServiceFactory resolves a session to an external service service
 type ExternalServiceServiceFactory func(flows.Session, *flows.ExternalService) (flows.ExternalServiceService, error)
 
+// WeniGPTServiceFactory resolves a session to a weniGPT service
+type WeniGPTServiceFactory func(flows.Session) (flows.WeniGPTService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -31,6 +34,7 @@ type services struct {
 	ticket          TicketServiceFactory
 	airtime         AirtimeServiceFactory
 	externalService ExternalServiceServiceFactory
+	wenigpt         WeniGPTServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -40,6 +44,9 @@ func newEmptyServices() *services {
 		},
 		webhook: func(flows.Session) (flows.WebhookService, error) {
 			return nil, errors.New("no webhook service factory configured")
+		},
+		wenigpt: func(flows.Session) (flows.WeniGPTService, error) {
+			return nil, errors.New("no wenigpt service factory configured")
 		},
 		classification: func(flows.Session, *flows.Classifier) (flows.ClassificationService, error) {
 			return nil, errors.New("no classification service factory configured")
@@ -62,6 +69,10 @@ func (s *services) Email(session flows.Session) (flows.EmailService, error) {
 
 func (s *services) Webhook(session flows.Session) (flows.WebhookService, error) {
 	return s.webhook(session)
+}
+
+func (s *services) WeniGPT(session flows.Session) (flows.WeniGPTService, error) {
+	return s.wenigpt(session)
 }
 
 func (s *services) Classification(session flows.Session, classifier *flows.Classifier) (flows.ClassificationService, error) {
