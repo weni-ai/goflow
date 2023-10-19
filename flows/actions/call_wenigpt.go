@@ -53,6 +53,17 @@ func (a *CallWeniGPTAction) Execute(run flows.FlowRun, step flows.Step, logModif
 	return a.call(run, step, input, kb, logEvent)
 }
 
+var token string
+var apiUrl = "https://nlp.bothub.it"
+
+func SetWeniGPTToken(t string) {
+	token = t
+}
+
+func SetWeniGPTAPIURL(url string) {
+	apiUrl = url
+}
+
 // Execute runs this action
 func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input string, kb string, logEvent flows.EventCallback) error {
 	svc, err := run.Session().Engine().Services().WeniGPT(run.Session())
@@ -61,9 +72,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		return nil
 	}
 
-	// TODO: get token/url from mailroom
-	var token string
-	var url string
+	url := apiUrl + "/v2/question-answering/"
 
 	call, err := svc.Call(run.Session(), input, kb, token, url)
 
