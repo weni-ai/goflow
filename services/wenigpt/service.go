@@ -66,7 +66,6 @@ func (s *service) Call(session flows.Session, input string, kb string, token str
 	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
 	if trace != nil {
 		call := &flows.WeniGPTCall{Trace: trace}
-
 		// throw away any error that happened prior to getting a response.. these will be surfaced to the user
 		// as connection_error status on the response
 		if trace.Response == nil {

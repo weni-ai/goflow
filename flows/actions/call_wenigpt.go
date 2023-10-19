@@ -1,8 +1,9 @@
 package actions
 
 import (
-	"net/http"
+	"strings"
 
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 )
@@ -60,7 +61,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		return nil
 	}
 
-	// pegar token/url no mailroom
+	// TODO: get token/url from mailroom
 	var token string
 	var url string
 
@@ -72,8 +73,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 	if call != nil {
 		a.updateWeniGPT(run, call)
 
-		status := callStatusWeniGPT(call, err, false)
-
+		status := callStatusWeniGPT(call, err)
 		logEvent(events.NewWeniGPTCalled(call, status, ""))
 
 		if a.ResultName != "" {
@@ -92,17 +92,26 @@ func (a *CallWeniGPTAction) Results(include func(*flows.ResultInfo)) {
 }
 
 // determines the wenigpt status from the HTTP status code
-func callStatusWeniGPT(call *flows.WeniGPTCall, err error, isResthook bool) flows.CallStatus {
+func callStatusWeniGPT(call *flows.WeniGPTCall, err error) flows.CallStatus {
+
+	response := struct {
+		Answers []struct {
+			Text       string `json:"text"`
+			Confidence string `json:"confidence"`
+		} `json:"answers"`
+		ID string `json:"id"`
+	}{}
+
+	jsonx.Unmarshal(call.ResponseJSON, &response)
+
 	if call.Response == nil || err != nil {
 		return flows.CallStatusConnectionError
 	}
-	if isResthook && call.Response.StatusCode == http.StatusGone {
-		// https://zapier.com/developer/documentation/v2/rest-hooks/
-		return flows.CallStatusSubscriberGone
-	}
 	if call.Response.StatusCode/100 == 2 {
 		return flows.CallStatusSuccess
+	} else if strings.HasPrefix(response.Answers[0].Text, "😕") || response.Answers[0].Text == "Desculpe, não possuo essa informação." {
+		return flows.CallStatusResponseOtherWeniGPT
 	}
-	//TODO: fzr para caso de other
+
 	return flows.CallStatusResponseError
 }

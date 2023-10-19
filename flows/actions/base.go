@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/nyaruka/gocommon/dates"
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
@@ -47,7 +48,6 @@ var weniGPTStatusCategories = map[flows.CallStatus]string{
 	flows.CallStatusSuccess:              CategorySuccess,
 	flows.CallStatusResponseError:        CategoryFailure,
 	flows.CallStatusConnectionError:      CategoryFailure,
-	flows.CallStatusSubscriberGone:       CategoryFailure,
 	flows.CallStatusResponseOtherWeniGPT: CategoryOtherWeniGPT,
 }
 
@@ -188,8 +188,18 @@ func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name 
 	category := weniGPTStatusCategories[status]
 	var extra json.RawMessage
 
-	if call.Response != nil {
-		value = strconv.Itoa(call.Response.StatusCode)
+	response := struct {
+		Answers []struct {
+			Text       string `json:"text"`
+			Confidence string `json:"confidence"`
+		} `json:"answers"`
+		ID string `json:"id"`
+	}{}
+
+	jsonx.Unmarshal(call.ResponseJSON, &response)
+
+	if len(response.Answers) > 0 {
+		value = response.Answers[0].Text
 
 		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
 			extra = call.ResponseJSON
