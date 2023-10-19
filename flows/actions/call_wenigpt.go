@@ -47,7 +47,6 @@ func (a *CallWeniGPTAction) Execute(run flows.FlowRun, step flows.Step, logModif
 		return nil
 	}
 
-	// TODO: preciso confirmar se esse id é realmente de uma base?
 	kb := a.KnowledgeBase
 
 	return a.call(run, step, input, kb, logEvent)
