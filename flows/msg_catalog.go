@@ -7,7 +7,7 @@ import (
 	"github.com/nyaruka/goflow/envs"
 )
 
-type MsgCatalog struct {
+type MsgCatalogOut struct {
 	BaseMsg
 
 	Header_        string        `json:"header,omitempty"`
@@ -21,8 +21,12 @@ type MsgCatalog struct {
 	TextLanguage   envs.Language `json:"text_language,omitempty"`
 }
 
-func NewMsgCatalog(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []string, smart bool, topic MsgTopic) *MsgCatalog {
-	return &MsgCatalog{
+type MsgCatalog struct {
+	assets.MsgCatalog
+}
+
+func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []string, smart bool, topic MsgTopic) *MsgCatalogOut {
+	return &MsgCatalogOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
 			URN_:     urn,
@@ -39,18 +43,49 @@ func NewMsgCatalog(urn urns.URN, channel *assets.ChannelReference, header, body,
 	}
 }
 
-func (m *MsgCatalog) Header() string { return m.Header_ }
+func NewMsgCatalog(asset assets.MsgCatalog) *MsgCatalog {
+	return &MsgCatalog{
+		MsgCatalog: asset,
+	}
+}
 
-func (m *MsgCatalog) Body() string { return m.Body_ }
+func (s *MsgCatalogAssets) Get(uuid uuids.UUID) *MsgCatalog {
+	return s.byUUID[uuid]
+}
 
-func (m *MsgCatalog) Footer() string { return m.Footer_ }
+func (e *MsgCatalog) Asset() assets.MsgCatalog { return e.MsgCatalog }
 
-func (m *MsgCatalog) Products() []string { return m.Products_ }
+// Reference returns a reference to this external service
+func (e *MsgCatalog) Reference() *assets.MsgCatalogReference {
+	return assets.NewMsgCatalogReference(e.ChannelUUID(), e.Name())
+}
 
-func (m *MsgCatalog) Topic() MsgTopic { return m.Topic_ }
+type MsgCatalogAssets struct {
+	byUUID map[uuids.UUID]*MsgCatalog
+}
 
-func (m *MsgCatalog) Action() string { return m.Action_ }
+func NewMsgCatalogAssets(msgCatalogs []assets.MsgCatalog) *MsgCatalogAssets {
+	s := &MsgCatalogAssets{
+		byUUID: make(map[uuids.UUID]*MsgCatalog, len(msgCatalogs)),
+	}
+	for _, asset := range msgCatalogs {
+		s.byUUID[asset.ChannelUUID()] = NewMsgCatalog(asset)
+	}
+	return s
+}
 
-func (m *MsgCatalog) Smart() bool { return m.Smart_ }
+func (m *MsgCatalogOut) Header() string { return m.Header_ }
 
-func (m *MsgCatalog) ProductSearch() string { return m.ProductSearch_ }
+func (m *MsgCatalogOut) Body() string { return m.Body_ }
+
+func (m *MsgCatalogOut) Footer() string { return m.Footer_ }
+
+func (m *MsgCatalogOut) Products() []string { return m.Products_ }
+
+func (m *MsgCatalogOut) Topic() MsgTopic { return m.Topic_ }
+
+func (m *MsgCatalogOut) Action() string { return m.Action_ }
+
+func (m *MsgCatalogOut) Smart() bool { return m.Smart_ }
+
+func (m *MsgCatalogOut) ProductSearch() string { return m.ProductSearch_ }

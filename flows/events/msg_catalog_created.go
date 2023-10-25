@@ -32,11 +32,11 @@ const TypeMsgCatalogCreated string = "msg_catalog_created"
 type MsgCatalogCreatedEvent struct {
 	baseEvent
 
-	Msg *flows.MsgCatalog `json:"msg" validate:"required,dive"`
+	Msg *flows.MsgCatalogOut `json:"msg" validate:"required,dive"`
 }
 
 // NewMsgCreated creates a new outgoing msg event to a single contact
-func NewMsgCatalogCreated(msg *flows.MsgCatalog) *MsgCatalogCreatedEvent {
+func NewMsgCatalogCreated(msg *flows.MsgCatalogOut) *MsgCatalogCreatedEvent {
 	return &MsgCatalogCreatedEvent{
 		baseEvent: newBaseEvent(TypeMsgCatalogCreated),
 		Msg:       msg,

@@ -21,6 +21,7 @@ type Services interface {
 	Ticket(Session, *Ticketer) (TicketService, error)
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
+	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -83,6 +84,13 @@ type ExternalServiceCall struct {
 	ResponseCleaned bool
 }
 
+type MsgCatalogCall struct {
+	RequestMethod   string
+	RequestURL      string
+	ResponseJSON    []byte
+	ResponseCleaned bool
+}
+
 // ClassificationService provides NLU functionality to the engine
 type ClassificationService interface {
 	Classify(session Session, input string, logHTTP HTTPLogCallback) (*Classification, error)
@@ -96,6 +104,10 @@ type TicketService interface {
 
 type ExternalServiceService interface {
 	Call(sesion Session, callAction assets.ExternalServiceCallAction, params []assets.ExternalServiceParam, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
+}
+
+type MsgCatalogService interface {
+	Call(sesion Session, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer

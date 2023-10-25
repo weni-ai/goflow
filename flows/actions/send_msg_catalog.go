@@ -1,7 +1,10 @@
 package actions
 
 import (
+	"fmt"
+
 	"github.com/nyaruka/gocommon/urns"
+	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -46,10 +49,11 @@ type SendMsgCatalogAction struct {
 	universalAction
 	createMsgCatalogAction
 
-	AllURNs    bool           `json:"all_urns,omitempty"`
-	Templating *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
-	Topic      flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
-	ResultName string         `json:"result_name,omitempty"`
+	MsgCatalog *assets.MsgCatalogReference `json:"msg_catalog,omitempty"`
+	AllURNs    bool                        `json:"all_urns,omitempty"`
+	Templating *Templating                 `json:"templating,omitempty" validate:"omitempty,dive"`
+	Topic      flows.MsgTopic              `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	ResultName string                      `json:"result_name,omitempty"`
 }
 
 type createMsgCatalogAction struct {
@@ -119,20 +123,30 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgCatalog(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
+		/////////////////////
+
+		msgCatalog := run.Session().Assets().MsgCatalog()
+		mc := msgCatalog.Get(uuids.UUID(channelRef.UUID))
+		c, err := a.call(run, step, mc, logEvent)
+		if err != nil {
+			a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
+		}
+
+		input := fmt.Sprintf("%s %s", c.RequestMethod, c.RequestURL)
+		a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", input, c.ResponseJSON, logEvent)
+
+		////////////////////
+
+		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalog(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
-
-	// TODO: saveResult with CategoryFailure
-	a.saveResult(run, step, a.ResultName, "SUCCESS RESULT", CategorySuccess, "", "SUCCESS RESULT", nil, logEvent)
-
 	return nil
 }
 
@@ -140,4 +154,27 @@ var msgCatalogCategories = []string{CategorySuccess, CategoryFailure}
 
 func (a *SendMsgCatalogAction) Results(include func(*flows.ResultInfo)) {
 	include(flows.NewResultInfo(a.ResultName, msgCatalogCategories))
+}
+
+func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, msgCatalog *flows.MsgCatalog, logEvent flows.EventCallback) (*flows.MsgCatalogCall, error) {
+	if msgCatalog == nil {
+		logEvent(events.NewDependencyError(a.MsgCatalog))
+		return nil, nil
+	}
+
+	svc, err := run.Session().Engine().Services().MsgCatalog(run.Session(), msgCatalog)
+	if err != nil {
+		logEvent(events.NewError(err))
+		return nil, nil
+	}
+
+	httpLogger := &flows.HTTPLogger{}
+
+	call, err := svc.Call(run.Session(), httpLogger.Log)
+	if err != nil {
+		logEvent(events.NewError(err))
+		return nil, err
+	}
+
+	return call, nil
 }

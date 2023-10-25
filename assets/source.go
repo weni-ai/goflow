@@ -16,4 +16,5 @@ type Source interface {
 	Ticketers() ([]Ticketer, error)
 	Topics() ([]Topic, error)
 	Users() ([]User, error)
+	MsgCatalogs() ([]MsgCatalog, error)
 }

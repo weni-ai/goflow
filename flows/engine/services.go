@@ -24,6 +24,8 @@ type AirtimeServiceFactory func(flows.Session) (flows.AirtimeService, error)
 // ExternalServiceServiceFactory resolves a session to an external service service
 type ExternalServiceServiceFactory func(flows.Session, *flows.ExternalService) (flows.ExternalServiceService, error)
 
+type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -31,6 +33,7 @@ type services struct {
 	ticket          TicketServiceFactory
 	airtime         AirtimeServiceFactory
 	externalService ExternalServiceServiceFactory
+	msgCatalog      MsgCatalogServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -51,6 +54,9 @@ func newEmptyServices() *services {
 			return nil, errors.New("no airtime service factory configured")
 		},
 		externalService: func(flows.Session, *flows.ExternalService) (flows.ExternalServiceService, error) {
+			return nil, errors.New("no external service factory configured")
+		},
+		msgCatalog: func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error) {
 			return nil, errors.New("no external service factory configured")
 		},
 	}
@@ -78,4 +84,8 @@ func (s *services) Airtime(session flows.Session) (flows.AirtimeService, error) 
 
 func (s *services) ExternalService(session flows.Session, externalService *flows.ExternalService) (flows.ExternalServiceService, error) {
 	return s.externalService(session, externalService)
+}
+
+func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalog) (flows.MsgCatalogService, error) {
+	return s.msgCatalog(session, msgCatalog)
 }

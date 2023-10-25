@@ -134,6 +134,10 @@ func (s *testSource) Locations() ([]assets.LocationHierarchy, error) {
 	return nil, s.err("locations")
 }
 
+func (s *testSource) MsgCatalogs() ([]assets.MsgCatalog, error) {
+	return nil, s.err("msgCatalog")
+}
+
 func (s *testSource) Resthooks() ([]assets.Resthook, error) {
 	return nil, s.err("resthooks")
 }
