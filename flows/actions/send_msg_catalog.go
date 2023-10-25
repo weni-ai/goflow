@@ -137,6 +137,8 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 
 		////////////////////
 
+		products = c.ProductRetailerIDS
+
 		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
