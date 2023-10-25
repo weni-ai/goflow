@@ -6,6 +6,7 @@ import (
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 )
@@ -127,7 +128,8 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 
 		msgCatalog := run.Session().Assets().MsgCatalog()
 		mc := msgCatalog.Get(uuids.UUID(channelRef.UUID))
-		c, err := a.call(run, step, mc, logEvent)
+		params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage)
+		c, err := a.call(run, step, params, mc, logEvent)
 		if err != nil {
 			a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 		}
@@ -156,7 +158,7 @@ func (a *SendMsgCatalogAction) Results(include func(*flows.ResultInfo)) {
 	include(flows.NewResultInfo(a.ResultName, msgCatalogCategories))
 }
 
-func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, msgCatalog *flows.MsgCatalog, logEvent flows.EventCallback) (*flows.MsgCatalogCall, error) {
+func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, params *assets.MsgCatalogParam, msgCatalog *flows.MsgCatalog, logEvent flows.EventCallback) (*flows.MsgCatalogCall, error) {
 	if msgCatalog == nil {
 		logEvent(events.NewDependencyError(a.MsgCatalog))
 		return nil, nil
@@ -170,7 +172,7 @@ func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, msgCatal
 
 	httpLogger := &flows.HTTPLogger{}
 
-	call, err := svc.Call(run.Session(), httpLogger.Log)
+	call, err := svc.Call(run.Session(), params, httpLogger.Log)
 	if err != nil {
 		logEvent(events.NewError(err))
 		return nil, err

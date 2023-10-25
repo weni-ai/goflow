@@ -107,7 +107,7 @@ type ExternalServiceService interface {
 }
 
 type MsgCatalogService interface {
-	Call(sesion Session, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
+	Call(session Session, params assets.MsgCatalogParam, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer
