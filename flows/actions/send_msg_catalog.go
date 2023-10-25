@@ -133,9 +133,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		if err != nil {
 			a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 		}
-
-		input := fmt.Sprintf("%s %s", c.RequestMethod, c.RequestURL)
-		a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", input, c.ResponseJSON, logEvent)
+		a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
 
 		////////////////////
 

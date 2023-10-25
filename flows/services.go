@@ -85,10 +85,8 @@ type ExternalServiceCall struct {
 }
 
 type MsgCatalogCall struct {
-	RequestMethod   string
-	RequestURL      string
-	ResponseJSON    []byte
-	ResponseCleaned bool
+	ResponseJSON       []byte
+	ProductRetailerIDS []string
 }
 
 // ClassificationService provides NLU functionality to the engine
