@@ -30,9 +30,10 @@ type MsgCatalogParam struct {
 	Smart         bool          `json:"smart"`
 	ProductSearch string        `json:"product_search,omitempty"`
 	TextLanguage  envs.Language `json:"text_language,omitempty"`
+	ChannelUUID   uuids.UUID    `json:"channel_uuid,omitempty"`
 }
 
-func NewMsgCatalogParam(header string, body string, footer string, products []string, action string, topic string, smart bool, productSearch string, textLanguage envs.Language) MsgCatalogParam {
+func NewMsgCatalogParam(header string, body string, footer string, products []string, action string, topic string, smart bool, productSearch string, textLanguage envs.Language, channelUUID uuids.UUID) MsgCatalogParam {
 	p := MsgCatalogParam{
 		Header:        header,
 		Body:          body,
@@ -43,6 +44,7 @@ func NewMsgCatalogParam(header string, body string, footer string, products []st
 		Smart:         smart,
 		ProductSearch: productSearch,
 		TextLanguage:  textLanguage,
+		ChannelUUID:   channelUUID,
 	}
 	return p
 }
