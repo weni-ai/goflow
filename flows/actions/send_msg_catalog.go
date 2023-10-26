@@ -127,7 +127,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		/////////////////////
 
 		msgCatalog := run.Session().Assets().MsgCatalogs()
-		mc := msgCatalog.Get(a.MsgCatalog.UUID)
+		mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
 		params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
 		c, err := a.call(run, step, params, mc, logEvent)
 		if err != nil {

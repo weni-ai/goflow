@@ -13,6 +13,7 @@ type MsgCatalog interface {
 	UUID() MsgCatalogUUID
 	Name() string
 	Type() string
+	ChannelUUID() ChannelUUID
 }
 
 type MsgCatalogReference struct {
