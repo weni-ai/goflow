@@ -49,7 +49,7 @@ func NewMsgCatalog(asset assets.MsgCatalog) *MsgCatalog {
 	}
 }
 
-func (s *MsgCatalogAssets) Get(uuid uuids.UUID) *MsgCatalog {
+func (s *MsgCatalogAssets) Get(uuid assets.MsgCatalogUUID) *MsgCatalog {
 	return s.byUUID[uuid]
 }
 
@@ -57,19 +57,19 @@ func (e *MsgCatalog) Asset() assets.MsgCatalog { return e.MsgCatalog }
 
 // Reference returns a reference to this external service
 func (e *MsgCatalog) Reference() *assets.MsgCatalogReference {
-	return assets.NewMsgCatalogReference(e.ChannelUUID(), e.Name())
+	return assets.NewMsgCatalogReference(e.UUID(), e.Name())
 }
 
 type MsgCatalogAssets struct {
-	byUUID map[uuids.UUID]*MsgCatalog
+	byUUID map[assets.MsgCatalogUUID]*MsgCatalog
 }
 
 func NewMsgCatalogAssets(msgCatalogs []assets.MsgCatalog) *MsgCatalogAssets {
 	s := &MsgCatalogAssets{
-		byUUID: make(map[uuids.UUID]*MsgCatalog, len(msgCatalogs)),
+		byUUID: make(map[assets.MsgCatalogUUID]*MsgCatalog, len(msgCatalogs)),
 	}
 	for _, asset := range msgCatalogs {
-		s.byUUID[asset.ChannelUUID()] = NewMsgCatalog(asset)
+		s.byUUID[asset.UUID()] = NewMsgCatalog(asset)
 	}
 	return s
 }

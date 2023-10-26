@@ -128,7 +128,7 @@ func (s *sessionAssets) Templates() *flows.TemplateAssets               { return
 func (s *sessionAssets) Ticketers() *flows.TicketerAssets               { return s.ticketers }
 func (s *sessionAssets) Topics() *flows.TopicAssets                     { return s.topics }
 func (s *sessionAssets) Users() *flows.UserAssets                       { return s.users }
-func (s *sessionAssets) MsgCatalog() *flows.MsgCatalogAssets            { return s.msgCatalog }
+func (s *sessionAssets) MsgCatalogs() *flows.MsgCatalogAssets           { return s.msgCatalog }
 
 func (s *sessionAssets) ResolveField(key string) assets.Field {
 	f := s.Fields().Get(key)

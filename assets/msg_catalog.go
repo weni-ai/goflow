@@ -7,17 +7,17 @@ import (
 	"github.com/nyaruka/goflow/envs"
 )
 
-//type MsgCatalogUUID uuids.UUID
+type MsgCatalogUUID uuids.UUID
 
 type MsgCatalog interface {
-	ChannelUUID() uuids.UUID
+	UUID() MsgCatalogUUID
 	Name() string
 	Type() string
 }
 
 type MsgCatalogReference struct {
-	UUID uuids.UUID `json:"uuid" validate:"required,uuid"`
-	Name string     `json:"name"`
+	UUID MsgCatalogUUID `json:"uuid" validate:"required,uuid"`
+	Name string         `json:"name"`
 }
 
 type MsgCatalogParam struct {
@@ -49,12 +49,7 @@ func NewMsgCatalogParam(header string, body string, footer string, products []st
 	return p
 }
 
-type MsgCatalogCallAction struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-func NewMsgCatalogReference(uuid uuids.UUID, name string) *MsgCatalogReference {
+func NewMsgCatalogReference(uuid MsgCatalogUUID, name string) *MsgCatalogReference {
 	return &MsgCatalogReference{UUID: uuid, Name: name}
 }
 
