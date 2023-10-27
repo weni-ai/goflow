@@ -62,6 +62,7 @@ type createMsgCatalogAction struct {
 	AutomaticSearch     bool                `json:"automaticProductSearch"`
 	ProductSearch       string              `json:"productSearch"`
 	ProductViewSettings ProductViewSettings `json:"productViewSettings"`
+	SendCatalog         bool                `json:"sendCatalog"`
 }
 
 type ProductViewSettings struct {
@@ -105,10 +106,6 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		logEvent(events.NewErrorf("search text evaluated to empty string"))
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, logEvent)
-
-	destinations := run.Contact().ResolveDestinations(a.AllURNs)
-
 	var products []string
 	for _, p := range a.Products {
 		v, found := p["product_retailer_id"]
@@ -116,6 +113,10 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			products = append(products, v)
 		}
 	}
+
+	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, products, a.SendCatalog, logEvent)
+
+	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
 	// create a new message for each URN+channel destination
 	for _, dest := range destinations {
@@ -136,14 +137,14 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 
 		products = c.ProductRetailerIDS
 
-		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic)
+		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 	return nil

@@ -19,13 +19,14 @@ type MsgCatalogOut struct {
 	Smart_         bool          `json:"smart"`
 	ProductSearch_ string        `json:"product_search,omitempty"`
 	TextLanguage   envs.Language `json:"text_language,omitempty"`
+	SendCatalog_   bool          `json:"send_catalog,omitempty"`
 }
 
 type MsgCatalog struct {
 	assets.MsgCatalog
 }
 
-func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []string, smart bool, topic MsgTopic) *MsgCatalogOut {
+func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []string, smart bool, topic MsgTopic, sendCatalog bool) *MsgCatalogOut {
 	return &MsgCatalogOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -40,6 +41,7 @@ func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, bo
 		Smart_:         smart,
 		ProductSearch_: productSearch,
 		Topic_:         topic,
+		SendCatalog_:   sendCatalog,
 	}
 }
 
@@ -96,3 +98,5 @@ func (m *MsgCatalogOut) Action() string { return m.Action_ }
 func (m *MsgCatalogOut) Smart() bool { return m.Smart_ }
 
 func (m *MsgCatalogOut) ProductSearch() string { return m.ProductSearch_ }
+
+func (m *MsgCatalogOut) SendCatalog() bool { return m.SendCatalog_ }
