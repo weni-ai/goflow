@@ -125,17 +125,21 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msgCatalog := run.Session().Assets().MsgCatalogs()
-		mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
-		params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
-		c, err := a.call(run, step, params, mc, logEvent)
-		if err != nil {
-			a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
-			return nil
-		}
-		a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
+		if a.createMsgCatalogAction.AutomaticSearch {
+			msgCatalog := run.Session().Assets().MsgCatalogs()
+			mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
+			params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
+			c, err := a.call(run, step, params, mc, logEvent)
+			if err != nil {
+				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
+				return nil
+			}
+			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
 
-		products = c.ProductRetailerIDS
+			products = c.ProductRetailerIDS
+		} else {
+			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
+		}
 
 		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
