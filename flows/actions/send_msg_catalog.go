@@ -124,18 +124,15 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		/////////////////////
-
 		msgCatalog := run.Session().Assets().MsgCatalogs()
 		mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
 		params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
 		c, err := a.call(run, step, params, mc, logEvent)
 		if err != nil {
 			a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
+			return nil
 		}
 		a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
-
-		////////////////////
 
 		products = c.ProductRetailerIDS
 
@@ -161,13 +158,13 @@ func (a *SendMsgCatalogAction) Results(include func(*flows.ResultInfo)) {
 func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, params assets.MsgCatalogParam, msgCatalog *flows.MsgCatalog, logEvent flows.EventCallback) (*flows.MsgCatalogCall, error) {
 	if msgCatalog == nil {
 		logEvent(events.NewDependencyError(a.MsgCatalog))
-		return nil, nil
+		return nil, fmt.Errorf("msgCatalog cannot be nil")
 	}
 
 	svc, err := run.Session().Engine().Services().MsgCatalog(run.Session(), msgCatalog)
 	if err != nil {
 		logEvent(events.NewError(err))
-		return nil, nil
+		return nil, err
 	}
 
 	httpLogger := &flows.HTTPLogger{}
