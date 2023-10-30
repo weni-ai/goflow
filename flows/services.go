@@ -87,6 +87,8 @@ type ExternalServiceCall struct {
 type MsgCatalogCall struct {
 	ResponseJSON       []byte
 	ProductRetailerIDS []string
+	TraceWeniGPT       *httpx.Trace
+	TraceSentenx       *httpx.Trace
 }
 
 // ClassificationService provides NLU functionality to the engine

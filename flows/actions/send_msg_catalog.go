@@ -118,6 +118,8 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
+	var status flows.CallStatus
+
 	// create a new message for each URN+channel destination
 	for _, dest := range destinations {
 		var channelRef *assets.ChannelReference
@@ -131,9 +133,24 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
+
+				status = flows.CallStatusResponseError
+				callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
+				logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+				callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
+				logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
+
 				return nil
 			}
+
+			status = flows.CallStatusSuccess
+			callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
+			logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+			callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
+			logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
 
 			products = c.ProductRetailerIDS
