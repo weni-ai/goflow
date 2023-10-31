@@ -1,3 +1,7 @@
+0.2.3-goflow-0.144.3
+----------
+ * Add language field to zeroshot request 
+
 0.2.2-goflow-0.144.3
 ----------
  * Fix msg and resume order
