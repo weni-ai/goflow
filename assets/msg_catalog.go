@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/nyaruka/gocommon/uuids"
-	"github.com/nyaruka/goflow/envs"
 )
 
 type MsgCatalogUUID uuids.UUID
@@ -22,29 +21,13 @@ type MsgCatalogReference struct {
 }
 
 type MsgCatalogParam struct {
-	Header        string        `json:"header,omitempty"`
-	Body          string        `json:"body,omitempty"`
-	Footer        string        `json:"footer,omitempty"`
-	Products      []string      `json:"products,omitempty"`
-	Action        string        `json:"action,omitempty"`
-	Topic         string        `json:"topic,omitempty"`
-	Smart         bool          `json:"smart"`
-	ProductSearch string        `json:"product_search,omitempty"`
-	TextLanguage  envs.Language `json:"text_language,omitempty"`
-	ChannelUUID   uuids.UUID    `json:"channel_uuid,omitempty"`
+	ProductSearch string     `json:"product_search,omitempty"`
+	ChannelUUID   uuids.UUID `json:"channel_uuid,omitempty"`
 }
 
-func NewMsgCatalogParam(header string, body string, footer string, products []string, action string, topic string, smart bool, productSearch string, textLanguage envs.Language, channelUUID uuids.UUID) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID) MsgCatalogParam {
 	p := MsgCatalogParam{
-		Header:        header,
-		Body:          body,
-		Footer:        footer,
-		Products:      products,
-		Action:        action,
-		Topic:         topic,
-		Smart:         smart,
 		ProductSearch: productSearch,
-		TextLanguage:  textLanguage,
 		ChannelUUID:   channelUUID,
 	}
 	return p

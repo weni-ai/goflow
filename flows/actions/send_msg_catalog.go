@@ -6,7 +6,6 @@ import (
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
-	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 )
@@ -130,15 +129,19 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		if a.createMsgCatalogAction.AutomaticSearch {
 			msgCatalog := run.Session().Assets().MsgCatalogs()
 			mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
-			params := assets.NewMsgCatalogParam(evaluatedHeader, evaluatedBody, evaluatedFooter, products, a.ProductViewSettings.Action, string(a.Topic), a.AutomaticSearch, evaluatedSearch, envs.NilLanguage, uuids.UUID(dest.Channel.UUID()))
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()))
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 
 				status = flows.CallStatusResponseError
-				callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
-				logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
-				callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
-				logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+				if c.TraceWeniGPT != nil {
+					callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
+					logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+				}
+				if c.TraceSentenx != nil {
+					callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
+					logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+				}
 
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 
@@ -146,10 +149,14 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			}
 
 			status = flows.CallStatusSuccess
-			callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
-			logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
-			callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
-			logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+			if c.TraceWeniGPT != nil {
+				callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
+				logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+			}
+			if c.TraceSentenx != nil {
+				callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
+				logEvent(events.NewWebhookCalled(callSentenx, status, ""))
+			}
 
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
 
