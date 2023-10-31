@@ -36,7 +36,8 @@
                 }
             ],
             "all_urns": true,
-            "result_name": "Result"
+            "result_name": "Result",
+            "sendCatalog": false
         },
         "events": [
             {
@@ -70,6 +71,7 @@
         "description": "Error events if msg header, body and footer have expression errors",
         "action": {
             "type": "send_msg_catalog",
+            "sendCatalog": false,
             "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
             "productSearch": "",
             "productViewSettings": {
@@ -82,6 +84,12 @@
             "products": [{"product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"}]
         },
         "events": [
+            {
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "search text evaluated to empty string",
+                "type": "error"
+            },
             {
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
@@ -99,6 +107,14 @@
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
                 "text": "error evaluating @(xxxxx): context has no property 'xxxxx'",
                 "type": "error"
+            },
+            {
+                "category": "Success",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "name": "",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "run_result_changed",
+                "value": ""
             },
             {
                 "type": "msg_catalog_created",
@@ -126,6 +142,7 @@
         "description": "body and footer ignored if they are expressions which evaluate to empty",
         "action": {
             "type": "send_msg_catalog",
+            "sendCatalog": false,
             "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
             "productSearch": "",
             "productViewSettings": {
@@ -146,13 +163,27 @@
                 "type": "error",
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
-                "text": "body text evaluated to empty string"
+                "text": "search text evaluated to empty string"
+            },
+            {
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "body text evaluated to empty string",
+                "type": "error"
             },
             {
                 "type": "error",
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
                 "text": "footer text evaluated to empty string"
+            },
+            {
+                "category": "Success",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "name": "",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "run_result_changed",
+                "value": ""
             },
             {
                 "type": "msg_catalog_created",
