@@ -101,7 +101,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedSearch == "" {
+	if evaluatedSearch == "" && a.AutomaticSearch {
 		logEvent(events.NewErrorf("search text evaluated to empty string"))
 	}
 
