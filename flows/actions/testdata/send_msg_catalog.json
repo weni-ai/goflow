@@ -87,12 +87,6 @@
             {
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
-                "text": "search text evaluated to empty string",
-                "type": "error"
-            },
-            {
-                "created_on": "2018-10-18T14:20:30.000123456Z",
-                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
                 "text": "error evaluating @(xxxxx): context has no property 'xxxxx'",
                 "type": "error"
             },
@@ -163,13 +157,7 @@
                 "type": "error",
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
-                "text": "search text evaluated to empty string"
-            },
-            {
-                "created_on": "2018-10-18T14:20:30.000123456Z",
-                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
-                "text": "body text evaluated to empty string",
-                "type": "error"
+                "text": "body text evaluated to empty string"
             },
             {
                 "type": "error",
