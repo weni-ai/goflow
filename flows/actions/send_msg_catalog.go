@@ -185,23 +185,25 @@ func (a *SendMsgCatalogAction) Results(include func(*flows.ResultInfo)) {
 }
 
 func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, params assets.MsgCatalogParam, msgCatalog *flows.MsgCatalog, logEvent flows.EventCallback) (*flows.MsgCatalogCall, error) {
+	var call *flows.MsgCatalogCall
+
 	if msgCatalog == nil {
 		logEvent(events.NewDependencyError(a.MsgCatalog))
-		return nil, fmt.Errorf("msgCatalog cannot be nil")
+		return call, fmt.Errorf("msgCatalog cannot be nil")
 	}
 
 	svc, err := run.Session().Engine().Services().MsgCatalog(run.Session(), msgCatalog)
 	if err != nil {
 		logEvent(events.NewError(err))
-		return nil, err
+		return call, err
 	}
 
 	httpLogger := &flows.HTTPLogger{}
 
-	call, err := svc.Call(run.Session(), params, httpLogger.Log)
+	call, err = svc.Call(run.Session(), params, httpLogger.Log)
 	if err != nil {
 		logEvent(events.NewError(err))
-		return nil, err
+		return call, err
 	}
 
 	return call, nil
