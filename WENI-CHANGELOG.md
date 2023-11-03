@@ -1,3 +1,7 @@
+0.3.0-goflow-0.144.3
+----------
+ * Add catalog msg card support
+
 0.2.3-goflow-0.144.3
 ----------
  * Add language field to zeroshot request 
