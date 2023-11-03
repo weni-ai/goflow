@@ -109,6 +109,7 @@ type SessionAssets interface {
 	Groups() *GroupAssets
 	Labels() *LabelAssets
 	Locations() *LocationAssets
+	MsgCatalogs() *MsgCatalogAssets
 	Resthooks() *ResthookAssets
 	Templates() *TemplateAssets
 	Ticketers() *TicketerAssets
