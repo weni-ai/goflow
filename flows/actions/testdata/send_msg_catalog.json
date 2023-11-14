@@ -11,6 +11,7 @@
                 "footer": "footer",
                 "action": "menu"
             },
+            "search_type":"default",
             "automaticProductSearch": true,
             "topic": "spam"
         },
@@ -37,7 +38,8 @@
             ],
             "all_urns": true,
             "result_name": "Result",
-            "sendCatalog": false
+            "sendCatalog": false,
+            "search_type": ""
         },
         "events": [
             {
@@ -80,6 +82,7 @@
                 "footer": "footer text @(xxxxx)",
                 "action": "Menu"
             },
+            "search_type": "vtex",
             "automaticProductSearch": false,
             "products": [{"product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"}]
         },
@@ -145,6 +148,7 @@
                 "footer": "@(\"\")",
                 "action": "Menu"
             },
+            "search_type": "default",
             "automaticProductSearch": false,
             "products": [
                 {
