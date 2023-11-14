@@ -48,6 +48,7 @@ type SendMsgCatalogAction struct {
 	baseAction
 	universalAction
 	createMsgCatalogAction
+	searchSettings
 
 	MsgCatalog *assets.MsgCatalogReference `json:"msg_catalog,omitempty"`
 	AllURNs    bool                        `json:"all_urns,omitempty"`
@@ -71,8 +72,13 @@ type ProductViewSettings struct {
 	Action string `json:"action"`
 }
 
+type searchSettings struct {
+	SearchUrl  string `json:"search_url,omitempty"`
+	SearchType string `json:"search_type"`
+}
+
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch bool, searchUrl string, searchType string, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
@@ -85,6 +91,10 @@ func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, prod
 			Products:        products,
 			AutomaticSearch: automaticSearch,
 			ProductSearch:   productSearch,
+		},
+		searchSettings: searchSettings{
+			SearchUrl:  searchUrl,
+			SearchType: searchType,
 		},
 		AllURNs: allURNs,
 	}
@@ -117,8 +127,6 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
-	var status flows.CallStatus
-
 	// create a new message for each URN+channel destination
 	for _, dest := range destinations {
 		var channelRef *assets.ChannelReference
@@ -129,37 +137,21 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		if a.createMsgCatalogAction.AutomaticSearch {
 			msgCatalog := run.Session().Assets().MsgCatalogs()
 			mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()))
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, a.SearchUrl)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
-
-				status = flows.CallStatusResponseError
-				if c.TraceWeniGPT != nil {
-					callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
-					logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+				for _, trace := range c.Traces {
+					call := &flows.WebhookCall{Trace: trace}
+					logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
 				}
-				if c.TraceSentenx != nil {
-					callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
-					logEvent(events.NewWebhookCalled(callSentenx, status, ""))
-				}
-
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
-
 				return nil
 			}
-
-			status = flows.CallStatusSuccess
-			if c.TraceWeniGPT != nil {
-				callWeniGPT := &flows.WebhookCall{Trace: c.TraceWeniGPT}
-				logEvent(events.NewWebhookCalled(callWeniGPT, status, ""))
+			for _, trace := range c.Traces {
+				call := &flows.WebhookCall{Trace: trace}
+				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
 			}
-			if c.TraceSentenx != nil {
-				callSentenx := &flows.WebhookCall{Trace: c.TraceSentenx}
-				logEvent(events.NewWebhookCalled(callSentenx, status, ""))
-			}
-
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
-
 			products = c.ProductRetailerIDS
 		} else {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
