@@ -23,12 +23,16 @@ type MsgCatalogReference struct {
 type MsgCatalogParam struct {
 	ProductSearch string     `json:"product_search,omitempty"`
 	ChannelUUID   uuids.UUID `json:"channel_uuid,omitempty"`
+	SearchType    string     `json:"search_type,omitempty"`
+	SearchUrl     string     `json:"search_url,omitempty"`
 }
 
-func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string) MsgCatalogParam {
 	p := MsgCatalogParam{
 		ProductSearch: productSearch,
 		ChannelUUID:   channelUUID,
+		SearchType:    searchType,
+		SearchUrl:     searchUrl,
 	}
 	return p
 }
