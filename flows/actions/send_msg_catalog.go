@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
@@ -115,15 +116,15 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		logEvent(events.NewErrorf("search text evaluated to empty string"))
 	}
 
-	var products []string
+	var mapProducts map[string]string
 	for _, p := range a.Products {
 		v, found := p["product_retailer_id"]
 		if found {
-			products = append(products, v)
+			mapProducts["product"] = v
 		}
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, products, a.SendCatalog, logEvent)
+	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -133,11 +134,26 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		if dest.Channel != nil {
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
+		var apiType string
+		if a.SearchType == "vtex" {
+			//testar essas regex
+			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)\/api\/catalog_system\/pub\/products\/search$`)
+			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com\.br\/api\/io\/_v\/api\/intelligent-search\/product_search$`)
+			if regexLegacy.MatchString(a.SearchUrl) {
+				apiType = "legacy"
+			} else if regexIntelligent.MatchString(a.SearchUrl) {
+				apiType = "intelligent"
+			}
+		}
 
 		if a.createMsgCatalogAction.AutomaticSearch {
 			msgCatalog := run.Session().Assets().MsgCatalogs()
 			mc := msgCatalog.GetByChannelUUID(channelRef.UUID)
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, a.SearchUrl)
+			if mc == nil {
+				a.saveResult(run, step, a.ResultName, fmt.Sprintf("channel with uuid: %s, does not have an active catalog", channelRef.UUID), CategoryFailure, "", "", nil, logEvent)
+				return nil
+			}
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, a.SearchUrl, apiType)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {
@@ -152,19 +168,19 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
 			}
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
-			products = c.ProductRetailerIDS
+			mapProducts = c.ProductRetailerIDS
 		} else {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
 		}
 
-		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic, a.SendCatalog)
+		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, mapProducts, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, products, a.AutomaticSearch, a.Topic, a.SendCatalog)
+		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, mapProducts, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 	return nil
