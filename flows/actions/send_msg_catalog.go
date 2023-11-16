@@ -116,11 +116,11 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		logEvent(events.NewErrorf("search text evaluated to empty string"))
 	}
 
-	var mapProducts map[string]string
+	mapProducts := make(map[string]string)
 	for _, p := range a.Products {
 		v, found := p["product_retailer_id"]
 		if found {
-			mapProducts["product"] = v
+			mapProducts["product_retailer_id"] = v
 		}
 	}
 
