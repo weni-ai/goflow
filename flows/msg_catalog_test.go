@@ -44,10 +44,9 @@ func TestMsgCatalogOut(t *testing.T) {
 		"footer": "footer",
 		"header": "header",
 		"product_search": "productSearch",
-		"products": [
-			"product_1",
-			"product_2"
-		],
+		"products": {
+			"product": "product_1"
+		},
 		"smart": false,
 		"text": "",
 		"topic": "none",
