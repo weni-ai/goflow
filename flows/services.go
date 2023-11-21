@@ -86,7 +86,7 @@ type ExternalServiceCall struct {
 
 type MsgCatalogCall struct {
 	ResponseJSON       []byte
-	ProductRetailerIDS map[string]string
+	ProductRetailerIDS map[string][]string
 	Traces             []*httpx.Trace
 }
 
