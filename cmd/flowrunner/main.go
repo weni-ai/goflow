@@ -280,6 +280,8 @@ func PrintEvent(event flows.Event, out io.Writer) {
 		msg = fmt.Sprintf("💬 message created \"%s\"", typed.Msg.Text())
 	case *events.MsgCatalogCreatedEvent:
 		msg = fmt.Sprintf("🛒 message catalog created with products \"%s\"", typed.Msg.Products())
+	case *events.MsgWppCreatedEvent:
+		msg = fmt.Sprintf("💬 message whatsapp created \"%s\"", typed.Msg.Body())
 	case *events.MsgReceivedEvent:
 		msg = fmt.Sprintf("📥 message received \"%s\"", typed.Msg.Text())
 	case *events.MsgWaitEvent:

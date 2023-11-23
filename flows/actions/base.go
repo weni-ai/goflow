@@ -148,11 +148,76 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedBody == "" {
+	if evaluatedFooter == "" {
 		logEvent(events.NewErrorf("footer text evaluated to empty string"))
 	}
 
 	return evaluatedHeader, evaluatedBody, evaluatedFooter
+}
+
+func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeader Header, actionBody string, actionFooter string, actionListMessages ListMessages, actionReplyMessage []string, logEvent flows.EventCallback) (string, []utils.Attachment, string, string, []string) {
+	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader.Text}, languages)[0]
+	evaluatedHeaderText, err := run.EvaluateTemplate(localizedHeaderText)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedHeaderText == "" {
+		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	}
+
+	// localize and evaluate the message attachments
+	translatedAttachments := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "attachments", actionHeader.Attachments, languages)
+	evaluatedAttachments := make([]utils.Attachment, 0, len(translatedAttachments))
+	for _, a := range translatedAttachments {
+		evaluatedAttachment, err := run.EvaluateTemplate(a)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		if evaluatedAttachment == "" {
+			logEvent(events.NewErrorf("attachment text evaluated to empty string, skipping"))
+			continue
+		}
+		if len(evaluatedAttachment) > maxAttachmentLength {
+			logEvent(events.NewErrorf("evaluated attachment is longer than %d limit, skipping", maxAttachmentLength))
+			continue
+		}
+		evaluatedAttachments = append(evaluatedAttachments, utils.Attachment(evaluatedAttachment))
+	}
+
+	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionBody}, languages)[0]
+	evaluatedBody, err := run.EvaluateTemplate(localizedBody)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedBody == "" {
+		logEvent(events.NewErrorf("body text evaluated to empty string"))
+	}
+
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedFooter == "" {
+		logEvent(events.NewErrorf("footer text evaluated to empty string"))
+	}
+
+	// localize and evaluate the quick replies
+	translatedReplyMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "quick_replies", actionReplyMessage, languages)
+	evaluatedReplyMessage := make([]string, 0, len(translatedReplyMessage))
+	for _, qr := range translatedReplyMessage {
+		evaluatedQuickReply, err := run.EvaluateTemplate(qr)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		if evaluatedQuickReply == "" {
+			logEvent(events.NewErrorf("quick reply text evaluated to empty string, skipping"))
+			continue
+		}
+		evaluatedReplyMessage = append(evaluatedReplyMessage, evaluatedQuickReply)
+	}
+
+	return evaluatedHeaderText, evaluatedAttachments, evaluatedBody, evaluatedFooter, evaluatedReplyMessage
 }
 
 // helper to save a run result and log it as an event
