@@ -137,8 +137,8 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		var apiType string
 		if a.SearchType == "vtex" {
 			//testar essas regex
-			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)\/api\/catalog_system\/pub\/products\/search$`)
-			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com\.br\/api\/io\/_v\/api\/intelligent-search\/product_search$`)
+			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/catalog_system\/pub\/products\/search$`)
+			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/product_search(\/)?$`)
 			if regexLegacy.MatchString(a.SearchUrl) {
 				apiType = "legacy"
 			} else if regexIntelligent.MatchString(a.SearchUrl) {
