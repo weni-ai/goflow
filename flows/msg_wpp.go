@@ -4,18 +4,20 @@ import (
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/utils"
 )
 
 type MsgWppOut struct {
 	BaseMsg
 
-	Header_       Header       `json:"header,omitempty"`
-	Body_         string       `json:"body,omitempty"`
-	Footer_       string       `json:"footer,omitempty"`
-	Topic_        MsgTopic     `json:"topic,omitempty"`
-	ListMessages_ ListMessages `json:"list_messages,omitempty"`
-	ReplyButtons_ []string     `json:"reply_buttons,omitempty"`
+	Header_       Header        `json:"header,omitempty"`
+	Body_         string        `json:"body,omitempty"`
+	Footer_       string        `json:"footer,omitempty"`
+	Topic_        MsgTopic      `json:"topic,omitempty"`
+	ListMessages_ ListMessages  `json:"list_messages,omitempty"`
+	ReplyButtons_ []string      `json:"reply_buttons,omitempty"`
+	TextLanguage  envs.Language `json:"text_language,omitempty"`
 }
 
 type Header struct {
