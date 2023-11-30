@@ -1,3 +1,7 @@
+0.4.0-goflow-0.144.3
+----------
+ * Add support for vtex searches
+
 0.3.0-goflow-0.144.3
 ----------
  * Add catalog msg card support
