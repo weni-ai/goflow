@@ -1,6 +1,8 @@
 package flows
 
 import (
+	"fmt"
+
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
@@ -56,6 +58,8 @@ func (s *MsgCatalogAssets) Get(uuid assets.MsgCatalogUUID) *MsgCatalog {
 }
 
 func (s *MsgCatalogAssets) GetByChannelUUID(uuid assets.ChannelUUID) *MsgCatalog {
+	fmt.Println("ASSETS CATALOGS: ", s.byChannelUUID)
+	fmt.Println("CHANNEL UUID: ", uuid)
 	return s.byChannelUUID[uuid]
 }
 
