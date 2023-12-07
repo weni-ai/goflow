@@ -26,6 +26,8 @@ type ExternalServiceServiceFactory func(flows.Session, *flows.ExternalService) (
 
 type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error)
 
+type OrgContextServiceFactory func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -34,6 +36,7 @@ type services struct {
 	airtime         AirtimeServiceFactory
 	externalService ExternalServiceServiceFactory
 	msgCatalog      MsgCatalogServiceFactory
+	context         OrgContextServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -88,4 +91,8 @@ func (s *services) ExternalService(session flows.Session, externalService *flows
 
 func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalog) (flows.MsgCatalogService, error) {
 	return s.msgCatalog(session, msgCatalog)
+}
+
+func (s *services) Context(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
+	return s.context(session, context)
 }

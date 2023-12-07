@@ -22,6 +22,7 @@ type sessionAssets struct {
 	labels           *flows.LabelAssets
 	locations        *flows.LocationAssets
 	msgCatalog       *flows.MsgCatalogAssets
+	orgContexts      *flows.OrgContextAssets
 	resthooks        *flows.ResthookAssets
 	templates        *flows.TemplateAssets
 	ticketers        *flows.TicketerAssets
@@ -69,6 +70,10 @@ func NewSessionAssets(env envs.Environment, source assets.Source, migrationConfi
 	if err != nil {
 		return nil, err
 	}
+	orgContexts, err := source.OrgContexts()
+	if err != nil {
+		return nil, err
+	}
 	resthooks, err := source.Resthooks()
 	if err != nil {
 		return nil, err
@@ -105,6 +110,7 @@ func NewSessionAssets(env envs.Environment, source assets.Source, migrationConfi
 		labels:           flows.NewLabelAssets(labels),
 		locations:        flows.NewLocationAssets(locations),
 		msgCatalog:       flows.NewMsgCatalogAssets(msgCatalog),
+		orgContexts:      flows.NewOrgContextAssets(orgContexts),
 		resthooks:        flows.NewResthookAssets(resthooks),
 		templates:        flows.NewTemplateAssets(templates),
 		ticketers:        flows.NewTicketerAssets(ticketers),
@@ -129,6 +135,7 @@ func (s *sessionAssets) Ticketers() *flows.TicketerAssets               { return
 func (s *sessionAssets) Topics() *flows.TopicAssets                     { return s.topics }
 func (s *sessionAssets) Users() *flows.UserAssets                       { return s.users }
 func (s *sessionAssets) MsgCatalogs() *flows.MsgCatalogAssets           { return s.msgCatalog }
+func (s *sessionAssets) OrgContext() *flows.OrgContextAssets            { return s.orgContexts }
 
 func (s *sessionAssets) ResolveField(key string) assets.Field {
 	f := s.Fields().Get(key)

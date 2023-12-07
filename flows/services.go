@@ -90,6 +90,10 @@ type MsgCatalogCall struct {
 	Traces             []*httpx.Trace
 }
 
+type OrgContextCall struct {
+	ResponseJSON []byte
+}
+
 // ClassificationService provides NLU functionality to the engine
 type ClassificationService interface {
 	Classify(session Session, input string, logHTTP HTTPLogCallback) (*Classification, error)
@@ -107,6 +111,10 @@ type ExternalServiceService interface {
 
 type MsgCatalogService interface {
 	Call(session Session, params assets.MsgCatalogParam, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
+}
+
+type OrgContextService interface {
+	Call(session Session, logHTTP HTTPLogCallback) (*OrgContextCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer

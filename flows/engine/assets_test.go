@@ -138,6 +138,10 @@ func (s *testSource) MsgCatalogs() ([]assets.MsgCatalog, error) {
 	return nil, s.err("msgCatalog")
 }
 
+func (s *testSource) OrgContexts() ([]assets.OrgContext, error) {
+	return nil, s.err("orgContext")
+}
+
 func (s *testSource) Resthooks() ([]assets.Resthook, error) {
 	return nil, s.err("resthooks")
 }
