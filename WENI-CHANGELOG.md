@@ -1,3 +1,7 @@
+0.5.0-goflow-0.144.3
+----------
+ * Add asset to zeroshot context
+
 0.4.1-goflow-0.144.3
 ----------
  * Add vtex search support with sellerId
