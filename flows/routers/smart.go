@@ -158,12 +158,14 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 
 	body := struct {
 		Context string `json:"context"`
+		Text    string `json:"text"`
 		Options []struct {
 			Class   string `json:"class"`
 			Context string `json:"context"`
 		} `json:"options"`
 	}{
 		Context: context,
+		Text:    operand,
 	}
 
 	// if run.Contact().Language() != envs.NilLanguage {
