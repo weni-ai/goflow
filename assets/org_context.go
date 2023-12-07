@@ -21,7 +21,7 @@ func NewOrgContextReference(orgContext string) *OrgContextReference {
 }
 
 func (r *OrgContextReference) Type() string {
-	return "context"
+	return "org_context"
 }
 
 func (r *OrgContextReference) GenericUUID() uuids.UUID {
