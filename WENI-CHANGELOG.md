@@ -1,3 +1,7 @@
+0.4.1-goflow-0.144.3
+----------
+ * Add vtex search support with sellerId
+
 0.4.0-goflow-0.144.3
 ----------
  * Add support for vtex searches
