@@ -115,6 +115,7 @@ type SessionAssets interface {
 	Ticketers() *TicketerAssets
 	Topics() *TopicAssets
 	Users() *UserAssets
+	OrgContext() *OrgContextAssets
 }
 
 // Localizable is anything in the flow definition which can be localized and therefore needs a UUID

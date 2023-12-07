@@ -17,4 +17,5 @@ type Source interface {
 	Topics() ([]Topic, error)
 	Users() ([]User, error)
 	MsgCatalogs() ([]MsgCatalog, error)
+	OrgContexts() ([]OrgContext, error)
 }
