@@ -157,20 +157,22 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	status := flows.CallStatusSuccess
 
 	body := struct {
-		Context string `json:"context"`
-		Text    string `json:"text"`
-		Options []struct {
+		Context  string `json:"context"`
+		Language string `json:"language"`
+		Text     string `json:"text"`
+		Options  []struct {
 			Class   string `json:"class"`
 			Context string `json:"context"`
 		} `json:"options"`
 	}{
-		Context: context,
-		Text:    operand,
+		Context:  context,
+		Text:     operand,
+		Language: "pt-br",
 	}
 
-	// if run.Contact().Language() != envs.NilLanguage {
-	// 	body.Language = string(run.Contact().Language())
-	// }
+	if run.Contact().Language() != envs.NilLanguage {
+		body.Language = string(run.Contact().Language())
+	}
 
 	args := make(map[string]string)
 	for _, c := range r.cases {
