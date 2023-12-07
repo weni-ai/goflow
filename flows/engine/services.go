@@ -36,7 +36,7 @@ type services struct {
 	airtime         AirtimeServiceFactory
 	externalService ExternalServiceServiceFactory
 	msgCatalog      MsgCatalogServiceFactory
-	context         OrgContextServiceFactory
+	orgContext      OrgContextServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -61,6 +61,9 @@ func newEmptyServices() *services {
 		},
 		msgCatalog: func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error) {
 			return nil, errors.New("no external service factory configured")
+		},
+		orgContext: func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error) {
+			return nil, errors.New("no org context factory configured")
 		},
 	}
 }
@@ -93,6 +96,6 @@ func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalo
 	return s.msgCatalog(session, msgCatalog)
 }
 
-func (s *services) Context(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
-	return s.context(session, context)
+func (s *services) OrgContext(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
+	return s.orgContext(session, context)
 }

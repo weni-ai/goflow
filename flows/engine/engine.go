@@ -106,6 +106,11 @@ func (b *Builder) WithMsgCatalogServiceFactory(f MsgCatalogServiceFactory) *Buil
 	return b
 }
 
+func (b *Builder) WithOrgContextServiceFactory(f OrgContextServiceFactory) *Builder {
+	b.eng.services.orgContext = f
+	return b
+}
+
 // WithMaxStepsPerSprint sets the maximum number of steps allowed in a single sprint
 func (b *Builder) WithMaxStepsPerSprint(max int) *Builder {
 	b.eng.maxStepsPerSprint = max
