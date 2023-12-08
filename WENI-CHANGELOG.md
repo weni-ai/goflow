@@ -1,3 +1,7 @@
+0.5.1-goflow-0.144.3
+----------
+ * Allow the context to be empty if it doesn't have one
+
 0.5.0-goflow-0.144.3
 ----------
  * Add asset to zeroshot context
