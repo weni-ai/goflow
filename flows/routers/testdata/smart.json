@@ -45,8 +45,8 @@
         "results": {
             "product": {
                 "name": "Product",
-                "value": "Failure",
-                "category": "Other",
+                "value": "Price",
+                "category": "Price",
                 "node_uuid": "64373978-e8f6-4973-b6ff-a2993f3376fc",
                 "input": "How much does it cost?",
                 "created_on": "2018-10-18T14:20:30.000123456Z"
@@ -54,13 +54,26 @@
         },
         "events": [
             {
-                "category": "Other",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "elapsed_ms": 0,
+                "extraction": "valid",
+                "request": "POST /v2/repository/nlp/zeroshot/zeroshot-fast-predict HTTP/1.1\r\nHost: api.bothub.it\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 184\r\nAuthorization: Bearer token\r\nContent-Type: application/json\r\nAccept-Encoding: gzip\r\n\r\n{\"context\":\"\",\"language\":\"eng\",\"text\":\"How much does it cost?\",\"options\":[{\"class\":\"Price\",\"context\":\"that's the price\"},{\"class\":\"Delivery\",\"context\":\"this is the delivery address\"}]}",
+                "response": "HTTP/1.0 200 OK\r\nContent-Length: 51\r\n\r\n{\"output\":{\"classification\":\"Price\",\"other\":false}}",
+                "retries": 0,
+                "status": "success",
+                "status_code": 200,
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "webhook_called",
+                "url": "https://api.bothub.it/v2/repository/nlp/zeroshot/zeroshot-fast-predict"
+            },
+            {
+                "category": "Price",
                 "created_on": "2018-10-18T14:20:30.000123456Z",
                 "input": "How much does it cost?",
                 "name": "Product",
                 "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
                 "type": "run_result_changed",
-                "value": "Failure"
+                "value": "Price"
             }
         ],
         "templates": [
