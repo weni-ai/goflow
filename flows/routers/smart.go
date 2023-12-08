@@ -145,13 +145,12 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		return "", "", nil
 	}
 
+	context := ""
 	orgContext := run.Session().Assets().OrgContext()
 	c := orgContext.GetByChannelUUID()
-	if c == nil {
-		return "", "", fmt.Errorf("org context cannot be nil")
+	if c != nil {
+		context = c.OrgContext.Context()
 	}
-
-	context := c.OrgContext.Context()
 
 	url := apiUrl + "/v2/repository/nlp/zeroshot/zeroshot-fast-predict"
 	status := flows.CallStatusSuccess
