@@ -35,6 +35,9 @@ func (c *OrgContext) Asset() assets.OrgContext { return c.OrgContext }
 
 // Reference returns a reference to this context
 func (c *OrgContext) Reference() *assets.OrgContextReference {
+	if c == nil {
+		return nil
+	}
 	return assets.NewOrgContextReference(c.Context())
 }
 

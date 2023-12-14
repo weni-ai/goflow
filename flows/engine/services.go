@@ -60,10 +60,10 @@ func newEmptyServices() *services {
 			return nil, errors.New("no external service factory configured")
 		},
 		msgCatalog: func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error) {
-			return nil, errors.New("no external service factory configured")
+			return nil, errors.New("no msg catalog service factory configured")
 		},
 		orgContext: func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error) {
-			return nil, errors.New("no org context factory configured")
+			return nil, errors.New("no org context service factory configured")
 		},
 	}
 }
