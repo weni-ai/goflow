@@ -22,6 +22,7 @@ type Services interface {
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
 	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
+	OrgContext(Session, *OrgContext) (OrgContextService, error)
 }
 
 // EmailService provides email functionality to the engine

@@ -14,6 +14,6 @@ func NewOrgContext(context string, channelUUID assets.ChannelUUID) assets.OrgCon
 	}
 }
 
-func (mc *OrgContext) Context() string { return mc.Context_ }
+func (c *OrgContext) Context() string { return c.Context_ }
 
-func (mc *OrgContext) ChannelUUID() assets.ChannelUUID { return mc.ChannelUUID_ }
+func (c *OrgContext) ChannelUUID() assets.ChannelUUID { return c.ChannelUUID_ }

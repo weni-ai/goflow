@@ -22,4 +22,12 @@ func TestEmptyServices(t *testing.T) {
 	airtimeSvc, err := eng.Services().Airtime(nil)
 	assert.EqualError(t, err, "no airtime service factory configured")
 	assert.Nil(t, airtimeSvc)
+
+	msgCatalogSvc, err := eng.Services().MsgCatalog(nil, nil)
+	assert.EqualError(t, err, "no msg catalog service factory configured")
+	assert.Nil(t, msgCatalogSvc)
+
+	orgContextSvc, err := eng.Services().OrgContext(nil, nil)
+	assert.EqualError(t, err, "no org context service factory configured")
+	assert.Nil(t, orgContextSvc)
 }

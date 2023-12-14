@@ -34,6 +34,12 @@ var assetsJSON = `{
 				"http://temba.io/"
 			]
 		}
+	],
+	"orgContexts": [
+		{
+			"channel_uuid": "535b259d-e668-4fde-87e6-6f8cbe7e2701",
+			"context": "Context"
+		}
 	]
 }`
 
@@ -45,6 +51,8 @@ func TestSessionAssets(t *testing.T) {
 
 	sa, err := engine.NewSessionAssets(env, source, nil)
 	require.NoError(t, err)
+
+	fmt.Println(sa.OrgContext())
 
 	assert.Equal(t, source, sa.Source())
 
@@ -65,6 +73,12 @@ func TestSessionAssets(t *testing.T) {
 	assert.Equal(t, []string{"http://temba.io/"}, resthook.Subscribers())
 
 	assert.Nil(t, sa.Resthooks().FindBySlug("xyz"))
+
+	oa := sa.OrgContext().GetByChannelUUID()
+	assert.Equal(t, assets.ChannelUUID("535b259d-e668-4fde-87e6-6f8cbe7e2701"), oa.ChannelUUID())
+	assert.Equal(t, "Context", oa.Context())
+
+	assert.Nil(t, sa.Labels().Get(assets.LabelUUID("xyz")))
 }
 
 func TestSessionAssetsWithSourceErrors(t *testing.T) {
@@ -79,7 +93,7 @@ func TestSessionAssetsWithSourceErrors(t *testing.T) {
 	_, err = sa.Flows().Get(assets.FlowUUID("ddba5842-252f-4a20-b901-08696fc773e2"))
 	assert.EqualError(t, err, "unable to load flow assets")
 
-	for _, errType := range []string{"channels", "classifiers", "fields", "globals", "groups", "labels", "locations", "resthooks", "templates", "users"} {
+	for _, errType := range []string{"channels", "classifiers", "fields", "globals", "groups", "labels", "locations", "resthooks", "templates", "users", "msgCatalogs", "orgContexts"} {
 		source.currentErrType = errType
 		_, err = engine.NewSessionAssets(env, source, nil)
 		assert.EqualError(t, err, fmt.Sprintf("unable to load %s assets", errType), "error mismatch for type %s", errType)
@@ -135,11 +149,11 @@ func (s *testSource) Locations() ([]assets.LocationHierarchy, error) {
 }
 
 func (s *testSource) MsgCatalogs() ([]assets.MsgCatalog, error) {
-	return nil, s.err("msgCatalog")
+	return nil, s.err("msgCatalogs")
 }
 
 func (s *testSource) OrgContexts() ([]assets.OrgContext, error) {
-	return nil, s.err("orgContext")
+	return nil, s.err("orgContexts")
 }
 
 func (s *testSource) Resthooks() ([]assets.Resthook, error) {
