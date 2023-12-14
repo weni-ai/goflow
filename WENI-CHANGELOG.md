@@ -1,3 +1,7 @@
+0.5.2-goflow-0.144.3
+----------
+ * Add unit tests for OrgContext
+
 0.5.1-goflow-0.144.3
 ----------
  * Allow the context to be empty if it doesn't have one
