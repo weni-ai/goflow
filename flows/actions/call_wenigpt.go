@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/flows"
@@ -82,7 +82,20 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		a.updateWeniGPT(run, call)
 
 		status := callStatusWeniGPT(call, err)
-		logEvent(events.NewWeniGPTCalled(call, status, ""))
+
+		c := &flows.WebhookCall{
+			Trace:           call.Trace,
+			ResponseJSON:    call.ResponseBody,
+			ResponseCleaned: false,
+		}
+
+		if c.Trace.Response.StatusCode >= 400 {
+			status = flows.CallStatusConnectionError
+			logEvent(events.NewWebhookCalled(c, status, ""))
+			return fmt.Errorf("error: status code equals '%d' and not 200", c.Trace.Response.StatusCode)
+		}
+
+		logEvent(events.NewWebhookCalled(c, status, ""))
 
 		if a.ResultName != "" {
 			a.saveWeniGPTResult(run, step, a.ResultName, call, status, logEvent)
@@ -103,11 +116,8 @@ func (a *CallWeniGPTAction) Results(include func(*flows.ResultInfo)) {
 func callStatusWeniGPT(call *flows.WeniGPTCall, err error) flows.CallStatus {
 
 	response := struct {
-		Answers []struct {
-			Text       string `json:"text"`
-			Confidence string `json:"confidence"`
-		} `json:"answers"`
-		ID string `json:"id"`
+		Answer string `json:"answer"`
+		Other  bool   `json:"other"`
 	}{}
 
 	jsonx.Unmarshal(call.ResponseJSON, &response)
@@ -117,7 +127,7 @@ func callStatusWeniGPT(call *flows.WeniGPTCall, err error) flows.CallStatus {
 	}
 	if call.Response.StatusCode/100 == 2 {
 		return flows.CallStatusSuccess
-	} else if strings.HasPrefix(response.Answers[0].Text, "😕") || response.Answers[0].Text == "Desculpe, não possuo essa informação." {
+	} else if response.Other {
 		return flows.CallStatusResponseOtherWeniGPT
 	}
 

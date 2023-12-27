@@ -33,14 +33,14 @@ func NewService(kb string, input string) flows.WeniGPTService {
 	}
 }
 
-func (s *service) Call(session flows.Session, input string, kb string, token string, url string) (*flows.WeniGPTCall, error) {
+func (s *service) Call(session flows.Session, input string, contentBaseUUID string, token string, url string) (*flows.WeniGPTCall, error) {
 
 	body := struct {
-		Question      string `json:"question"`
-		KnowledgeBase string `json:"knowledge_base_id"`
+		Message         string `json:"message"`
+		ContentBaseUUID string `json:"content_base_uuid"`
 	}{
-		Question:      input,
-		KnowledgeBase: kb,
+		Message:         input,
+		ContentBaseUUID: contentBaseUUID,
 	}
 
 	bodyJSON, err := json.Marshal(body)
