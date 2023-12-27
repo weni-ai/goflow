@@ -27,6 +27,10 @@ type ExternalServiceServiceFactory func(flows.Session, *flows.ExternalService) (
 // WeniGPTServiceFactory resolves a session to a weniGPT service
 type WeniGPTServiceFactory func(flows.Session) (flows.WeniGPTService, error)
 
+type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error)
+
+type OrgContextServiceFactory func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -35,6 +39,8 @@ type services struct {
 	airtime         AirtimeServiceFactory
 	externalService ExternalServiceServiceFactory
 	wenigpt         WeniGPTServiceFactory
+	msgCatalog      MsgCatalogServiceFactory
+	orgContext      OrgContextServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -59,6 +65,12 @@ func newEmptyServices() *services {
 		},
 		externalService: func(flows.Session, *flows.ExternalService) (flows.ExternalServiceService, error) {
 			return nil, errors.New("no external service factory configured")
+		},
+		msgCatalog: func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error) {
+			return nil, errors.New("no msg catalog service factory configured")
+		},
+		orgContext: func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error) {
+			return nil, errors.New("no org context service factory configured")
 		},
 	}
 }
@@ -89,4 +101,12 @@ func (s *services) Airtime(session flows.Session) (flows.AirtimeService, error) 
 
 func (s *services) ExternalService(session flows.Session, externalService *flows.ExternalService) (flows.ExternalServiceService, error) {
 	return s.externalService(session, externalService)
+}
+
+func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalog) (flows.MsgCatalogService, error) {
+	return s.msgCatalog(session, msgCatalog)
+}
+
+func (s *services) OrgContext(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
+	return s.orgContext(session, context)
 }

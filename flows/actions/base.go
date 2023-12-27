@@ -134,6 +134,37 @@ func (a *baseAction) evaluateMessage(run flows.FlowRun, languages []envs.Languag
 	return evaluatedText, evaluatedAttachments, evaluatedQuickReplies
 }
 
+func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []map[string]string, sendCatalog bool, logEvent flows.EventCallback) (string, string, string) {
+	localizedHeader := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader}, languages)[0]
+	evaluatedHeader, err := run.EvaluateTemplate(localizedHeader)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedHeader == "" && !sendCatalog && len(products) > 1 {
+		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	}
+
+	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionBody}, languages)[0]
+	evaluatedBody, err := run.EvaluateTemplate(localizedBody)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedBody == "" {
+		logEvent(events.NewErrorf("body text evaluated to empty string"))
+	}
+
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedBody == "" {
+		logEvent(events.NewErrorf("footer text evaluated to empty string"))
+	}
+
+	return evaluatedHeader, evaluatedBody, evaluatedFooter
+}
+
 // helper to save a run result and log it as an event
 func (a *baseAction) saveResult(run flows.FlowRun, step flows.Step, name, value, category, categoryLocalized string, input string, extra json.RawMessage, logEvent flows.EventCallback) {
 	result := flows.NewResult(name, value, category, categoryLocalized, step.NodeUUID(), input, extra, dates.Now())

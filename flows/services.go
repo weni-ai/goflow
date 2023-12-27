@@ -22,6 +22,8 @@ type Services interface {
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
 	WeniGPT(Session) (WeniGPTService, error)
+	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
+	OrgContext(Session, *OrgContext) (OrgContextService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -86,6 +88,16 @@ type ExternalServiceCall struct {
 	ResponseCleaned bool
 }
 
+type MsgCatalogCall struct {
+	ResponseJSON       []byte
+	ProductRetailerIDS map[string][]string
+	Traces             []*httpx.Trace
+}
+
+type OrgContextCall struct {
+	ResponseJSON []byte
+}
+
 // ClassificationService provides NLU functionality to the engine
 type ClassificationService interface {
 	Classify(session Session, input string, logHTTP HTTPLogCallback) (*Classification, error)
@@ -110,6 +122,14 @@ type WeniGPTCall struct {
 
 type WeniGPTService interface {
 	Call(session Session, input string, kb string, token string, url string) (*WeniGPTCall, error)
+}
+
+type MsgCatalogService interface {
+	Call(session Session, params assets.MsgCatalogParam, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
+}
+
+type OrgContextService interface {
+	Call(session Session, logHTTP HTTPLogCallback) (*OrgContextCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer

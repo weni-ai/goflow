@@ -1,0 +1,269 @@
+[
+    {
+        "description": "Read fails when topic is invalid",
+        "action": {
+            "type": "send_msg_catalog",
+            "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
+            "productSearch": "",
+            "productViewSettings":{
+                "header": "header",
+                "body": "body",
+                "footer": "footer",
+                "action": "menu"
+            },
+            "search_type":"default",
+            "automaticProductSearch": true,
+            "topic": "spam"
+        },
+        "read_error": "field 'topic' is not a valid message topic"
+    },
+    {
+        "description": "Error event if session has no contact",
+        "no_contact": true,
+        "action": {
+            "type": "send_msg_catalog",
+            "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
+            "productSearch": "",
+            "productViewSettings":{
+                "header": "header",
+                "body": "body",
+                "footer": "footer",
+                "action": "menu"
+            },
+            "automaticProductSearch": false,
+            "products": [
+                {
+                    "product_retailer_id": "7ac68bc8-a137-4cb2-a4a7-3a2858e0c1d5"
+                }
+            ],
+            "all_urns": true,
+            "result_name": "Result",
+            "sendCatalog": false,
+            "search_type": "",
+            "seller_id": ""
+        },
+        "events": [
+            {
+                "type": "error",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "can't execute action in session without a contact"
+            }
+        ],
+        "inspection": {
+            "dependencies": [],
+            "issues": [],
+            "results": [
+                {
+                    "categories": [
+                        "Success",
+                        "Failure"
+                    ],
+                    "key": "result",
+                    "name": "Result",
+                    "node_uuids": [
+                        "72a1f5df-49f9-45df-94c9-d86f7ea064e5"
+                    ]
+                }
+            ],
+            "waiting_exits": [],
+            "parent_refs": []
+        }
+    },
+    {
+        "description": "Error events if msg header, body and footer have expression errors",
+        "action": {
+            "type": "send_msg_catalog",
+            "sendCatalog": false,
+            "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
+            "productSearch": "",
+            "productViewSettings": {
+                "header": "header text @(xxxxx)",
+                "body": "Hi there @(1 / 0)",
+                "footer": "footer text @(xxxxx)",
+                "action": "Menu"
+            },
+            "search_type": "vtex",
+            "search_url": "https://search.vtex.com/api/catalog_system/pub/products/search",
+            "seller_id": "",
+            "automaticProductSearch": false,
+            "products": [{"product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"}]
+        },
+        "events": [
+            {
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "error evaluating @(xxxxx): context has no property 'xxxxx'",
+                "type": "error"
+            },
+            {
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "error evaluating @(1 / 0): division by zero",
+                "type": "error"
+            },
+            {
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "error evaluating @(xxxxx): context has no property 'xxxxx'",
+                "type": "error"
+            },
+            {
+                "category": "Success",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "name": "",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "run_result_changed",
+                "value": ""
+            },
+            {
+                "type": "msg_catalog_created",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "msg": {
+                    "body": "Hi there ",
+                    "channel": {
+                        "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+                        "name": "My Android Phone"
+                    },
+                    "footer": "footer text ",
+                    "header": "header text ",
+                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "action": "Menu",
+                    "smart": false,
+                    "text": "",
+                    "urn": "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d&id=123",
+                    "uuid": "9688d21d-95aa-4bed-afc7-f31b35731a3d"
+                }
+            }
+        ]
+    },
+    {
+        "description": "body and footer ignored if they are expressions which evaluate to empty",
+        "action": {
+            "type": "send_msg_catalog",
+            "sendCatalog": false,
+            "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
+            "productSearch": "",
+            "productViewSettings": {
+                "header": "Hi there",
+                "body": "@(\"\")",
+                "footer": "@(\"\")",
+                "action": "Menu"
+            },
+            "search_type": "vtex",
+            "search_url": "https://search.vtex.com.br/api/io/_v/api/intelligent-search/product_search",
+            "seller_id": "",
+            "automaticProductSearch": false,
+            "products": [
+                {
+                    "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
+                }
+            ]
+        },
+        "events": [
+            {
+                "type": "error",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "body text evaluated to empty string"
+            },
+            {
+                "type": "error",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "footer text evaluated to empty string"
+            },
+            {
+                "category": "Success",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "name": "",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "run_result_changed",
+                "value": ""
+            },
+            {
+                "type": "msg_catalog_created",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "msg": {
+                    "uuid": "9688d21d-95aa-4bed-afc7-f31b35731a3d",
+                    "urn": "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d&id=123",
+                    "channel": {
+                        "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+                        "name": "My Android Phone"
+                    },
+                    "text": "",
+                    "header": "Hi there",
+                    "action": "Menu",
+                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "smart": false
+                }
+            }
+        ]
+    },
+    {
+        "description": "body and footer ignored if they are expressions which evaluate to empty",
+        "action": {
+            "type": "send_msg_catalog",
+            "sendCatalog": false,
+            "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
+            "productSearch": "",
+            "productViewSettings": {
+                "header": "Hi there",
+                "body": "@(\"\")",
+                "footer": "@(\"\")",
+                "action": "Menu"
+            },
+            "search_type": "vtex",
+            "search_url": "https://search.vtex.com.br/api/checkout/pub/orderForms/simulation",
+            "seller_id": "",
+            "automaticProductSearch": false,
+            "products": [
+                {
+                    "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
+                }
+            ]
+        },
+        "events": [
+            {
+                "type": "error",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "body text evaluated to empty string"
+            },
+            {
+                "type": "error",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "text": "footer text evaluated to empty string"
+            },
+            {
+                "category": "Success",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "name": "",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "type": "run_result_changed",
+                "value": ""
+            },
+            {
+                "type": "msg_catalog_created",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "msg": {
+                    "uuid": "9688d21d-95aa-4bed-afc7-f31b35731a3d",
+                    "urn": "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d&id=123",
+                    "channel": {
+                        "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+                        "name": "My Android Phone"
+                    },
+                    "text": "",
+                    "header": "Hi there",
+                    "action": "Menu",
+                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "smart": false
+                }
+            }
+        ]
+    }
+]

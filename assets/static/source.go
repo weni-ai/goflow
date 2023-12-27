@@ -24,6 +24,8 @@ type StaticSource struct {
 		Groups           []*Group                  `json:"groups" validate:"omitempty,dive"`
 		Labels           []*Label                  `json:"labels" validate:"omitempty,dive"`
 		Locations        []*envs.LocationHierarchy `json:"locations"`
+		MsgCatalogs      []*MsgCatalog             `json:"msgCatalogs" validate:"omitempty"`
+		OrgContexts      []*OrgContext             `json:"orgContexts" validate:"omitempty"`
 		Resthooks        []*Resthook               `json:"resthooks" validate:"omitempty,dive"`
 		Templates        []*Template               `json:"templates" validate:"omitempty,dive"`
 		Ticketers        []*Ticketer               `json:"ticketers" validate:"omitempty,dive"`
@@ -134,6 +136,22 @@ func (s *StaticSource) Locations() ([]assets.LocationHierarchy, error) {
 	set := make([]assets.LocationHierarchy, len(s.s.Locations))
 	for i := range s.s.Locations {
 		set[i] = s.s.Locations[i]
+	}
+	return set, nil
+}
+
+func (s *StaticSource) MsgCatalogs() ([]assets.MsgCatalog, error) {
+	set := make([]assets.MsgCatalog, len(s.s.MsgCatalogs))
+	for i := range s.s.MsgCatalogs {
+		set[i] = s.s.MsgCatalogs[i]
+	}
+	return set, nil
+}
+
+func (s *StaticSource) OrgContexts() ([]assets.OrgContext, error) {
+	set := make([]assets.OrgContext, len(s.s.OrgContexts))
+	for i := range s.s.OrgContexts {
+		set[i] = s.s.OrgContexts[i]
 	}
 	return set, nil
 }

@@ -28,6 +28,10 @@ func TestBuilder(t *testing.T) {
 	assert.EqualError(t, err, "no ticket service factory configured")
 	_, err = eng.Services().Webhook(nil)
 	assert.EqualError(t, err, "no webhook service factory configured")
+	_, err = eng.Services().MsgCatalog(nil, nil)
+	assert.EqualError(t, err, "no msg catalog service factory configured")
+	_, err = eng.Services().OrgContext(nil, nil)
+	assert.EqualError(t, err, "no org context service factory configured")
 
 	// include a webhook service
 	webhookSvc := webhooks.NewService(&http.Client{}, nil, nil, map[string]string{"User-Agent": "goflow"}, 1000)

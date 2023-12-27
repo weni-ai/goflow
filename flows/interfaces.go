@@ -109,11 +109,13 @@ type SessionAssets interface {
 	Groups() *GroupAssets
 	Labels() *LabelAssets
 	Locations() *LocationAssets
+	MsgCatalogs() *MsgCatalogAssets
 	Resthooks() *ResthookAssets
 	Templates() *TemplateAssets
 	Ticketers() *TicketerAssets
 	Topics() *TopicAssets
 	Users() *UserAssets
+	OrgContext() *OrgContextAssets
 }
 
 // Localizable is anything in the flow definition which can be localized and therefore needs a UUID

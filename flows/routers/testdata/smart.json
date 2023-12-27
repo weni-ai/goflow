@@ -27,9 +27,7 @@
                     "uuid": "98503572-25bf-40ce-ad72-8836b6549a38",
                     "type": "has_any_word",
                     "arguments": [
-                        "price",
-                        "photos",
-                        "12345"
+                        "that's the price"
                     ],
                     "category_uuid": "598ae7a5-2f81-48f1-afac-595262514aa1"
                 },
@@ -37,9 +35,7 @@
                     "uuid": "a51e5c8c-c891-401d-9c62-15fc37278c94",
                     "type": "has_any_word",
                     "arguments": [
-                        "delivery",
-                        "address",
-                        "país"
+                        "this is the delivery address"
                     ],
                     "category_uuid": "c70fe86c-9aac-4cc2-a5cb-d35cbe3fed6e"
                 }
@@ -59,15 +55,9 @@
         "events": [
             {
                 "created_on": "2018-10-18T14:20:30.000123456Z",
-                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
-                "text": "error when combining input \"12345\" with regex",
-                "type": "error"
-            },
-            {
-                "created_on": "2018-10-18T14:20:30.000123456Z",
                 "elapsed_ms": 0,
                 "extraction": "valid",
-                "request": "POST /v2/repository/nlp/zeroshot/zeroshot-fast-predict HTTP/1.1\r\nHost: api.bothub.it\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 161\r\nAuthorization: Bearer token\r\nContent-Type: application/json\r\nAccept-Encoding: gzip\r\n\r\n{\"text\":\"How much does it cost?\",\"categories\":[{\"option\":\"Price\",\"synonyms\":[\"price\",\"photos\"]},{\"option\":\"Delivery\",\"synonyms\":[\"delivery\",\"address\",\"país\"]}]}",
+                "request": "POST /v2/repository/nlp/zeroshot/zeroshot-fast-predict HTTP/1.1\r\nHost: api.bothub.it\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 184\r\nAuthorization: Bearer token\r\nContent-Type: application/json\r\nAccept-Encoding: gzip\r\n\r\n{\"context\":\"\",\"language\":\"eng\",\"text\":\"How much does it cost?\",\"options\":[{\"class\":\"Price\",\"context\":\"that's the price\"},{\"class\":\"Delivery\",\"context\":\"this is the delivery address\"}]}",
                 "response": "HTTP/1.0 200 OK\r\nContent-Length: 51\r\n\r\n{\"output\":{\"classification\":\"Price\",\"other\":false}}",
                 "retries": 0,
                 "status": "success",
@@ -88,20 +78,12 @@
         ],
         "templates": [
             "@(\"How much does it cost?\")",
-            "price",
-            "photos",
-            "12345",
-            "delivery",
-            "address",
-            "país"
+            "that's the price",
+            "this is the delivery address"
         ],
         "localizables": [
-            "price",
-            "photos",
-            "12345",
-            "delivery",
-            "address",
-            "país",
+            "that's the price",
+            "this is the delivery address",
             "Price",
             "Delivery",
             "Other"
