@@ -28,7 +28,6 @@ func init() {
 const TypeSmart string = "smart"
 
 // Regex pattern for category and argument
-const CategoryRegex string = `^[A-Za-zÀ-ÖØ-öø-ÿ]+$`
 const ArgumentsRegex string = `^[A-Za-zÀ-ÖØ-öø-ÿ@.,]+$`
 
 var apiUrl = "https://api.bothub.it"
@@ -201,15 +200,11 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	for category, arg := range args {
 		for _, c := range r.categories {
 			if string(c.UUID()) == category {
-				if res, err := RegexMatch(c.Name(), CategoryRegex, true); res && err == nil {
-					body.Options = append(body.Options, struct {
-						Class   string "json:\"class\""
-						Context string "json:\"context\""
-					}{Class: c.Name(), Context: arg})
-					break
-				} else {
-					run.LogError(step, err)
-				}
+				body.Options = append(body.Options, struct {
+					Class   string "json:\"class\""
+					Context string "json:\"context\""
+				}{Class: c.Name(), Context: arg})
+				break
 			}
 		}
 	}
