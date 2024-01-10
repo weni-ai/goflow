@@ -71,7 +71,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		return nil
 	}
 
-	url := apiUrl + "/v2/question-answering/"
+	url := apiUrl + "/api/v1/wenigpt_question"
 
 	call, err := svc.Call(run.Session(), input, kb, token, url)
 
