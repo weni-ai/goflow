@@ -69,6 +69,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		a.updateWeniGPT(run, call)
 
 		status := callStatusWeniGPT(call, err)
+		logEvent(events.NewWeniGPTCalled(call, status, ""))
 
 		c := &flows.WebhookCall{
 			Trace:           call.Trace,
