@@ -121,7 +121,7 @@ type WeniGPTCall struct {
 }
 
 type WeniGPTService interface {
-	Call(session Session, input string, kb string, token string, url string) (*WeniGPTCall, error)
+	Call(session Session, input string, kb string) (*WeniGPTCall, error)
 }
 
 type MsgCatalogService interface {

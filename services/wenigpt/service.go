@@ -14,26 +14,36 @@ import (
 )
 
 type service struct {
-	KnowledgeBase string `json:"knowledge_base"`
-	Input         string `json:"input"`
+	httpClient     *http.Client
+	httpRetries    *httpx.RetryConfig
+	httpAccess     *httpx.AccessConfig
+	defaultHeaders map[string]string
+	maxBodyBytes   int
+	token          string
+	url            string
 }
 
 // NewServiceFactory creates a new wenigpt service factory
-func NewServiceFactory(kb string, input string) engine.WeniGPTServiceFactory {
+func NewServiceFactory(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAccess *httpx.AccessConfig, defaultHeaders map[string]string, maxBodyBytes int, token string, url string) engine.WeniGPTServiceFactory {
 	return func(flows.Session) (flows.WeniGPTService, error) {
-		return NewService(kb, input), nil
+		return NewService(httpClient, httpRetries, httpAccess, defaultHeaders, maxBodyBytes, token, url), nil
 	}
 }
 
 // NewService creates a new default webhook service
-func NewService(kb string, input string) flows.WeniGPTService {
+func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAccess *httpx.AccessConfig, defaultHeaders map[string]string, maxBodyBytes int, token string, url string) flows.WeniGPTService {
 	return &service{
-		KnowledgeBase: kb,
-		Input:         input,
+		httpClient:     httpClient,
+		httpRetries:    httpRetries,
+		httpAccess:     httpAccess,
+		defaultHeaders: defaultHeaders,
+		maxBodyBytes:   maxBodyBytes,
+		token:          token,
+		url:            url,
 	}
 }
 
-func (s *service) Call(session flows.Session, input string, contentBaseUUID string, token string, url string) (*flows.WeniGPTCall, error) {
+func (s *service) Call(session flows.Session, input string, contentBaseUUID string) (*flows.WeniGPTCall, error) {
 
 	body := struct {
 		Message         string `json:"message"`
@@ -49,21 +59,27 @@ func (s *service) Call(session flows.Session, input string, contentBaseUUID stri
 	}
 
 	// build our request
-	req, err := http.NewRequest("POST", url, bytes.NewReader(bodyJSON))
+	req, err := http.NewRequest("POST", s.url+"/api/v1/wenigpt_question", bytes.NewReader(bodyJSON))
 	if err != nil {
 		return nil, errors.Wrapf(err, "error building request")
 	}
-	req.Header.Add("Content-Type", "application/json")
 
-	if token != "" {
-		req.Header.Add("Authorization", "Bearer "+token)
+	// set any headers with defaults
+	for k, v := range s.defaultHeaders {
+		if req.Header.Get(k) == "" {
+			req.Header.Set(k, v)
+		}
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if s.token != "" {
+		req.Header.Set("Authorization", "Bearer "+s.token)
 	} else {
 		return nil, fmt.Errorf("validation token cannot be empty")
 	}
 
-	client := &http.Client{}
-
-	trace, err := httpx.DoTrace(client, req, nil, nil, -1)
+	trace, err := httpx.DoTrace(s.httpClient, req, s.httpRetries, s.httpAccess, s.maxBodyBytes)
 	if trace != nil {
 		call := &flows.WeniGPTCall{Trace: trace}
 		// throw away any error that happened prior to getting a response.. these will be surfaced to the user

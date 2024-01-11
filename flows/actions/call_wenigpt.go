@@ -52,17 +52,6 @@ func (a *CallWeniGPTAction) Execute(run flows.FlowRun, step flows.Step, logModif
 	return a.call(run, step, input, kb, logEvent)
 }
 
-var token string
-var apiUrl = "https://nlp.bothub.it"
-
-func SetWeniGPTToken(t string) {
-	token = t
-}
-
-func SetWeniGPTAPIURL(url string) {
-	apiUrl = url
-}
-
 // Execute runs this action
 func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input string, kb string, logEvent flows.EventCallback) error {
 	svc, err := run.Session().Engine().Services().WeniGPT(run.Session())
@@ -71,9 +60,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		return nil
 	}
 
-	url := apiUrl + "/api/v1/wenigpt_question"
-
-	call, err := svc.Call(run.Session(), input, kb, token, url)
+	call, err := svc.Call(run.Session(), input, kb)
 
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -82,7 +69,6 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		a.updateWeniGPT(run, call)
 
 		status := callStatusWeniGPT(call, err)
-		logEvent(events.NewWeniGPTCalled(call, status, ""))
 
 		c := &flows.WebhookCall{
 			Trace:           call.Trace,
