@@ -220,17 +220,15 @@ func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name 
 	var extra json.RawMessage
 
 	response := struct {
-		Answers []struct {
-			Text       string `json:"text"`
-			Confidence string `json:"confidence"`
-		} `json:"answers"`
-		ID string `json:"id"`
+		Answers string `json:"answers"`
+		Other   bool   `json:"other"`
+		ID      string `json:"id"`
 	}{}
 
 	jsonx.Unmarshal(call.ResponseJSON, &response)
 
-	if len(response.Answers) > 0 {
-		value = response.Answers[0].Text
+	if response.Answers != "" {
+		value = response.Answers
 
 		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
 			extra = call.ResponseJSON
