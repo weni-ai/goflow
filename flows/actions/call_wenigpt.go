@@ -77,7 +77,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 			ResponseCleaned: false,
 		}
 
-		if c.Trace.Response.StatusCode >= 400 {
+		if c.Trace.Response != nil && c.Trace.Response.StatusCode >= 400 {
 			status = flows.CallStatusConnectionError
 			logEvent(events.NewWebhookCalled(c, status, ""))
 			return fmt.Errorf("error: status code equals '%d' and not 200", c.Trace.Response.StatusCode)

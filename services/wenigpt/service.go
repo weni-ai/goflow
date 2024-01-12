@@ -85,7 +85,7 @@ func (s *service) Call(session flows.Session, input string, contentBaseUUID stri
 		// throw away any error that happened prior to getting a response.. these will be surfaced to the user
 		// as connection_error status on the response
 		if trace.Response == nil {
-			return call, nil
+			return call, err
 		}
 
 		if len(call.ResponseBody) > 0 {
