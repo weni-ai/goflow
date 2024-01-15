@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/nyaruka/gocommon/dates"
-	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
@@ -29,10 +28,9 @@ const maxAttachmentLength = 2048
 
 // common category names
 const (
-	CategorySuccess      = "Success"
-	CategorySkipped      = "Skipped"
-	CategoryFailure      = "Failure"
-	CategoryOtherWeniGPT = "Other"
+	CategorySuccess = "Success"
+	CategorySkipped = "Skipped"
+	CategoryFailure = "Failure"
 )
 
 var webhookCategories = []string{CategorySuccess, CategoryFailure}
@@ -41,14 +39,6 @@ var webhookStatusCategories = map[flows.CallStatus]string{
 	flows.CallStatusResponseError:   CategoryFailure,
 	flows.CallStatusConnectionError: CategoryFailure,
 	flows.CallStatusSubscriberGone:  CategoryFailure,
-}
-
-var weniGPTCategories = []string{CategorySuccess, CategoryFailure, CategoryOtherWeniGPT}
-var weniGPTStatusCategories = map[flows.CallStatus]string{
-	flows.CallStatusSuccess:              CategorySuccess,
-	flows.CallStatusResponseError:        CategoryFailure,
-	flows.CallStatusConnectionError:      CategoryFailure,
-	flows.CallStatusResponseOtherWeniGPT: CategoryOtherWeniGPT,
 }
 
 var registeredTypes = map[string](func() flows.Action){}
@@ -216,19 +206,11 @@ func (a *baseAction) updateWeniGPT(run flows.FlowRun, call *flows.WeniGPTCall) {
 func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name string, call *flows.WeniGPTCall, status flows.CallStatus, logEvent flows.EventCallback) {
 	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
 	value := "0"
-	category := weniGPTStatusCategories[status]
+	category := webhookStatusCategories[status]
 	var extra json.RawMessage
 
-	response := struct {
-		Answers string `json:"answers"`
-		Other   bool   `json:"other"`
-		ID      string `json:"id"`
-	}{}
-
-	jsonx.Unmarshal(call.ResponseJSON, &response)
-
-	if response.Answers != "" {
-		value = response.Answers
+	if call.Response != nil {
+		value = strconv.Itoa(call.Response.StatusCode)
 
 		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
 			extra = call.ResponseJSON

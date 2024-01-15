@@ -46,8 +46,6 @@ const (
 
 	// CallStatusSubscriberGone represents a special state of resthook responses which indicate the caller must remove that subscriber
 	CallStatusSubscriberGone CallStatus = "subscriber_gone"
-
-	CallStatusResponseOtherWeniGPT CallStatus = "other"
 )
 
 // WebhookCall is the result of a webhook call
