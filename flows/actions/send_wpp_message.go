@@ -69,7 +69,7 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		return nil
 	}
 
-	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedListTitle, evaluatedListFooter, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderText, a.Text, a.Footer, a.ListItems, a.ListTitle, a.ListFooter, a.Attachments, a.QuickReplies, logEvent)
+	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedListTitle, evaluatedListFooter, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Text, a.Footer, a.ListItems, a.ListTitle, a.ListFooter, a.Attachments, a.QuickReplies, logEvent)
 
 	evaluatedListMessage := flows.ListMessage{
 		ListTitle:  evaluatedListTitle,

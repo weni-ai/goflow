@@ -35,7 +35,7 @@ type MsgWppCreatedEvent struct {
 // NewMsgWppCreated creates a new outgoing msg event to a single contact
 func NewMsgWppCreated(msg *flows.MsgWppOut) *MsgWppCreatedEvent {
 	return &MsgWppCreatedEvent{
-		baseEvent: newBaseEvent(TypeMsgCatalogCreated),
+		baseEvent: newBaseEvent(TypeMsgWppCreated),
 		Msg:       msg,
 	}
 }

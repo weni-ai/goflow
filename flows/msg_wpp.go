@@ -18,7 +18,7 @@ type MsgWppOut struct {
 	Topic_           MsgTopic           `json:"topic,omitempty"`
 	ListMessage_     ListMessage        `json:"list_messages,omitempty"`
 	Attachments_     []utils.Attachment `json:"attachments,omitempty"`
-	ReplyButtons_    []string           `json:"reply_buttons,omitempty"`
+	QuickReplies_    []string           `json:"quick_replies,omitempty"`
 	TextLanguage     envs.Language      `json:"text_language,omitempty"`
 }
 
@@ -48,7 +48,7 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		Footer_:          footer,
 		ListMessage_:     listMessage,
 		Attachments_:     attachments,
-		ReplyButtons_:    replyButtons,
+		QuickReplies_:    replyButtons,
 		Topic_:           topic,
 	}
 }
@@ -69,4 +69,4 @@ func (m *MsgWppOut) Attachments() []utils.Attachment { return m.Attachments_ }
 
 func (m *MsgWppOut) Topic() MsgTopic { return m.Topic_ }
 
-func (m *MsgWppOut) ReplyButtons() []string { return m.ReplyButtons_ }
+func (m *MsgWppOut) QuickReplies() []string { return m.QuickReplies_ }

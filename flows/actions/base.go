@@ -155,13 +155,13 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 	return evaluatedHeader, evaluatedBody, evaluatedFooter
 }
 
-func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionListTitle string, actionListFooter string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, string, []utils.Attachment, []string) {
+func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionListTitle string, actionListFooter string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, string, []utils.Attachment, []string) {
 	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header_text", []string{actionHeaderText}, languages)[0]
 	evaluatedHeaderText, err := run.EvaluateTemplate(localizedHeaderText)
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedHeaderText == "" {
+	if evaluatedHeaderText == "" && actionHeaderType == "text" {
 		logEvent(events.NewErrorf("header text evaluated to empty string"))
 	}
 
@@ -170,8 +170,8 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedListTitle == "" {
-		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	if evaluatedListTitle == "" && actionInteractionType == "list" {
+		logEvent(events.NewErrorf("list title evaluated to empty string"))
 	}
 
 	localizedListFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_footer", []string{actionListFooter}, languages)[0]
@@ -179,8 +179,8 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedListFooter == "" {
-		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	if evaluatedListFooter == "" && actionInteractionType == "list" {
+		logEvent(events.NewErrorf("list footer evaluated to empty string"))
 	}
 
 	// localize and evaluate the message attachments
@@ -191,7 +191,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		if err != nil {
 			logEvent(events.NewError(err))
 		}
-		if evaluatedAttachment == "" {
+		if evaluatedAttachment == "" && actionHeaderType == "media" {
 			logEvent(events.NewErrorf("attachment text evaluated to empty string, skipping"))
 			continue
 		}
@@ -228,7 +228,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		if err != nil {
 			logEvent(events.NewError(err))
 		}
-		if evaluatedQuickReply == "" {
+		if evaluatedQuickReply == "" && actionInteractionType == "replies" {
 			logEvent(events.NewErrorf("quick reply text evaluated to empty string, skipping"))
 			continue
 		}
@@ -247,6 +247,10 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 			logEvent(events.NewError(err))
 		}
 		actionListItems[i].Description = evaluatedDescription
+	}
+
+	if actionListItems == nil && actionInteractionType == "list" {
+		logEvent(events.NewErrorf("list message evaluated to empty, skipping"))
 	}
 
 	return evaluatedHeaderText, evaluatedFooter, evaluatedText, actionListItems, evaluatedListTitle, evaluatedListFooter, evaluatedAttachments, evaluatedReplyMessage
