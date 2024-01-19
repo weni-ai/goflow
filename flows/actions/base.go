@@ -155,8 +155,8 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 	return evaluatedHeader, evaluatedBody, evaluatedFooter
 }
 
-func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeader Header, actionBody string, actionFooter string, actionListMessages ListMessages, actionReplyMessage []string, logEvent flows.EventCallback) (string, []utils.Attachment, string, string, []string) {
-	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader.Text}, languages)[0]
+func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionListTitle string, actionListFooter string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, string, []utils.Attachment, []string) {
+	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header_text", []string{actionHeaderText}, languages)[0]
 	evaluatedHeaderText, err := run.EvaluateTemplate(localizedHeaderText)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -165,8 +165,26 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		logEvent(events.NewErrorf("header text evaluated to empty string"))
 	}
 
+	localizedListTitle := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_title", []string{actionListTitle}, languages)[0]
+	evaluatedListTitle, err := run.EvaluateTemplate(localizedListTitle)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedListTitle == "" {
+		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	}
+
+	localizedListFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_footer", []string{actionListFooter}, languages)[0]
+	evaluatedListFooter, err := run.EvaluateTemplate(localizedListFooter)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+	if evaluatedListFooter == "" {
+		logEvent(events.NewErrorf("header text evaluated to empty string"))
+	}
+
 	// localize and evaluate the message attachments
-	translatedAttachments := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "attachments", actionHeader.Attachments, languages)
+	translatedAttachments := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "attachments", []string{actionAttachments}, languages)
 	evaluatedAttachments := make([]utils.Attachment, 0, len(translatedAttachments))
 	for _, a := range translatedAttachments {
 		evaluatedAttachment, err := run.EvaluateTemplate(a)
@@ -184,13 +202,13 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		evaluatedAttachments = append(evaluatedAttachments, utils.Attachment(evaluatedAttachment))
 	}
 
-	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionBody}, languages)[0]
-	evaluatedBody, err := run.EvaluateTemplate(localizedBody)
+	localizedText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "text", []string{actionText}, languages)[0]
+	evaluatedText, err := run.EvaluateTemplate(localizedText)
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
-	if evaluatedBody == "" {
-		logEvent(events.NewErrorf("body text evaluated to empty string"))
+	if evaluatedText == "" {
+		logEvent(events.NewErrorf("text evaluated to empty string"))
 	}
 
 	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
@@ -203,7 +221,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	}
 
 	// localize and evaluate the quick replies
-	translatedReplyMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "quick_replies", actionReplyMessage, languages)
+	translatedReplyMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "quick_replies", actionQuickReplies, languages)
 	evaluatedReplyMessage := make([]string, 0, len(translatedReplyMessage))
 	for _, qr := range translatedReplyMessage {
 		evaluatedQuickReply, err := run.EvaluateTemplate(qr)
@@ -217,7 +235,21 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		evaluatedReplyMessage = append(evaluatedReplyMessage, evaluatedQuickReply)
 	}
 
-	return evaluatedHeaderText, evaluatedAttachments, evaluatedBody, evaluatedFooter, evaluatedReplyMessage
+	for i, item := range actionListItems {
+		evaluatedTitle, err := run.EvaluateTemplate(item.Title)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		actionListItems[i].Title = evaluatedTitle
+
+		evaluatedDescription, err := run.EvaluateTemplate(item.Description)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		actionListItems[i].Description = evaluatedDescription
+	}
+
+	return evaluatedHeaderText, evaluatedFooter, evaluatedText, actionListItems, evaluatedListTitle, evaluatedListFooter, evaluatedAttachments, evaluatedReplyMessage
 }
 
 // helper to save a run result and log it as an event
