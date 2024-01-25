@@ -43,14 +43,16 @@ func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAcc
 	}
 }
 
-func (s *service) Call(session flows.Session, input string, contentBaseUUID string) (*flows.WeniGPTCall, error) {
+func (s *service) Call(session flows.Session, input string, contentBaseUUID string, language string) (*flows.WeniGPTCall, error) {
 
 	body := struct {
 		Text            string `json:"text"`
 		ContentBaseUUID string `json:"content_base_uuid"`
+		Language        string `json:"language"`
 	}{
 		Text:            input,
 		ContentBaseUUID: contentBaseUUID,
+		Language:        language,
 	}
 
 	bodyJSON, err := json.Marshal(body)

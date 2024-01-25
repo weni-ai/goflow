@@ -119,7 +119,7 @@ type WeniGPTCall struct {
 }
 
 type WeniGPTService interface {
-	Call(session Session, input string, contentBaseUUID string) (*WeniGPTCall, error)
+	Call(session Session, input string, contentBaseUUID string, language string) (*WeniGPTCall, error)
 }
 
 type MsgCatalogService interface {
