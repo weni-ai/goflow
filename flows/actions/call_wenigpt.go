@@ -57,7 +57,7 @@ func (a *CallWeniGPTAction) call(run flows.FlowRun, step flows.Step, input strin
 		return nil
 	}
 
-	call, err := svc.Call(run.Session(), input, kb, string(run.Flow().Language()))
+	call, err := svc.Call(run.Session(), input, kb, string(run.Contact().Language()))
 
 	if err != nil {
 		logEvent(events.NewError(err))
