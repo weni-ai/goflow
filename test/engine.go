@@ -26,7 +26,7 @@ func NewEngine() flows.Engine {
 			return newEmailService(), nil
 		}).
 		WithWebhookServiceFactory(webhooks.NewServiceFactory(http.DefaultClient, retries, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000)).
-		WithWeniGPTServiceFactory(wenigpt.NewServiceFactory(http.DefaultClient, retries, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "https://wenigpt.com")).
+		WithWeniGPTServiceFactory(wenigpt.NewServiceFactory(http.DefaultClient, retries, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "http://127.0.0.1:49994")).
 		WithClassificationServiceFactory(func(s flows.Session, c *flows.Classifier) (flows.ClassificationService, error) {
 			return newClassificationService(c), nil
 		}).
