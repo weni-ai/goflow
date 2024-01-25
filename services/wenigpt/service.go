@@ -46,10 +46,10 @@ func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAcc
 func (s *service) Call(session flows.Session, input string, contentBaseUUID string) (*flows.WeniGPTCall, error) {
 
 	body := struct {
-		Message         string `json:"message"`
+		Text            string `json:"text"`
 		ContentBaseUUID string `json:"content_base_uuid"`
 	}{
-		Message:         input,
+		Text:            input,
 		ContentBaseUUID: contentBaseUUID,
 	}
 
