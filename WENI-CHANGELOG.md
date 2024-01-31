@@ -1,3 +1,7 @@
+0.6.0-goflow-0.144.3
+----------
+ * Implement action for WeniGPT Call card
+
 0.5.2-goflow-0.144.3
 ----------
  * Add unit tests for OrgContext
