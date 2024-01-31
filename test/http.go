@@ -89,3 +89,34 @@ func testHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(statusCode)
 	w.Write(data)
 }
+
+// NewTestHTTPServerWeniGPT sets up a mock server for webhook actions
+func NewTestHTTPServerWeniGPT(port int) *httptest.Server {
+	server := httptest.NewUnstartedServer(http.HandlerFunc(testHTTPHandlerWeniGPT))
+
+	if port > 0 {
+		// manually create a listener for our test server so that our output is predictable
+		l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+		if err != nil {
+			panic(err.Error())
+		}
+		server.Listener = l
+	}
+	server.Start()
+	return server
+}
+
+func testHTTPHandlerWeniGPT(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	statusCode := http.StatusOK
+	//contentType := r.URL.Query().Get("type")
+	//data := []byte(r.URL.Query().Get("content"))
+
+	data := []byte(`{"answers":[{"text":"Is a cookie."}],"id":"0"}`)
+
+	w.Header().Set("Date", "Wed, 11 Apr 2018 18:24:30 GMT")
+
+	w.WriteHeader(statusCode)
+	w.Write(data)
+}

@@ -78,6 +78,12 @@ func (b *Builder) WithWebhookServiceFactory(f WebhookServiceFactory) *Builder {
 	return b
 }
 
+// WithWeniGPTServiceFactory sets the wenigpt service factory
+func (b *Builder) WithWeniGPTServiceFactory(f WeniGPTServiceFactory) *Builder {
+	b.eng.services.wenigpt = f
+	return b
+}
+
 // WithClassificationServiceFactory sets the NLU service factory
 func (b *Builder) WithClassificationServiceFactory(f ClassificationServiceFactory) *Builder {
 	b.eng.services.classification = f

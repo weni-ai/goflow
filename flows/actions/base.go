@@ -191,6 +191,35 @@ func (a *baseAction) updateWebhook(run flows.FlowRun, call *flows.WebhookCall) {
 	}
 }
 
+func (a *baseAction) updateWeniGPT(run flows.FlowRun, call *flows.WeniGPTCall) {
+	parsed := types.JSONToXValue(call.ResponseJSON)
+
+	switch typed := parsed.(type) {
+	case nil, types.XError:
+		run.SetWebhook(types.XObjectEmpty)
+	default:
+		run.SetWebhook(typed)
+	}
+}
+
+// helper to save a run result based on a wenigpt call and log it as an event
+func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name string, call *flows.WeniGPTCall, status flows.CallStatus, logEvent flows.EventCallback) {
+	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
+	value := "0"
+	category := webhookStatusCategories[status]
+	var extra json.RawMessage
+
+	if call.Response != nil {
+		value = strconv.Itoa(call.Response.StatusCode)
+
+		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
+			extra = call.ResponseJSON
+		}
+	}
+
+	a.saveResult(run, step, name, value, category, "", input, extra, logEvent)
+}
+
 // helper to apply a contact modifier
 func (a *baseAction) applyModifier(run flows.FlowRun, mod flows.Modifier, logModifier flows.ModifierCallback, logEvent flows.EventCallback) {
 	mod.Apply(run.Environment(), run.Session().Assets(), run.Contact(), logEvent)

@@ -21,6 +21,7 @@ type Services interface {
 	Ticket(Session, *Ticketer) (TicketService, error)
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
+	WeniGPT(Session) (WeniGPTService, error)
 	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
 	OrgContext(Session, *OrgContext) (OrgContextService, error)
 }
@@ -108,6 +109,17 @@ type TicketService interface {
 
 type ExternalServiceService interface {
 	Call(sesion Session, callAction assets.ExternalServiceCallAction, params []assets.ExternalServiceParam, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
+}
+
+// WeniGPTCall is the result of a wenigpt call
+type WeniGPTCall struct {
+	*httpx.Trace
+	ResponseJSON    []byte
+	ResponseCleaned bool // whether response had to be cleaned to make it valid JSON
+}
+
+type WeniGPTService interface {
+	Call(session Session, input string, contentBaseUUID string, language string) (*WeniGPTCall, error)
 }
 
 type MsgCatalogService interface {
