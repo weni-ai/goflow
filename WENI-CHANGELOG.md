@@ -1,3 +1,8 @@
+0.6.1-goflow-0.144.3
+----------
+ * Add nfm_reply field to input
+ * Add responseJSON to the result value for wenigpt
+
 0.6.0-goflow-0.144.3
 ----------
  * Implement action for WeniGPT Call card
