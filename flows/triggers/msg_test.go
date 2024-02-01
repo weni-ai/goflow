@@ -83,7 +83,7 @@ const triggerJSON = `{
 			},
 			"nfm_reply": {
 				"name": "Flow Wpp",
-				"response_json": "{\"flow_token\": \"<FLOW_TOKEN>\", \"optional_param1\": \"<value1>\", \"optional_param2\": \"<value2>\"}",
+				"response_json": "{\"flow_token\": \"<FLOW_TOKEN>\", \"optional_param1\": \"<value1>\", \"optional_param2\": \"<value2>\"}"
 			}
 	},
 	"triggered_on": "2023-10-05T19:35:25.576204487Z",
