@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apex/log"
 	"github.com/nyaruka/gocommon/dates"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
@@ -217,7 +216,7 @@ func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name 
 
 	err := json.Unmarshal(call.ResponseJSON, &text)
 	if err != nil {
-		log.WithError(err).Error("unable to unmarshal")
+		logEvent(events.NewError(err))
 	}
 
 	if call.Response != nil && len(text.Answers) > 0 {
