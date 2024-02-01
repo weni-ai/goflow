@@ -72,7 +72,7 @@ func (r *MsgResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
 
 	nfmReply := r.NFMReply()
 	if nfmReply != nil {
-		r.msg.SetNFMReply(r.nfmReply)
+		r.msg.SetNFMReply(nfmReply)
 	}
 
 	// update our input

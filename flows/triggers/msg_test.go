@@ -70,16 +70,20 @@ const triggerJSON = `{
 	},
 	"params": {
 			"order": {
-					"catalog_id": "1729754620797120",
-					"product_items": [
-							{
-									"currency": "BRL",
-									"item_price": 2.46,
-									"product_retailer_id": "1",
-									"quantity": 1
-							}
-					],
-					"text": ""
+				"catalog_id": "1729754620797120",
+				"product_items": [
+						{
+								"currency": "BRL",
+								"item_price": 2.46,
+								"product_retailer_id": "1",
+								"quantity": 1
+						}
+				],
+				"text": ""
+			},
+			"nfm_reply": {
+				"name": "Flow Wpp",
+				"response_json": "{\"flow_token\": \"<FLOW_TOKEN>\", \"optional_param1\": \"<value1>\", \"optional_param2\": \"<value2>\"}",
 			}
 	},
 	"triggered_on": "2023-10-05T19:35:25.576204487Z",
