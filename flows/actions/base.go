@@ -207,17 +207,12 @@ func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name 
 	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
 	value := "0"
 	category := webhookStatusCategories[status]
-	var extra json.RawMessage
 
 	if call.Response != nil {
-		value = strconv.Itoa(call.Response.StatusCode)
-
-		if len(call.ResponseJSON) > 0 && len(call.ResponseJSON) < resultExtraMaxBytes {
-			extra = call.ResponseJSON
-		}
+		value = string(call.ResponseJSON)
 	}
 
-	a.saveResult(run, step, name, value, category, "", input, extra, logEvent)
+	a.saveResult(run, step, name, value, category, "", input, nil, logEvent)
 }
 
 // helper to apply a contact modifier
