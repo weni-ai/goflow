@@ -52,6 +52,7 @@ func TestMsgInput(t *testing.T) {
 		"attachments": types.NewXArray(types.NewXText("image/jpg:http://example.com/test.jpg"), types.NewXText("video/mp4:http://example.com/test.mp4")),
 		"external_id": types.NewXText("ext12345"),
 		"order":       nil,
+		"nfm_reply":   nil,
 	}), flows.Context(env, input))
 
 	// check marshaling to JSON

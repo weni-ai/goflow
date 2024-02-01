@@ -38,6 +38,7 @@ type baseResume struct {
 	contact     *flows.Contact
 	resumedOn   time.Time
 	order       *flows.Order
+	nfmReply    *flows.NFMReply
 }
 
 // creates a new base resume
@@ -52,6 +53,7 @@ func (r *baseResume) Environment() envs.Environment { return r.environment }
 func (r *baseResume) Contact() *flows.Contact       { return r.contact }
 func (r *baseResume) ResumedOn() time.Time          { return r.resumedOn }
 func (r *baseResume) Order() *flows.Order           { return r.order }
+func (r *baseResume) NFMReply() *flows.NFMReply     { return r.nfmReply }
 
 // Apply applies our state changes and saves any events to the run
 func (r *baseResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
@@ -118,6 +120,7 @@ type baseResumeEnvelope struct {
 	Contact     json.RawMessage `json:"contact,omitempty"`
 	ResumedOn   time.Time       `json:"resumed_on" validate:"required"`
 	Order       json.RawMessage `json:"order,omitempty"`
+	NFMReply    json.RawMessage `json:"nfm_reply,omitempty"`
 }
 
 // ReadResume reads a resume from the given JSON
@@ -155,6 +158,11 @@ func (r *baseResume) unmarshal(sessionAssets flows.SessionAssets, e *baseResumeE
 			return errors.Wrap(err, "unable to read order")
 		}
 	}
+	if e.NFMReply != nil {
+		if r.nfmReply, err = flows.ReadNFMReply(sessionAssets, e.NFMReply, missing); err != nil {
+			return errors.Wrap(err, "unable to read nfm reply")
+		}
+	}
 	return nil
 }
 
@@ -177,6 +185,12 @@ func (r *baseResume) marshal(e *baseResumeEnvelope) error {
 	}
 	if r.order != nil {
 		e.Order, err = jsonx.Marshal(r.order)
+		if err != nil {
+			return err
+		}
+	}
+	if r.nfmReply != nil {
+		e.NFMReply, err = jsonx.Marshal(r.nfmReply)
 		if err != nil {
 			return err
 		}

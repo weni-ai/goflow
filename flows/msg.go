@@ -44,8 +44,9 @@ type BaseMsg struct {
 type MsgIn struct {
 	BaseMsg
 
-	ExternalID_ string `json:"external_id,omitempty"`
-	Order_      *Order `json:"order,omitempty"`
+	ExternalID_ string    `json:"external_id,omitempty"`
+	Order_      *Order    `json:"order,omitempty"`
+	NFMReply_   *NFMReply `json:"nfm_reply,omitempty"`
 }
 
 // MsgOut represents a outgoing message to the session contact
@@ -136,6 +137,10 @@ func (m *BaseMsg) Attachments() []utils.Attachment { return m.Attachments_ }
 func (m *MsgIn) Order() *Order { return m.Order_ }
 
 func (m *MsgIn) SetOrder(order *Order) { m.Order_ = order }
+
+func (m *MsgIn) NFMReply() *NFMReply { return m.NFMReply_ }
+
+func (m *MsgIn) SetNFMReply(nfmReply *NFMReply) { m.NFMReply_ = nfmReply }
 
 // ExternalID returns the optional external ID of this incoming message
 func (m *MsgIn) ExternalID() string { return m.ExternalID_ }
