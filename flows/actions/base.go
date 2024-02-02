@@ -134,7 +134,7 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("header text evaluated to empty string"))
 	}
 
-	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionBody}, languages)[0]
+	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "body", []string{actionBody}, languages)[0]
 	evaluatedBody, err := run.EvaluateTemplate(localizedBody)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -143,7 +143,7 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("body text evaluated to empty string"))
 	}
 
-	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "footer", []string{actionFooter}, languages)[0]
 	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -152,13 +152,13 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("footer text evaluated to empty string"))
 	}
 
-	localizedSellerId := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{sellerId}, languages)[0]
+	localizedSellerId := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "seller_id", []string{sellerId}, languages)[0]
 	evaluatedSellerId, err := run.EvaluateTemplate(localizedSellerId)
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
 
-	localizedURL := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{url}, languages)[0]
+	localizedURL := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "search_url", []string{url}, languages)[0]
 	evaluatedURL, err := run.EvaluateTemplate(localizedURL)
 	if err != nil {
 		logEvent(events.NewError(err))
