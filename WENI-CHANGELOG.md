@@ -1,3 +1,7 @@
+0.6.2-goflow-0.144.3
+----------
+ * Fix limitation of product sections
+
 0.6.1-goflow-0.144.3
 ----------
  * Add nfm_reply field to input
