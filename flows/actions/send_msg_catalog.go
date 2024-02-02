@@ -126,7 +126,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		}
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, logEvent)
+	evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedSellerId, evaluatedURL := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, a.SellerId, a.SearchUrl, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -142,11 +142,11 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/catalog_system\/pub\/products\/search$`)
 			regexLegacySeller := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/checkout\/pub\/orderForms\/simulation$`)
 			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/product_search(\/)?$`)
-			if regexLegacy.MatchString(a.SearchUrl) {
+			if regexLegacy.MatchString(evaluatedURL) {
 				apiType = "legacy"
-			} else if regexIntelligent.MatchString(a.SearchUrl) {
+			} else if regexIntelligent.MatchString(evaluatedURL) {
 				apiType = "intelligent"
-			} else if regexLegacySeller.MatchString(a.SearchUrl) {
+			} else if regexLegacySeller.MatchString(evaluatedURL) {
 				apiType = "legacy"
 			}
 		}
@@ -158,7 +158,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("channel with uuid: %s, does not have an active catalog", channelRef.UUID), CategoryFailure, "", "", nil, logEvent)
 				return nil
 			}
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, a.SearchUrl, apiType, a.SellerId)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedSellerId)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {
