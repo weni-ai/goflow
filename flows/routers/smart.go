@@ -166,10 +166,10 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 	}{
 		Context:  context,
 		Text:     operand,
-		Language: "pt-br",
+		Language: "por",
 	}
 
-	if run.Contact().Language() != envs.NilLanguage {
+	if run.Contact().Language() != envs.NilLanguage && run.Contact().Language() != "base" {
 		body.Language = string(run.Contact().Language())
 	}
 
