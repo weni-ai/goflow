@@ -220,8 +220,19 @@ func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name 
 	value := "0"
 	category := webhookStatusCategories[status]
 
-	if call.Response != nil {
-		value = string(call.ResponseJSON)
+	text := struct {
+		Answers []struct {
+			Text string `json:"text"`
+		} `json:"answers"`
+	}{}
+
+	err := json.Unmarshal(call.ResponseJSON, &text)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	if call.Response != nil && len(text.Answers) > 0 {
+		value = text.Answers[0].Text
 	}
 
 	a.saveResult(run, step, name, value, category, "", input, nil, logEvent)
