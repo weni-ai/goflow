@@ -118,11 +118,15 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		logEvent(events.NewErrorf("search text evaluated to empty string"))
 	}
 
-	mapProducts := make(map[string][]string)
+	ProductEntries := []flows.ProductEntry{}
 	for _, p := range a.Products {
 		v, found := p["product_retailer_id"]
 		if found {
-			mapProducts["product_retailer_id"] = append(mapProducts["product_retailer_id"], v)
+			productEntry := flows.ProductEntry{
+				Product:            "product_retailer_id",
+				ProductRetailerIDs: []string{v},
+			}
+			ProductEntries = append(ProductEntries, productEntry)
 		}
 	}
 
@@ -138,7 +142,6 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		}
 		var apiType string
 		if a.SearchType == "vtex" {
-			//testar essas regex
 			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/catalog_system\/pub\/products\/search$`)
 			regexLegacySeller := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/checkout\/pub\/orderForms\/simulation$`)
 			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/product_search(\/)?$`)
@@ -173,19 +176,19 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
 			}
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
-			mapProducts = c.ProductRetailerIDS
+			ProductEntries = c.ProductRetailerIDS
 		} else {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
 		}
 
-		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, mapProducts, a.AutomaticSearch, a.Topic, a.SendCatalog)
+		msg := flows.NewMsgCatalogOut(dest.URN.URN(), channelRef, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, ProductEntries, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, mapProducts, a.AutomaticSearch, a.Topic, a.SendCatalog)
+		msg := flows.NewMsgCatalogOut(urns.NilURN, nil, evaluatedHeader, evaluatedBody, evaluatedFooter, a.ProductViewSettings.Action, evaluatedSearch, ProductEntries, a.AutomaticSearch, a.Topic, a.SendCatalog)
 		logEvent(events.NewMsgCatalogCreated(msg))
 	}
 	return nil
