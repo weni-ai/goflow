@@ -128,7 +128,14 @@
                     },
                     "footer": "footer text ",
                     "header": "header text ",
-                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "products": [
+                        {
+                            "Product": "product_retailer_id",
+                            "ProductRetailerIDs": [
+                                "732a611c-296c-4396-8273-096c1eb96ad1"
+                            ]
+                        }
+                    ],
                     "action": "Menu",
                     "smart": false,
                     "text": "",
@@ -196,7 +203,14 @@
                     "text": "",
                     "header": "Hi there",
                     "action": "Menu",
-                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "products": [
+                        {
+                            "Product": "product_retailer_id",
+                            "ProductRetailerIDs": [
+                                "732a611c-296c-4396-8273-096c1eb96ad1"
+                            ]
+                        }
+                    ],
                     "smart": false
                 }
             }
@@ -260,7 +274,14 @@
                     "text": "",
                     "header": "Hi there",
                     "action": "Menu",
-                    "products": {"product_retailer_id":["732a611c-296c-4396-8273-096c1eb96ad1"]},
+                    "products": [
+                        {
+                            "Product": "product_retailer_id",
+                            "ProductRetailerIDs": [
+                                "732a611c-296c-4396-8273-096c1eb96ad1"
+                            ]
+                        }
+                    ],
                     "smart": false
                 }
             }
