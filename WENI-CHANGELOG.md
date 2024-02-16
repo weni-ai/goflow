@@ -1,3 +1,7 @@
+0.7.0-goflow-0.144.3
+----------
+ * Change the product list structure to preserve insertion order
+
 0.6.3-goflow-0.144.3
 ----------
  * Add only the text content in the result value for wenigpt
