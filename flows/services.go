@@ -86,9 +86,14 @@ type ExternalServiceCall struct {
 	ResponseCleaned bool
 }
 
+type ProductEntry struct {
+	Product            string
+	ProductRetailerIDs []string
+}
+
 type MsgCatalogCall struct {
 	ResponseJSON       []byte
-	ProductRetailerIDS map[string][]string
+	ProductRetailerIDS []ProductEntry
 	Traces             []*httpx.Trace
 }
 
