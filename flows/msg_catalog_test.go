@@ -25,7 +25,7 @@ func TestMsgCatalogOut(t *testing.T) {
 		"footer",
 		"action",
 		"productSearch",
-		[]string{"product_1", "product_2"},
+		[]flows.ProductEntry{{Product: "product", ProductRetailerIDs: []string{"product_1"}}},
 		false,
 		flows.MsgTopic("none"),
 		false,
@@ -45,8 +45,12 @@ func TestMsgCatalogOut(t *testing.T) {
 		"header": "header",
 		"product_search": "productSearch",
 		"products": [
-			"product_1",
-			"product_2"
+			{
+				"Product": "product",
+				"ProductRetailerIDs": [
+					"product_1"
+				]
+			}
 		],
 		"smart": false,
 		"text": "",

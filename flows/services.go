@@ -21,7 +21,9 @@ type Services interface {
 	Ticket(Session, *Ticketer) (TicketService, error)
 	Airtime(Session) (AirtimeService, error)
 	ExternalService(Session, *ExternalService) (ExternalServiceService, error)
+	WeniGPT(Session) (WeniGPTService, error)
 	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
+	OrgContext(Session, *OrgContext) (OrgContextService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -84,11 +86,19 @@ type ExternalServiceCall struct {
 	ResponseCleaned bool
 }
 
+type ProductEntry struct {
+	Product            string
+	ProductRetailerIDs []string
+}
+
 type MsgCatalogCall struct {
 	ResponseJSON       []byte
-	ProductRetailerIDS []string
-	TraceWeniGPT       *httpx.Trace
-	TraceSentenx       *httpx.Trace
+	ProductRetailerIDS []ProductEntry
+	Traces             []*httpx.Trace
+}
+
+type OrgContextCall struct {
+	ResponseJSON []byte
 }
 
 // ClassificationService provides NLU functionality to the engine
@@ -106,8 +116,23 @@ type ExternalServiceService interface {
 	Call(sesion Session, callAction assets.ExternalServiceCallAction, params []assets.ExternalServiceParam, logHTTP HTTPLogCallback) (*ExternalServiceCall, error)
 }
 
+// WeniGPTCall is the result of a wenigpt call
+type WeniGPTCall struct {
+	*httpx.Trace
+	ResponseJSON    []byte
+	ResponseCleaned bool // whether response had to be cleaned to make it valid JSON
+}
+
+type WeniGPTService interface {
+	Call(session Session, input string, contentBaseUUID string, language string) (*WeniGPTCall, error)
+}
+
 type MsgCatalogService interface {
 	Call(session Session, params assets.MsgCatalogParam, logHTTP HTTPLogCallback) (*MsgCatalogCall, error)
+}
+
+type OrgContextService interface {
+	Call(session Session, logHTTP HTTPLogCallback) (*OrgContextCall, error)
 }
 
 // AirtimeTransferStatus is a status of a airtime transfer

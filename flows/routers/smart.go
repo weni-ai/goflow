@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/jsonx"
@@ -146,29 +145,40 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		return "", "", nil
 	}
 
-	url := apiUrl + "/v2/repository/nlp/zeroshot/zeroshot-fast-predict"
-	status := flows.CallStatusSuccess
-	body := struct {
-		Text       string `json:"text"`
-		Language   string `json:"language,omitempty"`
-		Categories []struct {
-			Option   string   `json:"option"`
-			Synonyms []string `json:"synonyms"`
-		} `json:"categories"`
-	}{
-		Text: operand,
+	context := ""
+	orgContext := run.Session().Assets().OrgContext()
+	c := orgContext.GetByChannelUUID()
+	if c != nil {
+		context = c.OrgContext.Context()
 	}
 
-	if run.Contact().Language() != envs.NilLanguage {
+	url := apiUrl + "/v2/repository/nlp/zeroshot/zeroshot-fast-predict"
+	status := flows.CallStatusSuccess
+
+	body := struct {
+		Context  string `json:"context"`
+		Language string `json:"language"`
+		Text     string `json:"text"`
+		Options  []struct {
+			Class   string `json:"class"`
+			Context string `json:"context"`
+		} `json:"options"`
+	}{
+		Context:  context,
+		Text:     operand,
+		Language: "por",
+	}
+
+	if run.Contact().Language() != envs.NilLanguage && run.Contact().Language() != "base" {
 		body.Language = string(run.Contact().Language())
 	}
 
-	args := make(map[string][]string)
+	args := make(map[string]string)
 	for _, c := range r.cases {
 		if c.Type == "has_category" {
 			continue
 		}
-		var evaluatedArgs []string
+		var evaluatedArg string
 		localizedArgs, _ := run.GetTextArray(c.UUID, "arguments", c.Arguments)
 		for i := range c.Arguments {
 			test := localizedArgs[i]
@@ -182,29 +192,20 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 				run.LogError(step, xerr)
 			}
 
-			results := customSplit(resultAsStr.Native())
-
-			for _, result := range results {
-				arg := strings.TrimSpace(result)
-				if res, err := RegexMatch(arg, ArgumentsRegex, false); res && err == nil {
-					evaluatedArgs = append(evaluatedArgs, arg)
-				} else if err != nil {
-					run.LogError(step, err)
-				}
-			}
+			evaluatedArg = resultAsStr.Native()
 		}
 
-		args[string(c.CategoryUUID)] = evaluatedArgs
+		args[string(c.CategoryUUID)] = evaluatedArg
 	}
 
 	for category, arg := range args {
 		for _, c := range r.categories {
 			if string(c.UUID()) == category {
 				if res, err := RegexMatch(c.Name(), CategoryRegex, true); res && err == nil {
-					body.Categories = append(body.Categories, struct {
-						Option   string   "json:\"option\""
-						Synonyms []string "json:\"synonyms\""
-					}{Option: c.Name(), Synonyms: arg})
+					body.Options = append(body.Options, struct {
+						Class   string "json:\"class\""
+						Context string "json:\"context\""
+					}{Class: c.Name(), Context: arg})
 					break
 				} else {
 					run.LogError(step, err)
@@ -305,12 +306,6 @@ func RegexMatch(input string, regexPattern string, isCategory bool) (bool, error
 	} else {
 		return false, fmt.Errorf("error when combining input \"%s\" with regex", input)
 	}
-}
-
-func customSplit(input string) []string {
-	return strings.FieldsFunc(input, func(r rune) bool {
-		return r == ',' || r == ' '
-	})
 }
 
 // EnumerateTemplates enumerates all expressions on this object and its children

@@ -11,6 +11,7 @@ import (
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
 	"github.com/nyaruka/goflow/services/webhooks"
+	"github.com/nyaruka/goflow/services/wenigpt"
 
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
@@ -25,6 +26,7 @@ func NewEngine() flows.Engine {
 			return newEmailService(), nil
 		}).
 		WithWebhookServiceFactory(webhooks.NewServiceFactory(http.DefaultClient, retries, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000)).
+		WithWeniGPTServiceFactory(wenigpt.NewServiceFactory(http.DefaultClient, retries, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "http://127.0.0.1:49994")).
 		WithClassificationServiceFactory(func(s flows.Session, c *flows.Classifier) (flows.ClassificationService, error) {
 			return newClassificationService(c), nil
 		}).

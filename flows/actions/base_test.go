@@ -786,6 +786,21 @@ func TestConstructors(t *testing.T) {
 				"uuid": "ad154980-7bf7-4ab8-8728-545fd6378912"
 			}`,
 		},
+		{
+			actions.NewCallWeniGPT(
+				actionUUID,
+				"29670513-09bb-471b-8eee-f5f5d81973e8",
+				"What is a cookie?",
+				"WeniGPTResponse",
+			),
+			`{
+				"type": "call_wenigpt",
+				"knowledge_base": "29670513-09bb-471b-8eee-f5f5d81973e8",
+              	"input": "What is a cookie?",
+				"result_name": "WeniGPTResponse",
+				"uuid": "ad154980-7bf7-4ab8-8728-545fd6378912"
+			}`,
+		},
 	}
 
 	for _, tc := range tests {

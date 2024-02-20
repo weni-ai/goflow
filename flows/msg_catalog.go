@@ -10,23 +10,23 @@ import (
 type MsgCatalogOut struct {
 	BaseMsg
 
-	Header_        string        `json:"header,omitempty"`
-	Body_          string        `json:"body,omitempty"`
-	Footer_        string        `json:"footer,omitempty"`
-	Products_      []string      `json:"products,omitempty"`
-	Action_        string        `json:"action,omitempty"`
-	Topic_         MsgTopic      `json:"topic,omitempty"`
-	Smart_         bool          `json:"smart"`
-	ProductSearch_ string        `json:"product_search,omitempty"`
-	TextLanguage   envs.Language `json:"text_language,omitempty"`
-	SendCatalog_   bool          `json:"send_catalog,omitempty"`
+	Header_        string         `json:"header,omitempty"`
+	Body_          string         `json:"body,omitempty"`
+	Footer_        string         `json:"footer,omitempty"`
+	Products_      []ProductEntry `json:"products,omitempty"`
+	Action_        string         `json:"action,omitempty"`
+	Topic_         MsgTopic       `json:"topic,omitempty"`
+	Smart_         bool           `json:"smart"`
+	ProductSearch_ string         `json:"product_search,omitempty"`
+	TextLanguage   envs.Language  `json:"text_language,omitempty"`
+	SendCatalog_   bool           `json:"send_catalog,omitempty"`
 }
 
 type MsgCatalog struct {
 	assets.MsgCatalog
 }
 
-func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []string, smart bool, topic MsgTopic, sendCatalog bool) *MsgCatalogOut {
+func NewMsgCatalogOut(urn urns.URN, channel *assets.ChannelReference, header, body, footer, action, productSearch string, products []ProductEntry, smart bool, topic MsgTopic, sendCatalog bool) *MsgCatalogOut {
 	return &MsgCatalogOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -89,7 +89,7 @@ func (m *MsgCatalogOut) Body() string { return m.Body_ }
 
 func (m *MsgCatalogOut) Footer() string { return m.Footer_ }
 
-func (m *MsgCatalogOut) Products() []string { return m.Products_ }
+func (m *MsgCatalogOut) Products() []ProductEntry { return m.Products_ }
 
 func (m *MsgCatalogOut) Topic() MsgTopic { return m.Topic_ }
 

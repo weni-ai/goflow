@@ -124,7 +124,7 @@ func (a *baseAction) evaluateMessage(run flows.FlowRun, languages []envs.Languag
 	return evaluatedText, evaluatedAttachments, evaluatedQuickReplies
 }
 
-func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []string, sendCatalog bool, logEvent flows.EventCallback) (string, string, string) {
+func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []map[string]string, sendCatalog bool, sellerId string, url string, logEvent flows.EventCallback) (string, string, string, string, string) {
 	localizedHeader := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader}, languages)[0]
 	evaluatedHeader, err := run.EvaluateTemplate(localizedHeader)
 	if err != nil {
@@ -134,7 +134,7 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("header text evaluated to empty string"))
 	}
 
-	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionBody}, languages)[0]
+	localizedBody := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "body", []string{actionBody}, languages)[0]
 	evaluatedBody, err := run.EvaluateTemplate(localizedBody)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -143,7 +143,7 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("body text evaluated to empty string"))
 	}
 
-	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "footer", []string{actionFooter}, languages)[0]
 	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -152,7 +152,19 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewErrorf("footer text evaluated to empty string"))
 	}
 
-	return evaluatedHeader, evaluatedBody, evaluatedFooter
+	localizedSellerId := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "seller_id", []string{sellerId}, languages)[0]
+	evaluatedSellerId, err := run.EvaluateTemplate(localizedSellerId)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	localizedURL := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "search_url", []string{url}, languages)[0]
+	evaluatedURL, err := run.EvaluateTemplate(localizedURL)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	return evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedSellerId, evaluatedURL
 }
 
 func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionListTitle string, actionListFooter string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, string, []utils.Attachment, []string) {
@@ -290,6 +302,41 @@ func (a *baseAction) updateWebhook(run flows.FlowRun, call *flows.WebhookCall) {
 	default:
 		run.SetWebhook(typed)
 	}
+}
+
+func (a *baseAction) updateWeniGPT(run flows.FlowRun, call *flows.WeniGPTCall) {
+	parsed := types.JSONToXValue(call.ResponseJSON)
+
+	switch typed := parsed.(type) {
+	case nil, types.XError:
+		run.SetWebhook(types.XObjectEmpty)
+	default:
+		run.SetWebhook(typed)
+	}
+}
+
+// helper to save a run result based on a wenigpt call and log it as an event
+func (a *baseAction) saveWeniGPTResult(run flows.FlowRun, step flows.Step, name string, call *flows.WeniGPTCall, status flows.CallStatus, logEvent flows.EventCallback) {
+	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
+	value := "0"
+	category := webhookStatusCategories[status]
+
+	text := struct {
+		Answers []struct {
+			Text string `json:"text"`
+		} `json:"answers"`
+	}{}
+
+	err := json.Unmarshal(call.ResponseJSON, &text)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	if call.Response != nil && len(text.Answers) > 0 {
+		value = text.Answers[0].Text
+	}
+
+	a.saveResult(run, step, name, value, category, "", input, nil, logEvent)
 }
 
 // helper to apply a contact modifier
