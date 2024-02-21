@@ -222,5 +222,11 @@ func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, params a
 		return call, err
 	}
 
+	if len(call.ProductRetailerIDS) == 0 {
+		err = fmt.Errorf("product out of stock")
+		logEvent(events.NewError(err))
+		return call, err
+	}
+
 	return call, nil
 }
