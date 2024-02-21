@@ -1,3 +1,7 @@
+0.7.1-goflow-0.144.3
+----------
+ * Fix error handling for empty product list
+
 0.7.0-goflow-0.144.3
 ----------
  * Change the product list structure to preserve insertion order
