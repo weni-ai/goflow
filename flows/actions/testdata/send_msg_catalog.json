@@ -40,7 +40,7 @@
             "result_name": "Result",
             "sendCatalog": false,
             "search_type": "",
-            "seller_id": ""
+            "postal_code": ""
         },
         "events": [
             {
@@ -85,7 +85,7 @@
             },
             "search_type": "vtex",
             "search_url": "https://search.vtex.com/api/catalog_system/pub/products/search",
-            "seller_id": "",
+            "postal_code": "",
             "automaticProductSearch": false,
             "products": [{"product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"}]
         },
@@ -160,7 +160,7 @@
             },
             "search_type": "vtex",
             "search_url": "https://search.vtex.com.br/api/io/_v/api/intelligent-search/product_search",
-            "seller_id": "",
+            "postal_code": "",
             "automaticProductSearch": false,
             "products": [
                 {
@@ -231,8 +231,8 @@
             },
             "search_type": "vtex",
             "search_url": "https://search.vtex.com.br/api/checkout/pub/orderForms/simulation",
-            "seller_id": "",
             "automaticProductSearch": false,
+            "postal_code": "",
             "products": [
                 {
                     "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
