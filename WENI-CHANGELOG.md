@@ -1,3 +1,8 @@
+0.8.0-goflow-0.144.3
+----------
+ * Remove regex that removes whitespace for zeroshot category
+ * Add postal code field to catalog msgs
+
 0.7.1-goflow-0.144.3
 ----------
  * Fix error handling for empty product list
