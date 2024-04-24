@@ -1,3 +1,7 @@
+0.8.1-goflow-0.144.3
+----------
+ * Fix external service using repeated param value on sprint with many runs on same flow node.
+
 0.8.0-goflow-0.144.3
 ----------
  * Remove regex that removes whitespace for zeroshot category
