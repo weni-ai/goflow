@@ -69,6 +69,9 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 		return nil
 	}
 
+	evaluatedParams := make([]assets.ExternalServiceParam, len(params))
+	copy(evaluatedParams, params)
+
 	// substitute any variables in our params if data value is string
 	for i, param := range params {
 		dataValue, ok := param.Data.Value.(string)
@@ -77,13 +80,13 @@ func (a *CallExternalServiceAction) call(run flows.FlowRun, step flows.Step, ext
 			if err != nil {
 				logEvent(events.NewError(err))
 			}
-			params[i].Data.Value = evaluatedParam
+			evaluatedParams[i].Data.Value = evaluatedParam
 		}
 	}
 
 	httpLogger := &flows.HTTPLogger{}
 
-	call, err := svc.Call(run.Session(), callAction, params, httpLogger.Log)
+	call, err := svc.Call(run.Session(), callAction, evaluatedParams, httpLogger.Log)
 	if err != nil {
 		logEvent(events.NewError(err))
 	}
