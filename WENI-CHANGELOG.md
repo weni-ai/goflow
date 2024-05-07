@@ -1,3 +1,7 @@
+0.8.2-goflow-0.144.3
+----------
+ * Add whatsapp header token to webhooks
+
 0.8.1-goflow-0.144.3
 ----------
  * Fix external service using repeated param value on sprint with many runs on same flow node.
