@@ -26,12 +26,11 @@ type SendWppMsgAction struct {
 type createWppMsgAction struct {
 	HeaderType      string            `json:"header_type,omitempty"`
 	HeaderText      string            `json:"header_text,omitempty"`
-	Attachments     string            `json:"attachments,omitempty"`
+	Attachment      string            `json:"attachment,omitempty"`
 	Text            string            `json:"text,omitempty"`
 	Footer          string            `json:"footer,omitempty"`
 	ListItems       []flows.ListItems `json:"list_items,omitempty"`
-	ListTitle       string            `json:"list_title,omitempty"`
-	ListFooter      string            `json:"list_footer,omitempty"`
+	ButtonText      string            `json:"button_text,omitempty"`
 	QuickReplies    []string          `json:"quick_replies,omitempty"`
 	InteractionType string            `json:"interaction_type,omitempty"`
 }
@@ -43,18 +42,17 @@ type Header struct {
 }
 
 // NewSendWppMsg creates a new send msg whatsapp action
-func NewSendWppMsg(uuid flows.ActionUUID, headerType string, headerText string, attachment string, text string, footer string, listItems []flows.ListItems, listTitle string, listFooter string, quickReplies []string, interactionType string, allURNs bool) *SendWppMsgAction {
+func NewSendWppMsg(uuid flows.ActionUUID, headerType string, headerText string, attachment string, text string, footer string, listItems []flows.ListItems, buttonText string, quickReplies []string, interactionType string, allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
 		createWppMsgAction: createWppMsgAction{
 			HeaderType:      headerType,
 			HeaderText:      headerText,
-			Attachments:     attachment,
+			Attachment:      attachment,
 			Text:            text,
 			Footer:          footer,
 			ListItems:       listItems,
-			ListTitle:       listTitle,
-			ListFooter:      listFooter,
+			ButtonText:      buttonText,
 			QuickReplies:    quickReplies,
 			InteractionType: interactionType,
 		},
@@ -69,11 +67,10 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		return nil
 	}
 
-	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedListTitle, evaluatedListFooter, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Text, a.Footer, a.ListItems, a.ListTitle, a.ListFooter, a.Attachments, a.QuickReplies, logEvent)
+	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Footer, a.Text, a.ListItems, a.ButtonText, a.Attachment, a.QuickReplies, logEvent)
 
 	evaluatedListMessage := flows.ListMessage{
-		ListTitle:  evaluatedListTitle,
-		ListFooter: evaluatedListFooter,
+		ButtonText: evaluatedButtonText,
 		ListItems:  evaluatedListItems,
 	}
 

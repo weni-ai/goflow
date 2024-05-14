@@ -16,15 +16,14 @@ type MsgWppOut struct {
 	Text_            string             `json:"text,omitempty"`
 	Footer_          string             `json:"footer,omitempty"`
 	Topic_           MsgTopic           `json:"topic,omitempty"`
-	ListMessage_     ListMessage        `json:"list_messages,omitempty"`
+	ListMessage_     ListMessage        `json:"list_message,omitempty"`
 	Attachments_     []utils.Attachment `json:"attachments,omitempty"`
 	QuickReplies_    []string           `json:"quick_replies,omitempty"`
 	TextLanguage     envs.Language      `json:"text_language,omitempty"`
 }
 
 type ListMessage struct {
-	ListTitle  string      `json:"list_title,omitempty"`
-	ListFooter string      `json:"list_footer,omitempty"`
+	ButtonText string      `json:"button_text,omitempty"`
 	ListItems  []ListItems `json:"list_items,omitempty"`
 }
 
@@ -63,7 +62,7 @@ func (m *MsgWppOut) Text() string { return m.Text_ }
 
 func (m *MsgWppOut) Footer() string { return m.Footer_ }
 
-func (m *MsgWppOut) ListMessages() ListMessage { return m.ListMessage_ }
+func (m *MsgWppOut) ListMessage() ListMessage { return m.ListMessage_ }
 
 func (m *MsgWppOut) Attachments() []utils.Attachment { return m.Attachments_ }
 

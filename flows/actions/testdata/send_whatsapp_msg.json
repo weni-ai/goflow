@@ -15,8 +15,7 @@
                     "description": "option 1"
                 }
             ],
-            "list_title": "list title",
-            "list_footer": "list footer",
+            "button_text": "button",
             "attachments": "http://example.com/red.jpg",
             "quick_replies": [
                 "Yes",
@@ -62,9 +61,9 @@
                                 "title": "option 1",
                                 "uuid": "65fa2622-c56c-4221-aa46-f7aa97e13f53"
                             }
-                        ],
-                        "list_title": "list title"
+                        ]
                     },
+                    "button_text": "button",
                     "quick_replies": [
                         "Si",
                         "No"
