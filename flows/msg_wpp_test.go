@@ -44,7 +44,7 @@ func TestMsgWppOut(t *testing.T) {
 		"channel": {"uuid":"61f38f46-a856-4f90-899e-905691784159", "name":"My Android"},
 		"text": "Hi there.",
 		"footer": "Footer.",
-		"list_messages": {},
+		"list_message": {},
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
 		"topic": "agent"
 	}`), marshaled, "JSON mismatch")
