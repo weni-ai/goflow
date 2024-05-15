@@ -15,8 +15,6 @@
                     "description": "option 1"
                 }
             ],
-            "button_text": "button",
-            "attachments": "http://example.com/red.jpg",
             "quick_replies": [
                 "Yes",
                 "No"
@@ -28,7 +26,6 @@
                     "text": [
                         "Hola!"
                     ],
-                    "attachments": ["http://example.com/rojo.jpg"],
                     "quick_replies": [
                         "Si",
                         "No"
@@ -49,12 +46,10 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hola!",
-                    "attachments": ["http://example.com/rojo.jpg"],
-                    "footer": "Hi there!",
+                    "footer": "footer",
                     "header_type": "media",
                     "interaction_type": "list",
-                    "list_messages": {
-                        "list_footer": "list footer",
+                    "list_message": {
                         "list_items": [
                             {
                                 "description": "option 1",
@@ -63,7 +58,6 @@
                             }
                         ]
                     },
-                    "button_text": "button",
                     "quick_replies": [
                         "Si",
                         "No"
