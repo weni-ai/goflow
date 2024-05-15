@@ -76,11 +76,12 @@ type ProductViewSettings struct {
 type searchSettings struct {
 	SearchUrl  string `json:"search_url,omitempty"`
 	SearchType string `json:"search_type"`
+	PostalCode string `json:"postal_code"`
 	SellerId   string `json:"seller_id"`
 }
 
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch bool, searchUrl string, searchType string, sellerId string, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch bool, searchUrl string, searchType string, postalCode string, sellerId string, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
@@ -97,6 +98,7 @@ func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, prod
 		searchSettings: searchSettings{
 			SearchUrl:  searchUrl,
 			SearchType: searchType,
+			PostalCode: postalCode,
 			SellerId:   sellerId,
 		},
 		AllURNs: allURNs,
@@ -130,7 +132,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		}
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedSellerId, evaluatedURL := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, a.SellerId, a.SearchUrl, logEvent)
+	evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, a.PostalCode, a.SearchUrl, a.SellerId, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -161,7 +163,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("channel with uuid: %s, does not have an active catalog", channelRef.UUID), CategoryFailure, "", "", nil, logEvent)
 				return nil
 			}
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedSellerId)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {
@@ -218,6 +220,12 @@ func (a *SendMsgCatalogAction) call(run flows.FlowRun, step flows.Step, params a
 
 	call, err = svc.Call(run.Session(), params, httpLogger.Log)
 	if err != nil {
+		logEvent(events.NewError(err))
+		return call, err
+	}
+
+	if len(call.ProductRetailerIDS) == 0 {
+		err = fmt.Errorf("product out of stock")
 		logEvent(events.NewError(err))
 		return call, err
 	}

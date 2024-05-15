@@ -26,16 +26,18 @@ type MsgCatalogParam struct {
 	SearchType    string     `json:"search_type,omitempty"`
 	SearchUrl     string     `json:"search_url,omitempty"`
 	ApiType       string     `json:"api_type,omitempty"`
+	PostalCode    string     `json:"postal_code,omitempty"`
 	SellerId      string     `json:"seller_id,omitempty"`
 }
 
-func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, sellerId string) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string) MsgCatalogParam {
 	p := MsgCatalogParam{
 		ProductSearch: productSearch,
 		ChannelUUID:   channelUUID,
 		SearchType:    searchType,
 		SearchUrl:     searchUrl,
 		ApiType:       apiType,
+		PostalCode:    postalCode,
 		SellerId:      sellerId,
 	}
 	return p

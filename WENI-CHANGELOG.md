@@ -1,3 +1,20 @@
+0.8.2-goflow-0.144.3
+----------
+ * Add whatsapp header token to webhooks
+
+0.8.1-goflow-0.144.3
+----------
+ * Fix external service using repeated param value on sprint with many runs on same flow node.
+
+0.8.0-goflow-0.144.3
+----------
+ * Remove regex that removes whitespace for zeroshot category
+ * Add postal code field to catalog msgs
+
+0.7.1-goflow-0.144.3
+----------
+ * Fix error handling for empty product list
+
 0.7.0-goflow-0.144.3
 ----------
  * Change the product list structure to preserve insertion order
