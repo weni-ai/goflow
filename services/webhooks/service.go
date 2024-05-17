@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/goflow/flows"
@@ -61,6 +63,17 @@ func (s *service) Call(session flows.Session, request *http.Request) (*flows.Web
 	if request.Header.Get("X-Weni-Whatsapp-Token") != "" {
 		request.Header.Set("Authorization", "Bearer "+whatsAppSystemUserToken)
 		request.Header.Del("X-Weni-Whatsapp-Token")
+	}
+
+	timeoutHeader := request.Header.Get("X-Weni-Webhook-Timeout")
+	if timeout, err := strconv.Atoi(timeoutHeader); err == nil {
+		if timeout >= 60 {
+			timeout = 60
+		}
+		if timeout <= 30 {
+			timeout = 30
+		}
+		s.httpClient.Timeout = time.Second * time.Duration(timeout)
 	}
 
 	trace, err := httpx.DoTrace(s.httpClient, request, s.httpRetries, s.httpAccess, s.maxBodyBytes)
