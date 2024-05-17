@@ -1,3 +1,7 @@
+0.9.0-goflow-0.144.3
+----------
+ * Implementations for whatsapp message card
+
 0.8.2-goflow-0.144.3
 ----------
  * Add whatsapp header token to webhooks
