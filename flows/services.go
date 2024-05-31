@@ -17,6 +17,7 @@ import (
 type Services interface {
 	Email(Session) (EmailService, error)
 	Webhook(Session) (WebhookService, error)
+	Brain(Session) (BrainService, error)
 	Classification(Session, *Classifier) (ClassificationService, error)
 	Ticket(Session, *Ticketer) (TicketService, error)
 	Airtime(Session) (AirtimeService, error)
@@ -125,6 +126,17 @@ type WeniGPTCall struct {
 
 type WeniGPTService interface {
 	Call(session Session, input string, contentBaseUUID string, language string) (*WeniGPTCall, error)
+}
+
+// BrainCall is the result of a brain call
+type BrainCall struct {
+	*httpx.Trace
+	ResponseJSON    []byte
+	ResponseCleaned bool // whether response had to be cleaned to make it valid JSON
+}
+
+type BrainService interface {
+	Call(session Session, projectUUID uuids.UUID, text string, contactURN *ContactURN, attachments []utils.Attachment) (*BrainCall, error)
 }
 
 type MsgCatalogService interface {

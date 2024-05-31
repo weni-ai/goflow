@@ -1,6 +1,8 @@
 package flows
 
-import "github.com/nyaruka/goflow/assets"
+import (
+	"github.com/nyaruka/goflow/assets"
+)
 
 type OrgContext struct {
 	assets.OrgContext
@@ -31,6 +33,15 @@ func (c *OrgContextAssets) GetByChannelUUID() *OrgContext {
 	return nil
 }
 
+func (c *OrgContextAssets) GetProjectUUIDByChannelUUID() *OrgContext {
+	for _, c := range c.byChannelUUID {
+		if c.OrgContext.ProjectUUID() != "" {
+			return c
+		}
+	}
+	return nil
+}
+
 func (c *OrgContext) Asset() assets.OrgContext { return c.OrgContext }
 
 // Reference returns a reference to this context
@@ -38,7 +49,7 @@ func (c *OrgContext) Reference() *assets.OrgContextReference {
 	if c == nil {
 		return nil
 	}
-	return assets.NewOrgContextReference(c.Context())
+	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID())
 }
 
 type OrgContextAssets struct {
