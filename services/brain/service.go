@@ -1,4 +1,4 @@
-package wenigpt
+package brain
 
 import (
 	"bytes"
