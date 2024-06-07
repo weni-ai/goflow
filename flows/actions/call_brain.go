@@ -3,6 +3,7 @@ package actions
 import (
 	"strings"
 
+	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -48,18 +49,18 @@ func (a *CallBrainAction) Execute(run flows.FlowRun, step flows.Step, logModifie
 // Execute runs this action
 func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flows.EventCallback) error {
 	destinations := run.Contact().ResolveDestinations(true)
-	var urn *flows.ContactURN
-	attachmentsString, err := run.EvaluateTemplate("@input.attachments")
-	if err != nil {
-		logEvent(events.NewError(err))
-	}
+	var urn urns.URN
+	attachmentsString, _ := run.EvaluateTemplate("@input.attachments")
 	trimmedString := strings.Trim(attachmentsString, "[]")
 	attachments := strings.Split(trimmedString, ", ")
+	if len(attachments) == 1 && strings.Trim(attachments[0], " ") == "" {
+		attachments = nil
+	}
 
 	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, "@input.text", attachments, nil, logEvent)
 
 	for _, dest := range destinations {
-		urn = dest.URN
+		urn = dest.URN.URN()
 		svc, err := run.Session().Engine().Services().Brain(run.Session())
 		if err != nil {
 			logEvent(events.NewError(err))

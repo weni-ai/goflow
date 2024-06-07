@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/nyaruka/gocommon/httpx"
+	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
@@ -46,12 +47,12 @@ func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAcc
 	}
 }
 
-func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text string, contactURN *flows.ContactURN, attachments []utils.Attachment) (*flows.BrainCall, error) {
+func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text string, contactURN urns.URN, attachments []utils.Attachment) (*flows.BrainCall, error) {
 
 	body := struct {
 		ProjectUUID uuids.UUID
 		Text        string
-		ContactURN  *flows.ContactURN
+		ContactURN  urns.URN
 		Attachments []utils.Attachment
 	}{
 		ProjectUUID: projectUUID,

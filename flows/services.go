@@ -136,7 +136,7 @@ type BrainCall struct {
 }
 
 type BrainService interface {
-	Call(session Session, projectUUID uuids.UUID, text string, contactURN *ContactURN, attachments []utils.Attachment) (*BrainCall, error)
+	Call(session Session, projectUUID uuids.UUID, text string, contactURN urns.URN, attachments []utils.Attachment) (*BrainCall, error)
 }
 
 type MsgCatalogService interface {

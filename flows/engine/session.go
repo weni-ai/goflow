@@ -374,7 +374,9 @@ func (s *session) continueUntilWait(sprint *sprint, currentRun flows.FlowRun, no
 					if currentRun.Flow() == nil {
 						return errors.New("can't resume parent run with missing flow asset")
 					}
-
+					if len(node.Actions()) > 0 && node.Actions()[0].Type() == "call_brain" {
+						failure(sprint, currentRun, step, errors.New("can't resume parent run since brain has been called"))
+					}
 					if exit, operand, err = s.findResumeExit(sprint, currentRun, false); err != nil {
 						failure(sprint, currentRun, step, errors.Wrapf(err, "can't resume run as node no longer exists"))
 					}
