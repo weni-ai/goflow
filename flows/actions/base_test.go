@@ -801,6 +801,20 @@ func TestConstructors(t *testing.T) {
 				"uuid": "ad154980-7bf7-4ab8-8728-545fd6378912"
 			}`,
 		},
+		{
+			actions.NewRunCodeAction(
+				actionUUID,
+				"foo code action",
+				"a7f9dd5b-7b88-4a79-a123-6f26e34affbb",
+				"CodeActionResponse",
+			),
+			`{
+				"type": "run_code_action",
+				"codeaction": {"name": "foo code action", "id": "a7f9dd5b-7b88-4a79-a123-6f26e34affbb},
+				"result_name": "CodeActionResponse",
+				"uuid": "ad154980-7bf7-4ab8-8728-545fd6378912"
+			}`,
+		},
 	}
 
 	for _, tc := range tests {

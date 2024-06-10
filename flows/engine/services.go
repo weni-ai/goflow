@@ -31,6 +31,8 @@ type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgC
 
 type OrgContextServiceFactory func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error)
 
+type CodeActionServiceFactory func(flows.Session) (flows.CodeActionService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -41,6 +43,7 @@ type services struct {
 	wenigpt         WeniGPTServiceFactory
 	msgCatalog      MsgCatalogServiceFactory
 	orgContext      OrgContextServiceFactory
+	codeAction      CodeActionServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -109,4 +112,8 @@ func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalo
 
 func (s *services) OrgContext(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
 	return s.orgContext(session, context)
+}
+
+func (s *services) CodeAction(session flows.Session) (flows.CodeActionService, error) {
+	return s.codeAction(session)
 }

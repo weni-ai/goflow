@@ -24,6 +24,7 @@ type Services interface {
 	WeniGPT(Session) (WeniGPTService, error)
 	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
 	OrgContext(Session, *OrgContext) (OrgContextService, error)
+	CodeAction(Session) (CodeActionService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -99,6 +100,14 @@ type MsgCatalogCall struct {
 
 type OrgContextCall struct {
 	ResponseJSON []byte
+}
+
+type CodeActionService interface {
+	Run(session Session, request *http.Request) (*CodeActionRun, error)
+}
+
+type CodeActionRun struct {
+	Result string
 }
 
 // ClassificationService provides NLU functionality to the engine
