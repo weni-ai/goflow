@@ -20,11 +20,17 @@ type MsgWppOut struct {
 	Attachments_     []utils.Attachment `json:"attachments,omitempty"`
 	QuickReplies_    []string           `json:"quick_replies,omitempty"`
 	TextLanguage     envs.Language      `json:"text_language,omitempty"`
+	CTAMessage_      CTAMessage         `json:"cta_message,omitempty"`
 }
 
 type ListMessage struct {
 	ButtonText string      `json:"button_text,omitempty"`
 	ListItems  []ListItems `json:"list_items,omitempty"`
+}
+
+type CTAMessage struct {
+	DisplayText_ string `json:"display_text,omitempty"`
+	ActionURL_   string `json:"action_url,omitempty"`
 }
 
 type ListItems struct {
@@ -33,7 +39,7 @@ type ListItems struct {
 	UUID        string `json:"uuid,omitempty"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType string, headerType string, headerText string, text string, footer string, listMessage ListMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -49,6 +55,7 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		Attachments_:     attachments,
 		QuickReplies_:    replyButtons,
 		Topic_:           topic,
+		CTAMessage_:      ctaMessage,
 	}
 }
 
@@ -69,3 +76,5 @@ func (m *MsgWppOut) Attachments() []utils.Attachment { return m.Attachments_ }
 func (m *MsgWppOut) Topic() MsgTopic { return m.Topic_ }
 
 func (m *MsgWppOut) QuickReplies() []string { return m.QuickReplies_ }
+
+func (m *MsgWppOut) CTAMessage() CTAMessage { return m.CTAMessage_ }
