@@ -150,14 +150,14 @@ type nodeEnvelope struct {
 
 func (e *nodeEnvelope) validateWithExit() error {
 	if len(e.Exits) < 1 {
-		return errors.New("exits are required")
+		return errors.New("field 'exits' must have a minimum of 1 items")
 	}
 	return nil
 }
 
 func (e *nodeEnvelope) validateWithoutExit() error {
 	if len(e.Exits) > 0 {
-		return errors.New("exits must be empty")
+		return errors.New("field 'exits' must have a maximum of 0 items")
 	}
 	return nil
 }
