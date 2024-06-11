@@ -32,12 +32,6 @@ func NewCallBrain(uuid flows.ActionUUID, resultName string) *CallBrainAction {
 
 // Validate validates our action is valid
 func (a *CallBrainAction) Validate() error {
-	// for key := range a.Headers {
-	// 	if !httpguts.ValidHeaderFieldName(key) {
-	// 		return errors.Errorf("header '%s' is not a valid HTTP header", key)
-	// 	}
-	// }
-
 	return nil
 }
 
