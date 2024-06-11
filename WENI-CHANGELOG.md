@@ -1,3 +1,7 @@
+0.10.0-goflow-0.144.3
+----------
+ * Add action to brain card
+
 0.9.1-goflow-0.144.3
 ----------
  * Add webhook header to custom timeout for requests
