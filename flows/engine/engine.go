@@ -117,6 +117,12 @@ func (b *Builder) WithOrgContextServiceFactory(f OrgContextServiceFactory) *Buil
 	return b
 }
 
+// WithBrainServiceFactory sets the brain service factory
+func (b *Builder) WithBrainServiceFactory(f BrainServiceFactory) *Builder {
+	b.eng.services.brain = f
+	return b
+}
+
 // WithMaxStepsPerSprint sets the maximum number of steps allowed in a single sprint
 func (b *Builder) WithMaxStepsPerSprint(max int) *Builder {
 	b.eng.maxStepsPerSprint = max

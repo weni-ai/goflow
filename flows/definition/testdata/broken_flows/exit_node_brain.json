@@ -12,11 +12,15 @@
                     "actions": [
                         {
                             "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
-                            "type": "say_msg",
+                            "type": "call_brain",
                             "text": "Hi there @contact.name"
                         }
                     ],
-                    "exits": []
+                    "exits": [
+                        {
+                            "uuid": "23a7a64b-5f07-4a91-acc0-ddb52d7ff5ca"
+                        }
+                    ]
                 }
             ]
         }

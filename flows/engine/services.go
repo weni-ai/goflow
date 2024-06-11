@@ -27,6 +27,9 @@ type ExternalServiceServiceFactory func(flows.Session, *flows.ExternalService) (
 // WeniGPTServiceFactory resolves a session to a weniGPT service
 type WeniGPTServiceFactory func(flows.Session) (flows.WeniGPTService, error)
 
+// BrainServiceFactory resolves a session to a brain service
+type BrainServiceFactory func(flows.Session) (flows.BrainService, error)
+
 type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgCatalogService, error)
 
 type OrgContextServiceFactory func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error)
@@ -41,6 +44,7 @@ type services struct {
 	wenigpt         WeniGPTServiceFactory
 	msgCatalog      MsgCatalogServiceFactory
 	orgContext      OrgContextServiceFactory
+	brain           BrainServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -71,6 +75,9 @@ func newEmptyServices() *services {
 		},
 		orgContext: func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error) {
 			return nil, errors.New("no org context service factory configured")
+		},
+		brain: func(flows.Session) (flows.BrainService, error) {
+			return nil, errors.New("no brain service factory configured")
 		},
 	}
 }
@@ -109,4 +116,8 @@ func (s *services) MsgCatalog(session flows.Session, msgCatalog *flows.MsgCatalo
 
 func (s *services) OrgContext(session flows.Session, context *flows.OrgContext) (flows.OrgContextService, error) {
 	return s.orgContext(session, context)
+}
+
+func (s *services) Brain(session flows.Session) (flows.BrainService, error) {
+	return s.brain(session)
 }

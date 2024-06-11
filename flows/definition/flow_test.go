@@ -44,6 +44,10 @@ func TestBrokenFlows(t *testing.T) {
 			"unable to read node: field 'exits' must have a minimum of 1 items",
 		},
 		{
+			"exit_node_brain.json",
+			"unable to read node: field 'exits' must have a maximum of 0 items",
+		},
+		{
 			"exitless_category.json",
 			"unable to read router: unable to read category: field 'exit_uuid' is required",
 		},

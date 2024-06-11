@@ -142,10 +142,29 @@ func (n *node) EnumerateLocalizables(include func(uuids.UUID, string, []string, 
 //------------------------------------------------------------------------------------------
 
 type nodeEnvelope struct {
-	UUID    flows.NodeUUID    `json:"uuid"               validate:"required,uuid4"`
+	UUID    flows.NodeUUID    `json:"uuid" validate:"required,uuid4"`
 	Actions []json.RawMessage `json:"actions,omitempty"`
 	Router  json.RawMessage   `json:"router,omitempty"`
-	Exits   []*exit           `json:"exits"              validate:"required,min=1"`
+	Exits   []*exit           `json:"exits"`
+}
+
+func (e *nodeEnvelope) validateWithExit() error {
+	if len(e.Exits) < 1 {
+		return errors.New("field 'exits' must have a minimum of 1 items")
+	}
+	return nil
+}
+
+func (e *nodeEnvelope) validateWithoutExit() error {
+	if len(e.Exits) > 0 {
+		return errors.New("field 'exits' must have a maximum of 0 items")
+	}
+	return nil
+}
+
+// types of nodes that can exist without an exit
+var actionTypesWithoutExit = map[string]bool{
+	"call_brain": true,
 }
 
 // UnmarshalJSON unmarshals a flow node from the given JSON
@@ -172,6 +191,19 @@ func (n *node) UnmarshalJSON(data []byte) error {
 		n.actions[i], err = actions.ReadAction(e.Actions[i])
 		if err != nil {
 			return errors.Wrap(err, "unable to read action")
+		}
+	}
+
+	// validate exits based on action types
+	for i := range n.actions {
+		if _, ok := actionTypesWithoutExit[n.actions[i].Type()]; ok {
+			if err := e.validateWithoutExit(); err != nil {
+				return errors.Wrap(err, "unable to read node")
+			}
+		} else {
+			if err := e.validateWithExit(); err != nil {
+				return errors.Wrap(err, "unable to read node")
+			}
 		}
 	}
 
