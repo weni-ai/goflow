@@ -24,10 +24,11 @@ type nfmReplyEnvelope struct {
 func (n *NFMReply) Context(env envs.Environment) map[string]types.XValue {
 	jsonData, _ := json.Marshal(n.ResponseJSON)
 	responseXValue := types.JSONToXValue(jsonData)
+	responseObject, _ := types.ToXObject(env, responseXValue)
 
 	return map[string]types.XValue{
 		"name":          types.NewXText(n.Name),
-		"response_json": responseXValue,
+		"response_json": responseObject,
 	}
 }
 
