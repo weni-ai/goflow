@@ -12,19 +12,22 @@ import (
 )
 
 type NFMReply struct {
-	Name         string `json:"name,omitempty"`
-	ResponseJSON string `json:"response_json,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	ResponseJSON map[string]interface{} `json:"response_json,omitempty"`
 }
 
 type nfmReplyEnvelope struct {
-	Name         string `json:"name,omitempty"`
-	ResponseJSON string `json:"response_json,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	ResponseJSON map[string]interface{} `json:"response_json,omitempty"`
 }
 
 func (n *NFMReply) Context(env envs.Environment) map[string]types.XValue {
+	jsonData, _ := json.Marshal(n.ResponseJSON)
+	responseXValue := types.JSONToXValue(jsonData)
+
 	return map[string]types.XValue{
 		"name":          types.NewXText(n.Name),
-		"response_json": types.NewXText(n.ResponseJSON),
+		"response_json": responseXValue,
 	}
 }
 
