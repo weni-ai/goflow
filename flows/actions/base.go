@@ -255,19 +255,6 @@ func (a *baseAction) updateBrain(run flows.FlowRun, call *flows.BrainCall) {
 	}
 }
 
-// helper to save a run result based on a brain call and log it as an event
-func (a *baseAction) saveBrainResult(run flows.FlowRun, step flows.Step, name string, call *flows.BrainCall, status flows.CallStatus, logEvent flows.EventCallback) {
-	input := fmt.Sprintf("%s %s", call.Request.Method, call.Request.URL.String())
-	value := "0"
-	category := webhookStatusCategories[status]
-
-	if call.Response != nil {
-		value = strconv.Itoa(call.Response.StatusCode)
-	}
-
-	a.saveResult(run, step, name, value, category, "", input, nil, logEvent)
-}
-
 // helper to apply a contact modifier
 func (a *baseAction) applyModifier(run flows.FlowRun, mod flows.Modifier, logModifier flows.ModifierCallback, logEvent flows.EventCallback) {
 	mod.Apply(run.Environment(), run.Session().Assets(), run.Contact(), logEvent)
