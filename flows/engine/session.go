@@ -375,7 +375,7 @@ func (s *session) continueUntilWait(sprint *sprint, currentRun flows.FlowRun, no
 						return errors.New("can't resume parent run with missing flow asset")
 					}
 					if len(node.Actions()) > 0 && node.Actions()[0].Type() == "call_brain" {
-						failure(sprint, currentRun, step, errors.New("can't resume parent run since brain has been called"))
+						return nil
 					}
 					if exit, operand, err = s.findResumeExit(sprint, currentRun, false); err != nil {
 						failure(sprint, currentRun, step, errors.Wrapf(err, "can't resume run as node no longer exists"))
@@ -422,6 +422,20 @@ func (s *session) continueUntilWait(sprint *sprint, currentRun flows.FlowRun, no
 
 				// if we hit a wait, also return to the caller
 				if s.status == flows.SessionStatusWaiting {
+					return nil
+				}
+
+				// as a premise, brain action will always be unique in a node
+				// when brain is called we need to complete all parent runs since we can't resume them
+				if len(node.Actions()) > 0 && node.Actions()[0].Type() == "call_brain" {
+					s.status = flows.SessionStatusCompleted
+					currentRun.Exit(flows.RunStatusCompleted)
+
+					for currentRun.ParentInSession() != nil {
+						currentRun = currentRun.ParentInSession()
+						currentRun.Exit(flows.RunStatusCompleted)
+					}
+
 					return nil
 				}
 			}
