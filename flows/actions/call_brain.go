@@ -3,7 +3,6 @@ package actions
 import (
 	"strings"
 
-	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
@@ -42,8 +41,6 @@ func (a *CallBrainAction) Execute(run flows.FlowRun, step flows.Step, logModifie
 
 // Execute runs this action
 func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flows.EventCallback) error {
-	destinations := run.Contact().ResolveDestinations(true)
-	var urn urns.URN
 	attachmentsString, _ := run.EvaluateTemplate("@input.attachments")
 	trimmedString := strings.Trim(attachmentsString, "[]")
 	attachments := strings.Split(trimmedString, ", ")
@@ -53,45 +50,38 @@ func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flow
 
 	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, "@input.text", attachments, nil, logEvent)
 
-	for _, dest := range destinations {
-		urn = dest.URN.URN()
-		svc, err := run.Session().Engine().Services().Brain(run.Session())
-		if err != nil {
-			logEvent(events.NewError(err))
-			return nil
+	contactURN := run.Contact().PreferredURN()
+	svc, err := run.Session().Engine().Services().Brain(run.Session())
+	if err != nil {
+		logEvent(events.NewError(err))
+		return nil
+	}
+
+	orgContext := run.Session().Assets().OrgContext()
+	c := orgContext.GetProjectUUIDByChannelUUID()
+	var projectUUID uuids.UUID
+	if c != nil {
+		projectUUID = c.OrgContext.ProjectUUID()
+	}
+
+	call, err := svc.Call(run.Session(), projectUUID, evaluatedText, contactURN.URN(), evaluatedAttachment)
+
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	if call != nil {
+		a.updateBrain(run, call)
+
+		status := callStatusBrain(call, err)
+
+		c := &flows.WebhookCall{
+			Trace:           call.Trace,
+			ResponseJSON:    call.ResponseBody,
+			ResponseCleaned: false,
 		}
 
-		orgContext := run.Session().Assets().OrgContext()
-		c := orgContext.GetProjectUUIDByChannelUUID()
-		var projectUUID uuids.UUID
-		if c != nil {
-			projectUUID = c.OrgContext.ProjectUUID()
-		}
-
-		call, err := svc.Call(run.Session(), projectUUID, evaluatedText, urn, evaluatedAttachment)
-
-		if err != nil {
-			logEvent(events.NewError(err))
-		}
-
-		if call != nil {
-			a.updateBrain(run, call)
-
-			status := callStatusBrain(call, err)
-
-			c := &flows.WebhookCall{
-				Trace:           call.Trace,
-				ResponseJSON:    call.ResponseBody,
-				ResponseCleaned: false,
-			}
-
-			logEvent(events.NewWebhookCalled(c, status, ""))
-
-			if a.ResultName != "" {
-				a.saveBrainResult(run, step, a.ResultName, call, status, logEvent)
-			}
-		}
-
+		logEvent(events.NewWebhookCalled(c, status, ""))
 	}
 
 	return nil
