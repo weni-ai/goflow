@@ -1,3 +1,7 @@
+0.11.0-goflow-0.144.3
+----------
+ * Adjust Brain Card
+
 0.10.0-goflow-0.144.3
 ----------
  * Add action to brain card
