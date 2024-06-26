@@ -1,3 +1,11 @@
+0.11.2-goflow-0.144.3
+----------
+ * Adjust tests for brain webhook calls
+
+0.11.1-goflow-0.144.3
+----------
+ * Adjust brain webhook calls
+
 0.11.0-goflow-0.144.3
 ----------
  * Adjust Brain Card
