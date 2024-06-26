@@ -50,10 +50,10 @@ func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAcc
 func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text string, contactURN urns.URN, attachments []utils.Attachment) (*flows.BrainCall, error) {
 
 	body := struct {
-		ProjectUUID uuids.UUID
-		Text        string
-		ContactURN  urns.URN
-		Attachments []utils.Attachment
+		ProjectUUID uuids.UUID          `json:"project_uuid"`
+		Text        string              `json:"text"`
+		ContactURN  urns.URN            `json:"contact_urn"`
+		Attachments []utils.Attachment  `json:"attachments"`
 	}{
 		ProjectUUID: projectUUID,
 		Text:        text,
