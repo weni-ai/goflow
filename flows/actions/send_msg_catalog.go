@@ -147,15 +147,15 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			regexLegacy := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/catalog_system\/pub\/products\/search$`)
 			regexLegacySeller := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/checkout\/pub\/orderForms\/simulation$`)
 			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/product_search(\/)?$`)
-			regexADS := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/sponsored_products(\/)?$`)
+			regexSponsored := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/sponsored_products(\/)?$`)
 			if regexLegacy.MatchString(evaluatedURL) {
 				apiType = "legacy"
 			} else if regexIntelligent.MatchString(evaluatedURL) {
 				apiType = "intelligent"
 			} else if regexLegacySeller.MatchString(evaluatedURL) {
 				apiType = "legacy"
-			} else if regexADS.MatchString(evaluatedURL) {
-				apiType = "intelligent"
+			} else if regexSponsored.MatchString(evaluatedURL) {
+				apiType = "sponsored"
 			}
 		}
 
