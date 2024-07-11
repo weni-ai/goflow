@@ -1,3 +1,7 @@
+0.11.3-goflow-0.144.3
+----------
+ * Add new apiType to send products
+
 0.11.2-goflow-0.144.3
 ----------
  * Adjust tests for brain webhook calls
