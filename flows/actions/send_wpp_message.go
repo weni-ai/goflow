@@ -93,9 +93,10 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 
 	ctaMessage := flows.CTAMessage{}
 	if a.ActionURL != "" {
+		evaluatedActionURL, _ := run.EvaluateTemplate(a.ActionURL)
 		ctaMessage = flows.CTAMessage{
 			DisplayText_: evaluatedButtonText,
-			URL_:         a.ActionURL,
+			URL_:         evaluatedActionURL,
 		}
 	}
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
