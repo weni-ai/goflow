@@ -33,6 +33,7 @@ type createWppMsgAction struct {
 	ButtonText      string            `json:"button_text,omitempty"`
 	QuickReplies    []string          `json:"quick_replies,omitempty"`
 	InteractionType string            `json:"interaction_type,omitempty"`
+	ActionURL       string            `json:"action_url,omitempty"`
 }
 
 type Header struct {
@@ -42,7 +43,19 @@ type Header struct {
 }
 
 // NewSendWppMsg creates a new send msg whatsapp action
-func NewSendWppMsg(uuid flows.ActionUUID, headerType string, headerText string, attachment string, text string, footer string, listItems []flows.ListItems, buttonText string, quickReplies []string, interactionType string, allURNs bool) *SendWppMsgAction {
+func NewSendWppMsg(
+	uuid flows.ActionUUID,
+	headerType string,
+	headerText string,
+	attachment string,
+	text string,
+	footer string,
+	listItems []flows.ListItems,
+	buttonText string,
+	quickReplies []string,
+	interactionType string,
+	actionURL string,
+	allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
 		createWppMsgAction: createWppMsgAction{
@@ -55,6 +68,7 @@ func NewSendWppMsg(uuid flows.ActionUUID, headerType string, headerText string, 
 			ButtonText:      buttonText,
 			QuickReplies:    quickReplies,
 			InteractionType: interactionType,
+			ActionURL:       actionURL,
 		},
 		AllURNs: allURNs,
 	}
@@ -69,11 +83,22 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 
 	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Footer, a.Text, a.ListItems, a.ButtonText, a.Attachment, a.QuickReplies, logEvent)
 
-	evaluatedListMessage := flows.ListMessage{
-		ButtonText: evaluatedButtonText,
-		ListItems:  evaluatedListItems,
+	listMessage := flows.ListMessage{}
+	if len(evaluatedListItems) > 0 {
+		listMessage = flows.ListMessage{
+			ButtonText: evaluatedButtonText,
+			ListItems:  evaluatedListItems,
+		}
 	}
 
+	ctaMessage := flows.CTAMessage{}
+	if a.ActionURL != "" {
+		evaluatedActionURL, _ := run.EvaluateTemplate(a.ActionURL)
+		ctaMessage = flows.CTAMessage{
+			DisplayText_: evaluatedButtonText,
+			URL_:         evaluatedActionURL,
+		}
+	}
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
 	for _, dest := range destinations {
@@ -82,14 +107,14 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, evaluatedListMessage, evaluatedAttachments, evaluatedReplyMessage, a.Topic)
+		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, evaluatedAttachments, evaluatedReplyMessage, a.Topic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, evaluatedListMessage, evaluatedAttachments, evaluatedReplyMessage, flows.NilMsgTopic)
+		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, evaluatedAttachments, evaluatedReplyMessage, flows.NilMsgTopic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
