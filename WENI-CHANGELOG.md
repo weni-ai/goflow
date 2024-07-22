@@ -1,3 +1,7 @@
+0.12.0-goflow-0.144.3
+----------
+ * Support for CTA message for whatsapp cloud channels
+
 0.11.3-goflow-0.144.3
 ----------
  * Add new apiType to send products
