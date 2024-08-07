@@ -34,6 +34,9 @@ type createWppMsgAction struct {
 	QuickReplies    []string          `json:"quick_replies,omitempty"`
 	InteractionType string            `json:"interaction_type,omitempty"`
 	ActionURL       string            `json:"action_url,omitempty"`
+	FlowID					string            `json:"flow_id,omitempty"`
+	FlowData				flows.FlowData  	`json:"flow_data,omitempty"`
+	FlowScreen			string            `json:"flow_screen,omitempty"`
 }
 
 type Header struct {
@@ -55,6 +58,9 @@ func NewSendWppMsg(
 	quickReplies []string,
 	interactionType string,
 	actionURL string,
+	flowID string,
+	flowData flows.FlowData,
+	flowScreen string,
 	allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
@@ -99,6 +105,25 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			URL_:         evaluatedActionURL,
 		}
 	}
+
+	flowMessage := flows.FlowMessage{}
+	if a.FlowID != "" {
+		evaluatedFlowID, _ := run.EvaluateTemplate(a.FlowID)
+		evaluatedFlowScreen, _ := run.EvaluateTemplate(a.FlowScreen)
+
+		evaluatedFlowData := make(flows.FlowData)
+		for k, v := range a.FlowData {
+			evaluatedValue, _ := run.EvaluateTemplate(v)
+			evaluatedFlowData[k] = evaluatedValue
+		}
+
+		flowMessage = flows.FlowMessage{
+			FlowID:    evaluatedFlowID,
+			FlowData:  a.FlowData,
+			FlowScreen: evaluatedFlowScreen,
+		}
+	}
+
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
 	for _, dest := range destinations {
@@ -107,14 +132,14 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, evaluatedAttachments, evaluatedReplyMessage, a.Topic)
+		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, evaluatedAttachments, evaluatedReplyMessage, a.Topic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, evaluatedAttachments, evaluatedReplyMessage, flows.NilMsgTopic)
+		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, evaluatedAttachments, evaluatedReplyMessage, flows.NilMsgTopic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
