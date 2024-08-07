@@ -27,6 +27,7 @@ func TestMsgWppOut(t *testing.T) {
 		"Footer.",
 		flows.CTAMessage{},
 		flows.ListMessage{},
+		flows.FlowMessage{},
 		[]utils.Attachment{
 			utils.Attachment("image/jpeg:https://example.com/test.jpg"),
 			utils.Attachment("audio/mp3:https://example.com/test.mp3"),
@@ -47,6 +48,7 @@ func TestMsgWppOut(t *testing.T) {
 		"footer": "Footer.",
 		"cta_message": {},
 		"list_message": {},
+		"flow_message": {},
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
 		"topic": "agent"
 	}`), marshaled, "JSON mismatch")
