@@ -34,9 +34,9 @@ type createWppMsgAction struct {
 	QuickReplies    []string          `json:"quick_replies,omitempty"`
 	InteractionType string            `json:"interaction_type,omitempty"`
 	ActionURL       string            `json:"action_url,omitempty"`
-	FlowID					string            `json:"flow_id,omitempty"`
-	FlowData				flows.FlowData  	`json:"flow_data,omitempty"`
-	FlowScreen			string            `json:"flow_screen,omitempty"`
+	FlowID          string            `json:"flow_id,omitempty"`
+	FlowData        flows.FlowData    `json:"flow_data,omitempty"`
+	FlowScreen      string            `json:"flow_screen,omitempty"`
 }
 
 type Header struct {

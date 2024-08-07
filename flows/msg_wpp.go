@@ -37,9 +37,9 @@ type CTAMessage struct {
 type FlowData map[string]string
 
 type FlowMessage struct {
-	FlowID    	string		`json:"flow_id,omitempty"`
-	FlowData		FlowData	`json:"flow_data,omitempty"`
-	FlowScreen	string    `json:"flow_screen,omitempty"`
+	FlowID     string   `json:"flow_id,omitempty"`
+	FlowData   FlowData `json:"flow_data,omitempty"`
+	FlowScreen string   `json:"flow_screen,omitempty"`
 }
 
 type ListItems struct {
