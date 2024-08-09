@@ -1,3 +1,7 @@
+0.13.0-goflow-0.144.3
+----------
+ * Change response_json type in NFMReply
+
 0.12.0-goflow-0.144.3
 ----------
  * Support for CTA message for whatsapp cloud channels
