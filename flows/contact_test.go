@@ -286,7 +286,7 @@ func TestContactSetPreferredChannel(t *testing.T) {
 	assert.Equal(t, urns.URN("twitter:joey?channel="+string(twitter1.UUID())), contact.URNs()[0].URN())
 
 	contact.UpdatePreferredChannel(twitter2)
-	assert.Equal(t, urns.URN("twitter:joey?channel="+string(twitter1.UUID())), contact.URNs()[0].URN())
+	assert.Equal(t, urns.URN("twitter:joey?channel="+string(twitter2.UUID())), contact.URNs()[0].URN())
 
 	// if they are already associated with the channel, then they become the preferred URN
 	contact.UpdatePreferredChannel(android)
