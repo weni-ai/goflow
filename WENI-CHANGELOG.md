@@ -1,3 +1,7 @@
+0.13.1-goflow-0.144.3
+----------
+ * Allow re-assign urn to another channel of the same type #67
+
 0.13.0-goflow-0.144.3
 ----------
  * Change response_json type in NFMReply
