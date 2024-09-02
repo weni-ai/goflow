@@ -50,10 +50,6 @@ func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flow
 		attachments = nil
 	}
 
-	if len(a.Input) == 0 {
-		a.Input = "@input.text"
-	}
-
 	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, a.Input, attachments, nil, logEvent)
 
 	contactURN := run.Contact().PreferredURN()
