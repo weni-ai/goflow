@@ -161,7 +161,8 @@
                         "flow_screen": "WELCOME_SCREEN",
                         "flow_data": {
                             "name": "John Doe"
-                        }
+                        },
+                        "flow_cta": "Button text"
                     }
                 }
             }

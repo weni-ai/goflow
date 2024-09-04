@@ -40,6 +40,7 @@ type FlowMessage struct {
 	FlowID     string   `json:"flow_id,omitempty"`
 	FlowData   FlowData `json:"flow_data,omitempty"`
 	FlowScreen string   `json:"flow_screen,omitempty"`
+	FlowCTA    string   `json:"flow_cta,omitempty"`
 }
 
 type ListItems struct {

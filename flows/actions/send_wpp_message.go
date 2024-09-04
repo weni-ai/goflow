@@ -118,9 +118,10 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		}
 
 		flowMessage = flows.FlowMessage{
-			FlowID:    evaluatedFlowID,
-			FlowData:  a.FlowData,
+			FlowID:     evaluatedFlowID,
+			FlowData:   evaluatedFlowData,
 			FlowScreen: evaluatedFlowScreen,
+			FlowCTA:    evaluatedButtonText,
 		}
 	}
 
