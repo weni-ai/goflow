@@ -1,3 +1,7 @@
+0.14.0-goflow-0.144.3
+----------
+ * Add entry field for call_brain
+
 0.13.1-goflow-0.144.3
 ----------
  * Allow re-assign urn to another channel of the same type #67
