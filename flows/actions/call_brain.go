@@ -18,13 +18,15 @@ const TypeCallBrain string = "call_brain"
 type CallBrainAction struct {
 	baseAction
 	onlineAction
+	Entry      string `json:"entry"`
 	ResultName string `json:"result_name,omitempty"`
 }
 
 // NewCallBrain creates a new call brain action
-func NewCallBrain(uuid flows.ActionUUID, resultName string) *CallBrainAction {
+func NewCallBrain(uuid flows.ActionUUID, entry string, resultName string) *CallBrainAction {
 	return &CallBrainAction{
 		baseAction: newBaseAction(TypeCallBrain, uuid),
+		Entry:      entry,
 		ResultName: resultName,
 	}
 }
@@ -48,7 +50,11 @@ func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flow
 		attachments = nil
 	}
 
-	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, "@input.text", attachments, nil, logEvent)
+	if len(a.Entry) == 0 {
+		a.Entry = "@input.text"
+	}
+
+	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, a.Entry, attachments, nil, logEvent)
 
 	contactURN := run.Contact().PreferredURN()
 	svc, err := run.Session().Engine().Services().Brain(run.Session())
