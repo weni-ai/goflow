@@ -166,7 +166,13 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("channel with uuid: %s, does not have an active catalog", channelRef.UUID), CategoryFailure, "", "", nil, logEvent)
 				return nil
 			}
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId)
+			orgContext := run.Session().Assets().OrgContext()
+			context := orgContext.GetHasVtexByChannelUUID()
+			var hasVtex bool
+			if context != nil {
+				hasVtex = context.OrgContext.HasVtex()
+			}
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtex)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {

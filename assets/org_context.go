@@ -10,16 +10,18 @@ type OrgContext interface {
 	Context() string
 	ChannelUUID() ChannelUUID
 	ProjectUUID() uuids.UUID
+	HasVtex() bool
 }
 
 type OrgContextReference struct {
 	Context     string     `json:"context"`
 	UUID        string     `json:"uuid"`
 	ProjectUUID uuids.UUID `json:"project_uuid"`
+	HasVtex     bool       `json:"has_vtex"`
 }
 
-func NewOrgContextReference(orgContext string, projectUUID uuids.UUID) *OrgContextReference {
-	return &OrgContextReference{Context: orgContext, ProjectUUID: projectUUID}
+func NewOrgContextReference(orgContext string, projectUUID uuids.UUID, hasVtex bool) *OrgContextReference {
+	return &OrgContextReference{Context: orgContext, ProjectUUID: projectUUID, HasVtex: hasVtex}
 }
 
 func (r *OrgContextReference) Type() string {

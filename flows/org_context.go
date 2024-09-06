@@ -42,6 +42,15 @@ func (c *OrgContextAssets) GetProjectUUIDByChannelUUID() *OrgContext {
 	return nil
 }
 
+func (c *OrgContextAssets) GetHasVtexByChannelUUID() *OrgContext {
+	for _, c := range c.byChannelUUID {
+		if c.OrgContext.HasVtex() {
+			return c
+		}
+	}
+	return nil
+}
+
 func (c *OrgContext) Asset() assets.OrgContext { return c.OrgContext }
 
 // Reference returns a reference to this context
@@ -49,7 +58,7 @@ func (c *OrgContext) Reference() *assets.OrgContextReference {
 	if c == nil {
 		return nil
 	}
-	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID())
+	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtex())
 }
 
 type OrgContextAssets struct {
