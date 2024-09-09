@@ -1,3 +1,7 @@
+0.14.1-goflow-0.144.3
+----------
+ * Fix contact context identation for editor gen #72
+
 0.14.0-goflow-0.144.3
 ----------
  * Add entry field for call_brain
