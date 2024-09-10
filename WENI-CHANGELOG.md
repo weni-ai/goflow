@@ -1,3 +1,11 @@
+0.14.2-goflow-0.144.3
+----------
+ * Fix: Allow vtex intelligent search to receive locale query param
+
+0.14.1-goflow-0.144.3
+----------
+ * Fix contact context identation for editor gen
+
 0.14.0-goflow-0.144.3
 ----------
  * Add entry field for call_brain
