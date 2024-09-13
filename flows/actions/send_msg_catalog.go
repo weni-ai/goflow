@@ -7,6 +7,7 @@ import (
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/events"
 )
@@ -166,13 +167,20 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("channel with uuid: %s, does not have an active catalog", channelRef.UUID), CategoryFailure, "", "", nil, logEvent)
 				return nil
 			}
+
 			orgContext := run.Session().Assets().OrgContext()
 			context := orgContext.GetHasVtexByChannelUUID()
 			var hasVtex bool
 			if context != nil {
 				hasVtex = context.OrgContext.HasVtex()
 			}
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtex)
+
+			language := "eng"
+			if run.Contact().Language() != envs.NilLanguage && run.Contact().Language() != "base" {
+				language = string(run.Contact().Language())
+			}
+
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtex, language)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {
