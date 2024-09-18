@@ -24,6 +24,7 @@ import (
 	"github.com/nyaruka/goflow/flows/resumes"
 	"github.com/nyaruka/goflow/flows/triggers"
 	"github.com/nyaruka/goflow/services/airtime/dtone"
+	"github.com/nyaruka/goflow/services/brain"
 	"github.com/nyaruka/goflow/services/classification/wit"
 	"github.com/nyaruka/goflow/services/email/smtp"
 	"github.com/nyaruka/goflow/services/webhooks"
@@ -129,8 +130,13 @@ func testActionType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 		// pick a suitable "holder" flow in our assets JSON
 		flowIndex := 0
 		flowUUID := assets.FlowUUID("bead76f5-dac4-4c9d-996c-c62b326e8c0a")
-		if tc.InFlowType == flows.FlowTypeVoice {
+		if typeName == "call_brain" {
 			flowIndex = 1
+			flowUUID = assets.FlowUUID("d8c4f0e9-3f3b-4b0b-9d5d-0b4f2e9d3b1b")
+		}
+
+		if tc.InFlowType == flows.FlowTypeVoice {
+			flowIndex = 2
 			flowUUID = assets.FlowUUID("7a84463d-d209-4d3e-a0ff-79f977cd7bd0")
 		}
 
@@ -232,6 +238,7 @@ func testActionType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 			WithAirtimeServiceFactory(func(flows.Session) (flows.AirtimeService, error) {
 				return dtone.NewService(http.DefaultClient, nil, "nyaruka", "123456789"), nil
 			}).
+			WithBrainServiceFactory(brain.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "http://127.0.0.1:49994")).
 			Build()
 
 		// create session
