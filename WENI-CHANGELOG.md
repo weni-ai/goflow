@@ -1,3 +1,7 @@
+0.14.3-goflow-0.144.3
+----------
+ * Fix: Brain only send attachments when entry is @input.text
+
 0.14.2-goflow-0.144.3
 ----------
  * Fix: Allow vtex intelligent search to receive locale query param
