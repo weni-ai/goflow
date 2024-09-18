@@ -75,6 +75,9 @@ func NewSendWppMsg(
 			QuickReplies:    quickReplies,
 			InteractionType: interactionType,
 			ActionURL:       actionURL,
+			FlowID:          flowID,
+			FlowData:        flowData,
+			FlowScreen:      flowScreen,
 		},
 		AllURNs: allURNs,
 	}
