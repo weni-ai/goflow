@@ -21,6 +21,22 @@
             ]
         },
         {
+            "uuid": "d8c4f0e9-3f3b-4b0b-9d5d-0b4f2e9d3b1b",
+            "name": "Action Without Exit Tester",
+            "spec_version": "13.2",
+            "language": "eng",
+            "type": "messaging",
+            "revision": 123,
+            "localization": {},
+            "nodes": [
+                {
+                    "uuid": "83b1f5df-49f9-45df-94c9-d86f7ea064e5",
+                    "actions": [],
+                    "exits": []
+                }
+            ]
+        },
+        {
             "uuid": "7a84463d-d209-4d3e-a0ff-79f977cd7bd0",
             "name": "Voice Action Tester",
             "spec_version": "13.2",

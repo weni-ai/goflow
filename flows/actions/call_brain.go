@@ -43,18 +43,22 @@ func (a *CallBrainAction) Execute(run flows.FlowRun, step flows.Step, logModifie
 
 // Execute runs this action
 func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flows.EventCallback) error {
-	attachmentsString, _ := run.EvaluateTemplate("@input.attachments")
-	trimmedString := strings.Trim(attachmentsString, "[]")
-	attachments := strings.Split(trimmedString, ", ")
-	if len(attachments) == 1 && strings.Trim(attachments[0], " ") == "" {
-		attachments = nil
+	var entry = a.Entry
+	if len(entry) == 0 {
+		entry = "@input.text"
 	}
 
-	if len(a.Entry) == 0 {
-		a.Entry = "@input.text"
+	var attachments []string = nil
+	if entry == "@input.text" {
+		attachmentsString, _ := run.EvaluateTemplate("@input.attachments")
+		trimmedString := strings.Trim(attachmentsString, "[]")
+		attachments = strings.Split(trimmedString, ", ")
+		if len(attachments) == 1 && strings.Trim(attachments[0], " ") == "" {
+			attachments = nil
+		}
 	}
 
-	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, a.Entry, attachments, nil, logEvent)
+	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, entry, attachments, nil, logEvent)
 
 	contactURN := run.Contact().PreferredURN()
 	svc, err := run.Session().Engine().Services().Brain(run.Session())
