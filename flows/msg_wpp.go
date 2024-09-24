@@ -34,7 +34,7 @@ type CTAMessage struct {
 	URL_         string `json:"url,omitempty"`
 }
 
-type FlowData map[string]string
+type FlowData map[string]interface{}
 
 type FlowMessage struct {
 	FlowID     string   `json:"flow_id,omitempty"`

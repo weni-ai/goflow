@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"encoding/json"
+
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
@@ -119,8 +121,16 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 
 		evaluatedFlowData := make(flows.FlowData)
 		for k, v := range a.FlowData {
-			evaluatedValue, _ := run.EvaluateTemplate(v)
-			evaluatedFlowData[k] = evaluatedValue
+			evaluatedValue, _ := run.EvaluateTemplate(v.(string))
+
+			// check if the evalutaed value is a valid JSON, and if so do not convert to string
+			var jsonValue json.RawMessage
+			err := json.Unmarshal([]byte(evaluatedValue), &jsonValue)
+			if err == nil {
+				evaluatedFlowData[k] = jsonValue
+			} else {
+				evaluatedFlowData[k] = evaluatedValue
+			}
 		}
 
 		flowMessage = flows.FlowMessage{
