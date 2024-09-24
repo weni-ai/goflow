@@ -169,10 +169,10 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			}
 
 			orgContext := run.Session().Assets().OrgContext()
-			context := orgContext.GetHasVtexByChannelUUID()
-			var hasVtex bool
+			context := orgContext.GetHasVtexAdsByChannelUUID()
+			var hasVtexAds bool
 			if context != nil {
-				hasVtex = context.OrgContext.HasVtex()
+				hasVtexAds = context.OrgContext.HasVtexAds()
 			}
 
 			language := "eng"
@@ -180,7 +180,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				language = string(run.Contact().Language())
 			}
 
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtex, language)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, language)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				for _, trace := range c.Traces {

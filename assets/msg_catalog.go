@@ -28,11 +28,11 @@ type MsgCatalogParam struct {
 	ApiType       string     `json:"api_type,omitempty"`
 	PostalCode    string     `json:"postal_code,omitempty"`
 	SellerId      string     `json:"seller_id,omitempty"`
-	HasVtex       bool       `json:"has_vtex,omitempty"`
+	HasVtexAds    bool       `json:"vtex_ads,omitempty"`
 	Language      string     `json:"language"`
 }
 
-func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtex bool, language string) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtexAds bool, language string) MsgCatalogParam {
 	p := MsgCatalogParam{
 		ProductSearch: productSearch,
 		ChannelUUID:   channelUUID,
@@ -41,7 +41,7 @@ func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType
 		ApiType:       apiType,
 		PostalCode:    postalCode,
 		SellerId:      sellerId,
-		HasVtex:       hasVtex,
+		HasVtexAds:    hasVtexAds,
 		Language:      language,
 	}
 	return p

@@ -9,15 +9,15 @@ type OrgContext struct {
 	Context_     string             `json:"context" validate:"required,context"`
 	ChannelUUID_ assets.ChannelUUID `json:"channel_uuid"`
 	ProjectUUID_ uuids.UUID         `json:"project_uuid"`
-	HasVtex_     bool               `json:"has_vtex"`
+	HasVtexAds_  bool               `json:"vtex_ads"`
 }
 
-func NewOrgContext(context string, channelUUID assets.ChannelUUID, projectUUID uuids.UUID, hasVtex bool) assets.OrgContext {
+func NewOrgContext(context string, channelUUID assets.ChannelUUID, projectUUID uuids.UUID, hasVtexAds bool) assets.OrgContext {
 	return &OrgContext{
 		Context_:     context,
 		ChannelUUID_: channelUUID,
 		ProjectUUID_: projectUUID,
-		HasVtex_:     hasVtex,
+		HasVtexAds_:  hasVtexAds,
 	}
 }
 
@@ -27,4 +27,4 @@ func (c *OrgContext) ChannelUUID() assets.ChannelUUID { return c.ChannelUUID_ }
 
 func (c *OrgContext) ProjectUUID() uuids.UUID { return c.ProjectUUID_ }
 
-func (c *OrgContext) HasVtex() bool { return c.HasVtex_ }
+func (c *OrgContext) HasVtexAds() bool { return c.HasVtexAds_ }
