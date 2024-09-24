@@ -128,13 +128,15 @@
             "uuid": "c67969d6-f400-4b5e-bb7c-e45115cd3aa4",
             "header_type": "text",
             "footer": "footer",
-            "interaction_type": "flow",
+            "interaction_type": "flow_msg",
             "text": "Hi there!",
             "button_text": "Button text",
             "flow_id": "19849459827734",
             "flow_screen": "WELCOME_SCREEN",
             "flow_data": {
-                "name": "John Doe"
+                "name": "John Doe",
+                "options": "[\"option 1\",\"option 2\"]",
+                "extra": "{\"foo\":\"bar\"}"
             }
         },
         "localization": {},
@@ -153,14 +155,21 @@
                     "text": "Hi there!",
                     "footer": "footer",
                     "header_type": "text",
-                    "interaction_type": "flow",
+                    "interaction_type": "flow_msg",
                     "cta_message": {},
                     "list_message": {},
                     "flow_message": {
                         "flow_id": "19849459827734",
                         "flow_screen": "WELCOME_SCREEN",
                         "flow_data": {
-                            "name": "John Doe"
+                            "name": "John Doe",
+                            "options": [
+                                "option 1",
+                                "option 2"
+                            ],
+                            "extra": {
+                                "foo": "bar"
+                            }
                         },
                         "flow_cta": "Button text"
                     }
