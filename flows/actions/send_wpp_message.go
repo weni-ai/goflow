@@ -138,6 +138,7 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			FlowData:   evaluatedFlowData,
 			FlowScreen: evaluatedFlowScreen,
 			FlowCTA:    evaluatedButtonText,
+			FlowMode:   a.FlowMode,
 		}
 	}
 
