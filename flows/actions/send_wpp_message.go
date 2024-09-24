@@ -37,6 +37,7 @@ type createWppMsgAction struct {
 	FlowID          string            `json:"flow_id,omitempty"`
 	FlowData        flows.FlowData    `json:"flow_data,omitempty"`
 	FlowScreen      string            `json:"flow_screen,omitempty"`
+	FlowMode        string            `json:"flow_mode,omitempty"`
 }
 
 type Header struct {
@@ -61,6 +62,7 @@ func NewSendWppMsg(
 	flowID string,
 	flowData flows.FlowData,
 	flowScreen string,
+	flowMode string,
 	allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
@@ -78,6 +80,7 @@ func NewSendWppMsg(
 			FlowID:          flowID,
 			FlowData:        flowData,
 			FlowScreen:      flowScreen,
+			FlowMode:        flowMode,
 		},
 		AllURNs: allURNs,
 	}
