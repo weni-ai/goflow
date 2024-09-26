@@ -1,3 +1,7 @@
+0.15.0
+----------
+ * Adjustments for sponsored product support
+
 0.14.3-goflow-0.144.3
 ----------
  * Fix: Brain only send attachments when entry is @input.text
