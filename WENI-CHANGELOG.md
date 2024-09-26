@@ -1,3 +1,7 @@
+1.1.0
+----------
+ * Add support to whatsapp flows
+
 1.0.0
 ----------
  * Adjustments for sponsored product support
