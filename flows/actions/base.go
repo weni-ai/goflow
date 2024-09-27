@@ -249,16 +249,34 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	}
 
 	for i, item := range actionListItems {
-		evaluatedTitle, err := run.EvaluateTemplate(item.Title)
-		if err != nil {
-			logEvent(events.NewError(err))
-		}
-		actionListItems[i].Title = evaluatedTitle
+		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
 
-		evaluatedDescription, err := run.EvaluateTemplate(item.Description)
+		if len(translatedListMessage[0]) == 0 {
+			continue
+		}
+
+		evaluatedTitle, err := run.EvaluateTemplate(translatedListMessage[0])
 		if err != nil {
 			logEvent(events.NewError(err))
+			continue
 		}
+
+		var evaluatedDescription string
+		if len(translatedListMessage[1]) > 0 {
+			evaluatedDescription, err = run.EvaluateTemplate(translatedListMessage[1])
+			if err != nil {
+				logEvent(events.NewError(err))
+			}
+		}
+
+		if len(evaluatedTitle) == 0 && len(evaluatedDescription) == 0 {
+			logEvent(events.NewErrorf("option title and description evaluated to empty strings, skipping"))
+			continue
+		} else if len(evaluatedTitle) == 0 {
+			logEvent(events.NewErrorf("option title text evaluated to empty string"))
+		}
+
+		actionListItems[i].Title = evaluatedTitle
 		actionListItems[i].Description = evaluatedDescription
 	}
 
