@@ -63,7 +63,8 @@
                     "quick_replies": [
                         "Si",
                         "No"
-                    ]
+                    ],
+                    "order_details_message": {}
                 }
             }
         ],
@@ -109,7 +110,8 @@
                         "display_text": "Button text"
                     },
                     "list_message": {},
-                    "flow_message": {}
+                    "flow_message": {},
+                    "order_details_message": {}
                 }
             }
         ],
@@ -172,7 +174,8 @@
                             }
                         },
                         "flow_cta": "Button text"
-                    }
+                    },
+                    "order_details_message": {}
                 }
             }
         ],

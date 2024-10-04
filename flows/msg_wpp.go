@@ -77,12 +77,12 @@ type OrderPaymentSettings struct {
 }
 
 type OrderDetails struct {
-	ReferenceID     string                      `json:"re ference_id"`
-	Items           string                      `json:"item_list"`
-	Tax             *OrderAmountWithDescription `json:"tax"`
-	Shipping        *OrderAmountWithDescription `json:"shipping"`
-	Discount        *OrderDiscount              `json:"discount"`
-	PaymentSettings *OrderPaymentSettings       `json:"payment_settings"`
+	ReferenceID     string                      `json:"reference_id,omitempty"`
+	Items           string                      `json:"item_list,omitempty"`
+	Tax             *OrderAmountWithDescription `json:"tax,omitempty"`
+	Shipping        *OrderAmountWithDescription `json:"shipping,omitempty"`
+	Discount        *OrderDiscount              `json:"discount,omitempty"`
+	PaymentSettings *OrderPaymentSettings       `json:"payment_settings,omitempty"`
 }
 
 // Message for order details, with attribute types defined such as int values
@@ -102,10 +102,10 @@ type MessageOrder struct {
 }
 
 type MessageOrderItem struct {
-	RetailerID string `json:"retailer_id"`
-	Name       string `json:"name"`
-	Amount     int    `json:"amount"`
-	Quantity   int    `json:"quantity"`
+	RetailerID string `json:"retailer_id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Amount     int    `json:"amount,omitempty"`
+	Quantity   int    `json:"quantity,omitempty"`
 	SaleAmount int    `json:"sale_amount,omitempty"`
 }
 type MessageOrderAmountWithDescription struct {

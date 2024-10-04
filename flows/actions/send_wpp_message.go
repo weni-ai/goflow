@@ -27,21 +27,21 @@ type SendWppMsgAction struct {
 }
 
 type createWppMsgAction struct {
-	HeaderType      string             `json:"header_type,omitempty"`
-	HeaderText      string             `json:"header_text,omitempty"`
-	Attachment      string             `json:"attachment,omitempty"`
-	Text            string             `json:"text,omitempty"`
-	Footer          string             `json:"footer,omitempty"`
-	ListItems       []flows.ListItems  `json:"list_items,omitempty"`
-	ButtonText      string             `json:"button_text,omitempty"`
-	QuickReplies    []string           `json:"quick_replies,omitempty"`
-	InteractionType string             `json:"interaction_type,omitempty"`
-	ActionURL       string             `json:"action_url,omitempty"`
-	FlowID          string             `json:"flow_id,omitempty"`
-	FlowData        flows.FlowData     `json:"flow_data,omitempty"`
-	FlowScreen      string             `json:"flow_screen,omitempty"`
-	FlowMode        string             `json:"flow_mode,omitempty"`
-	OrderDetails    flows.OrderDetails `json:"order_details,omitempty"`
+	HeaderType      string              `json:"header_type,omitempty"`
+	HeaderText      string              `json:"header_text,omitempty"`
+	Attachment      string              `json:"attachment,omitempty"`
+	Text            string              `json:"text,omitempty"`
+	Footer          string              `json:"footer,omitempty"`
+	ListItems       []flows.ListItems   `json:"list_items,omitempty"`
+	ButtonText      string              `json:"button_text,omitempty"`
+	QuickReplies    []string            `json:"quick_replies,omitempty"`
+	InteractionType string              `json:"interaction_type,omitempty"`
+	ActionURL       string              `json:"action_url,omitempty"`
+	FlowID          string              `json:"flow_id,omitempty"`
+	FlowData        flows.FlowData      `json:"flow_data,omitempty"`
+	FlowScreen      string              `json:"flow_screen,omitempty"`
+	FlowMode        string              `json:"flow_mode,omitempty"`
+	OrderDetails    *flows.OrderDetails `json:"order_details,omitempty"`
 }
 
 type Header struct {
@@ -67,7 +67,7 @@ func NewSendWppMsg(
 	flowData flows.FlowData,
 	flowScreen string,
 	flowMode string,
-	orderDetails flows.OrderDetails,
+	orderDetails *flows.OrderDetails,
 	allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
