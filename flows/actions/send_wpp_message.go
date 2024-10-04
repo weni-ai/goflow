@@ -151,12 +151,49 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		evaluatedReferenceID, _ := run.EvaluateTemplate(a.OrderDetails.ReferenceID)
 		evaluatedOrderItems, _ := run.EvaluateTemplate(a.OrderDetails.Items)
 
-		orderItems := []flows.MessageOrderItem{}
+		if evaluatedOrderItems == "" {
+			logEvent(events.NewErrorf("order items evaluated to empty string"))
+			return nil
+		}
+
 		tempOrderItems := []map[string]interface{}{}
 		err := json.Unmarshal([]byte(evaluatedOrderItems), &tempOrderItems)
 		if err != nil {
 			logEvent(events.NewErrorf("error unmarshalling order items: %v", err))
 			return nil
+		}
+
+		orderItems := []flows.MessageOrderItem{}
+		for _, item := range tempOrderItems {
+			convertedQuantity, err := strconv.ParseFloat(item["quantity"].(string), 64)
+			if err != nil {
+				logEvent(events.NewErrorf("error converting order item quantity %s to int: %v", item["quantity"], err))
+				return nil
+			}
+
+			convertedAmount, err := strconv.ParseFloat(item["amount"].(string), 64)
+			if err != nil {
+				logEvent(events.NewErrorf("error converting order item amount %s to int: %v", item["amount"], err))
+				return nil
+			}
+
+			orderItem := flows.MessageOrderItem{
+				Name:     item["name"].(string),
+				Quantity: int(convertedQuantity),
+				Amount:   int(convertedAmount),
+			}
+
+			if item["sale_amount"] == nil {
+				convertedSaleAmount, err := strconv.ParseFloat(item["sale_amount"].(string), 64)
+				if err != nil {
+					logEvent(events.NewErrorf("error converting order item sale amount %s to int: %v", item["sale_amount"], err))
+					return nil
+				}
+
+				orderItem.SaleAmount = int(convertedSaleAmount)
+			}
+
+			orderItems = append(orderItems, orderItem)
 		}
 
 		evaluatedOrderTax, _ := run.EvaluateTemplate(a.OrderDetails.Tax.Value)
