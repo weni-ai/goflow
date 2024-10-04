@@ -183,9 +183,11 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, language)
 			c, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
-				for _, trace := range c.Traces {
-					call := &flows.WebhookCall{Trace: trace}
-					logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
+				if c != nil {
+					for _, trace := range c.Traces {
+						call := &flows.WebhookCall{Trace: trace}
+						logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
+					}
 				}
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 				return nil
