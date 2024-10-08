@@ -181,10 +181,10 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			}
 
 			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, language)
-			c, err := a.call(run, step, params, mc, logEvent)
+			catalogCall, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
-				if c != nil {
-					for _, trace := range c.Traces {
+				if catalogCall != nil {
+					for _, trace := range catalogCall.Traces {
 						call := &flows.WebhookCall{Trace: trace}
 						if trace != nil {
 							logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
@@ -194,12 +194,12 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
 				return nil
 			}
-			for _, trace := range c.Traces {
+			for _, trace := range catalogCall.Traces {
 				call := &flows.WebhookCall{Trace: trace}
 				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
 			}
-			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
-			ProductEntries = c.ProductRetailerIDS
+			a.saveResult(run, step, a.ResultName, string(catalogCall.ResponseJSON), CategorySuccess, "", "", catalogCall.ResponseJSON, logEvent)
+			ProductEntries = catalogCall.ProductRetailerIDS
 		} else {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
 		}
