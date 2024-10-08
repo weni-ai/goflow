@@ -186,7 +186,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				if c != nil {
 					for _, trace := range c.Traces {
 						call := &flows.WebhookCall{Trace: trace}
-						logEvent(events.NewWebhookCalled(call, callStatus(call, err, true), ""))
+						logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
 					}
 				}
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
