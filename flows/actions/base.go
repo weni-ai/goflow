@@ -247,6 +247,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		}
 		evaluatedReplyMessage = append(evaluatedReplyMessage, evaluatedQuickReply)
 	}
+	var evaluatedListItems []flows.ListItems
 
 	for i, item := range actionListItems {
 		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
@@ -276,11 +277,10 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 			logEvent(events.NewErrorf("option title text evaluated to empty string"))
 		}
 
-		actionListItems[i].Title = evaluatedTitle
-		actionListItems[i].Description = evaluatedDescription
+		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription})
 	}
 
-	return evaluatedHeaderText, evaluatedFooter, evaluatedText, actionListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
+	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
 }
 
 // helper to save a run result and log it as an event
