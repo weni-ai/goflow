@@ -249,7 +249,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	}
 	var evaluatedListItems []flows.ListItems
 
-	for _, item := range actionListItems {
+	for i, item := range actionListItems {
 		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
 
 		if len(translatedListMessage[0]) == 0 {
@@ -277,7 +277,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 			logEvent(events.NewErrorf("option title text evaluated to empty string"))
 		}
 
-		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription})
+		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: actionListItems[i].UUID})
 	}
 
 	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
