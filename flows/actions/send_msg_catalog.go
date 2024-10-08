@@ -186,7 +186,9 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				if c != nil {
 					for _, trace := range c.Traces {
 						call := &flows.WebhookCall{Trace: trace}
-						logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
+						if trace != nil {
+							logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
+						}
 					}
 				}
 				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
@@ -194,7 +196,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			}
 			for _, trace := range c.Traces {
 				call := &flows.WebhookCall{Trace: trace}
-				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, true), ""))
+				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
 			}
 			a.saveResult(run, step, a.ResultName, string(c.ResponseJSON), CategorySuccess, "", "", c.ResponseJSON, logEvent)
 			ProductEntries = c.ProductRetailerIDS
