@@ -252,7 +252,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	for i, item := range actionListItems {
 		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
 
-		if len(translatedListMessage[0]) == 0 {
+		if len(translatedListMessage) == 0 {
 			continue
 		}
 
@@ -263,7 +263,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		}
 
 		var evaluatedDescription string
-		if len(translatedListMessage[1]) > 0 {
+		if len(translatedListMessage) > 1 {
 			evaluatedDescription, err = run.EvaluateTemplate(translatedListMessage[1])
 			if err != nil {
 				logEvent(events.NewError(err))
