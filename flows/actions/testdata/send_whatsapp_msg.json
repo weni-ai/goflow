@@ -186,5 +186,121 @@
             "waiting_exits": [],
             "parent_refs": []
         }
+    },
+    {
+        "description": "WhatsApp Order Details message",
+        "action": {
+            "type": "send_whatsapp_msg",
+            "uuid": "c67969d6-f400-4b5e-bb7c-e45115cd3aa4",
+            "header_type": "media",
+            "attachment": "image/jpeg:https://foo.bar/image.jpg",
+            "footer": "footer",
+            "interaction_type": "order_details",
+            "text": "Hi there!",
+            "button_text": "Button text",
+            "order_details": {
+                "reference_id": "123456",
+                "item_list": "[{\"retailer_id\":\"123\",\"name\":\"item 1\",\"quantity\":1,\"amount\":{\"value\":2000,\"offset\":100},\"sale_amount\":{\"value\":1000,\"offset\":100}}]",
+                "tax": {
+                    "value": "2,99",
+                    "description": "tax"
+                },
+                "shipping": {
+                    "value": "9.99",
+                    "description": "shipping"
+                },
+                "discount": {
+                    "value": "5.99",
+                    "description": "discount"
+                },
+                "payment_settings": {
+                    "type": "digital-goods",
+                    "payment_link": "https://www.foo.bar",
+                    "pix_config": {
+                        "key": "key",
+                        "key_type": "key type",
+                        "merchant_name": "merchant name",
+                        "code": "code"
+                    }
+                }
+            }
+        },
+        "localization": {},
+        "events": [
+            {
+                "type": "msg_wpp_created",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "msg": {
+                    "uuid": "9688d21d-95aa-4bed-afc7-f31b35731a3d",
+                    "urn": "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d&id=123",
+                    "channel": {
+                        "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+                        "name": "My Android Phone"
+                    },
+                    "text": "Hi there!",
+                    "footer": "footer",
+                    "header_type": "media",
+                    "attachments": [
+                        "image/jpeg:https://foo.bar/image.jpg"
+                    ],
+                    "interaction_type": "order_details",
+                    "cta_message": {},
+                    "list_message": {},
+                    "flow_message": {},
+                    "order_details_message": {
+                        "order": {
+                            "discount": {
+                                "description": "discount",
+                                "value": 599
+                            },
+                            "items": [
+                                {
+                                    "amount": {
+                                        "offset": 100,
+                                        "value": 2000
+                                    },
+                                    "name": "item 1",
+                                    "quantity": 1,
+                                    "retailer_id": "123",
+                                    "sale_amount": {
+                                        "offset": 100,
+                                        "value": 1000
+                                    }
+                                }
+                            ],
+                            "shipping": {
+                                "description": "shipping",
+                                "value": 999
+                            },
+                            "subtotal": 1000,
+                            "tax": {
+                                "description": "tax",
+                                "value": 299
+                            }
+                        },
+                        "payment_settings": {
+                            "payment_link": "https://www.foo.bar",
+                            "pix_config": {
+                                "code": "code",
+                                "key": "key",
+                                "key_type": "key type",
+                                "merchant_name": "merchant name"
+                            },
+                            "type": "digital-goods"
+                        },
+                        "reference_id": "123456",
+                        "total_amount": 1699
+                    }
+                }
+            }
+        ],
+        "inspection": {
+            "dependencies": [],
+            "issues": [],
+            "results": [],
+            "waiting_exits": [],
+            "parent_refs": []
+        }
     }
 ]

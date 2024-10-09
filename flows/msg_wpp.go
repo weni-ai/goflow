@@ -102,12 +102,13 @@ type MessageOrder struct {
 }
 
 type MessageOrderItem struct {
-	RetailerID string `json:"retailer_id,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Amount     int    `json:"amount,omitempty"`
-	Quantity   int    `json:"quantity,omitempty"`
-	SaleAmount int    `json:"sale_amount,omitempty"`
+	RetailerID string                        `json:"retailer_id,omitempty"`
+	Name       string                        `json:"name,omitempty"`
+	Quantity   int                           `json:"quantity,omitempty"`
+	Amount     MessageOrderAmountWithOffset  `json:"amount,omitempty"`
+	SaleAmount *MessageOrderAmountWithOffset `json:"sale_amount,omitempty"`
 }
+
 type MessageOrderAmountWithDescription struct {
 	Value       int    `json:"value,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -117,6 +118,11 @@ type MessageOrderDiscount struct {
 	Value       int    `json:"value,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProgramName string `json:"program_name,omitempty"`
+}
+
+type MessageOrderAmountWithOffset struct {
+	Value  int `json:"value"`
+	Offset int `json:"offset"`
 }
 
 func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {

@@ -3,6 +3,7 @@ package actions
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
@@ -163,34 +164,81 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			return nil
 		}
 
+		if len(tempOrderItems) == 0 {
+			logEvent(events.NewErrorf("order items evaluated to empty array"))
+			return nil
+		}
+
 		orderItems := []flows.MessageOrderItem{}
 		for _, item := range tempOrderItems {
-			convertedQuantity, err := strconv.ParseFloat(item["quantity"].(string), 64)
-			if err != nil {
-				logEvent(events.NewErrorf("error converting order item quantity %s to int: %v", item["quantity"], err))
+			if item["quantity"] == nil {
+				logEvent(events.NewErrorf("order item quantity is nil"))
+				return nil
+			}
+			convertedQuantity, isFloat := item["quantity"].(float64)
+			if !isFloat {
+				logEvent(events.NewErrorf("error reading order item quantity: %v", item["quantity"]))
 				return nil
 			}
 
-			convertedAmount, err := strconv.ParseFloat(item["amount"].(string), 64)
-			if err != nil {
-				logEvent(events.NewErrorf("error converting order item amount %s to int: %v", item["amount"], err))
+			if item["amount"] == nil {
+				logEvent(events.NewErrorf("order item amount is required"))
+				return nil
+			}
+			var convertedAmount float64
+			var convertedOffset float64
+			itemAmount, ok := item["amount"].(map[string]interface{})
+			if !ok {
+				logEvent(events.NewErrorf("error reading order item amount: %v", item["amount"]))
+				return nil
+			}
+			convertedAmount, isFloat = itemAmount["value"].(float64)
+			if !isFloat {
+				logEvent(events.NewErrorf("error reading order item amount: %v", itemAmount["value"]))
+				return nil
+			}
+
+			convertedOffset, isFloat = itemAmount["offset"].(float64)
+			if !isFloat {
+				logEvent(events.NewErrorf("error reading order item amount offset: %v", itemAmount["offset"]))
 				return nil
 			}
 
 			orderItem := flows.MessageOrderItem{
-				Name:     item["name"].(string),
-				Quantity: int(convertedQuantity),
-				Amount:   int(convertedAmount),
+				RetailerID: item["retailer_id"].(string),
+				Name:       item["name"].(string),
+				Quantity:   int(convertedQuantity),
+				Amount: flows.MessageOrderAmountWithOffset{
+					Value:  int(convertedAmount),
+					Offset: int(convertedOffset),
+				},
 			}
 
-			if item["sale_amount"] == nil {
-				convertedSaleAmount, err := strconv.ParseFloat(item["sale_amount"].(string), 64)
-				if err != nil {
-					logEvent(events.NewErrorf("error converting order item sale amount %s to int: %v", item["sale_amount"], err))
+			if item["sale_amount"] != nil {
+				itemSaleAmount, ok := item["sale_amount"].(map[string]interface{})
+				if !ok {
+					logEvent(events.NewErrorf("error reading order item sale amount: %v", item["sale_amount"]))
+					return nil
+				}
+				convertedSaleAmount, isFloat := itemSaleAmount["value"].(float64)
+				if !isFloat {
+					logEvent(events.NewErrorf("error converting order item sale amount %s: %v", itemSaleAmount["value"], err))
 					return nil
 				}
 
-				orderItem.SaleAmount = int(convertedSaleAmount)
+				convertedSaleAmountOffset, isFloat := itemSaleAmount["offset"].(float64)
+				if !isFloat {
+					logEvent(events.NewErrorf("error converting order item sale amount offset %s: %v", itemSaleAmount["offset"], err))
+					return nil
+				}
+
+				if convertedSaleAmount > 0 {
+					orderItem.SaleAmount = &flows.MessageOrderAmountWithOffset{
+						Value:  int(convertedSaleAmount),
+						Offset: int(convertedSaleAmountOffset),
+					}
+				}
+
 			}
 
 			orderItems = append(orderItems, orderItem)
@@ -214,30 +262,43 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		evaluatedOrderPixMerchantName, _ := run.EvaluateTemplate(a.OrderDetails.PaymentSettings.PixConfig.MerchantName)
 		evaluatedOrderPixCode, _ := run.EvaluateTemplate(a.OrderDetails.PaymentSettings.PixConfig.Code)
 
-		convertedOrderTax, err := strconv.ParseFloat(evaluatedOrderTax, 64)
-		if err != nil {
-			logEvent(events.NewErrorf("error converting order tax %s to int: %v", evaluatedOrderTax, err))
-			return nil
+		var convertedOrderTax float64
+		var convertedOrderShipping float64
+		var convertedOrderDiscount float64
+		err = nil
+		if evaluatedOrderTax != "" {
+			taxInRealFloatRepresentation := strings.Replace(evaluatedOrderTax, ",", ".", -1)
+			convertedOrderTax, err = strconv.ParseFloat(taxInRealFloatRepresentation, 64)
+			if err != nil {
+				logEvent(events.NewErrorf("error converting order tax %s to int: %v", evaluatedOrderTax, err))
+				return nil
+			}
 		}
 
-		convertedOrderShipping, err := strconv.ParseFloat(evaluatedOrderShipping, 64)
-		if err != nil {
-			logEvent(events.NewErrorf("error converting order shipping %s to int: %v", evaluatedOrderShipping, err))
-			return nil
+		if evaluatedOrderShipping != "" {
+			shippingInRealFloatRepresentation := strings.Replace(evaluatedOrderShipping, ",", ".", -1)
+			convertedOrderShipping, err = strconv.ParseFloat(shippingInRealFloatRepresentation, 64)
+			if err != nil {
+				logEvent(events.NewErrorf("error converting order shipping %s to int: %v", evaluatedOrderShipping, err))
+				return nil
+			}
 		}
 
-		convertedOrderDiscount, err := strconv.ParseFloat(evaluatedOrderDiscount, 64)
-		if err != nil {
-			logEvent(events.NewErrorf("error converting order discount %s to int: %v", evaluatedOrderDiscount, err))
-			return nil
+		if evaluatedOrderDiscount != "" {
+			discountInRealFloatRepresentation := strings.Replace(evaluatedOrderDiscount, ",", ".", -1)
+			convertedOrderDiscount, err = strconv.ParseFloat(discountInRealFloatRepresentation, 64)
+			if err != nil {
+				logEvent(events.NewErrorf("error converting order discount %s to int: %v", evaluatedOrderDiscount, err))
+				return nil
+			}
 		}
 
 		subTotalValue := 0
 		for _, item := range orderItems {
-			if item.SaleAmount != 0 {
-				subTotalValue += item.SaleAmount * item.Quantity
+			if item.SaleAmount != nil && item.SaleAmount.Value > 0 {
+				subTotalValue += item.SaleAmount.Value * item.Quantity
 			} else {
-				subTotalValue += item.Amount * item.Quantity
+				subTotalValue += item.Amount.Value * item.Quantity
 			}
 		}
 
