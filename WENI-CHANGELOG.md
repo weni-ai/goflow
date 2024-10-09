@@ -1,3 +1,7 @@
+1.2.1
+----------
+ * Fix validation for dynamic lists
+
 1.2.0
 ----------
  * Refactor evaluateMessageWpp to message list
