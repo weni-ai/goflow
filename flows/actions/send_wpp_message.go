@@ -145,6 +145,7 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 					trace, err := httpx.DoTrace(client, req, nil, nil, -1)
 					if err != nil {
 						run.LogError(step, err)
+						continue
 					}
 					base64Data := base64.StdEncoding.EncodeToString(trace.ResponseBody)
 					evaluatedFlowData[k] = base64Data
