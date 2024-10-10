@@ -1,8 +1,11 @@
 package actions
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"net/http"
 
+	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
@@ -26,20 +29,21 @@ type SendWppMsgAction struct {
 }
 
 type createWppMsgAction struct {
-	HeaderType      string            `json:"header_type,omitempty"`
-	HeaderText      string            `json:"header_text,omitempty"`
-	Attachment      string            `json:"attachment,omitempty"`
-	Text            string            `json:"text,omitempty"`
-	Footer          string            `json:"footer,omitempty"`
-	ListItems       []flows.ListItems `json:"list_items,omitempty"`
-	ButtonText      string            `json:"button_text,omitempty"`
-	QuickReplies    []string          `json:"quick_replies,omitempty"`
-	InteractionType string            `json:"interaction_type,omitempty"`
-	ActionURL       string            `json:"action_url,omitempty"`
-	FlowID          string            `json:"flow_id,omitempty"`
-	FlowData        flows.FlowData    `json:"flow_data,omitempty"`
-	FlowScreen      string            `json:"flow_screen,omitempty"`
-	FlowMode        string            `json:"flow_mode,omitempty"`
+	HeaderType                string            `json:"header_type,omitempty"`
+	HeaderText                string            `json:"header_text,omitempty"`
+	Attachment                string            `json:"attachment,omitempty"`
+	Text                      string            `json:"text,omitempty"`
+	Footer                    string            `json:"footer,omitempty"`
+	ListItems                 []flows.ListItems `json:"list_items,omitempty"`
+	ButtonText                string            `json:"button_text,omitempty"`
+	QuickReplies              []string          `json:"quick_replies,omitempty"`
+	InteractionType           string            `json:"interaction_type,omitempty"`
+	ActionURL                 string            `json:"action_url,omitempty"`
+	FlowID                    string            `json:"flow_id,omitempty"`
+	FlowData                  flows.FlowData    `json:"flow_data,omitempty"`
+	FlowScreen                string            `json:"flow_screen,omitempty"`
+	FlowMode                  string            `json:"flow_mode,omitempty"`
+	FlowDataAttachmentNameMap map[string]string `json:"flow_data_attachment_name_map,omitempty"`
 }
 
 type Header struct {
@@ -129,7 +133,24 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			if err == nil {
 				evaluatedFlowData[k] = jsonValue
 			} else {
-				evaluatedFlowData[k] = evaluatedValue
+				// check if the evaluated value is an attachment
+				if _, ok := a.FlowDataAttachmentNameMap[k]; ok {
+					// if the attachment is found, fetch it's content and save the base64 encoded content
+					client := &http.Client{}
+					req, err := http.NewRequest("GET", evaluatedValue, nil)
+					if err != nil {
+						run.LogError(step, err)
+						continue
+					}
+					trace, err := httpx.DoTrace(client, req, nil, nil, -1)
+					if err != nil {
+						run.LogError(step, err)
+					}
+					base64Data := base64.StdEncoding.EncodeToString(trace.ResponseBody)
+					evaluatedFlowData[k] = base64Data
+				} else {
+					evaluatedFlowData[k] = evaluatedValue
+				}
 			}
 		}
 
