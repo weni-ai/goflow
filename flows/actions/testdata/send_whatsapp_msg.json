@@ -123,6 +123,14 @@
     },
     {
         "description": "WhatsApp Flows message",
+        "http_mocks": {
+            "https://example.com/test.jpg": [
+                {
+                    "status": 200,
+                    "body": "fake image data"
+                }
+            ]
+        },
         "action": {
             "type": "send_whatsapp_msg",
             "uuid": "c67969d6-f400-4b5e-bb7c-e45115cd3aa4",
@@ -136,7 +144,11 @@
             "flow_data": {
                 "name": "John Doe",
                 "options": "[\"option 1\",\"option 2\"]",
-                "extra": "{\"foo\":\"bar\"}"
+                "extra": "{\"foo\":\"bar\"}",
+                "image": "https://example.com/test.jpg"
+            },
+            "flow_data_attachment_name_map": {
+                "image": "test.jpg"
             }
         },
         "localization": {},
@@ -169,7 +181,8 @@
                             ],
                             "extra": {
                                 "foo": "bar"
-                            }
+                            },
+                            "image": "ZmFrZSBpbWFnZSBkYXRh"
                         },
                         "flow_cta": "Button text"
                     }
