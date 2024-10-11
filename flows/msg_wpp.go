@@ -10,18 +10,19 @@ import (
 
 type MsgWppOut struct {
 	BaseMsg
-	InteractionType_ string             `json:"interaction_type,omitempty"`
-	HeaderType_      string             `json:"header_type,omitempty"`
-	HeaderText_      string             `json:"header_text,omitempty"`
-	Text_            string             `json:"text,omitempty"`
-	Footer_          string             `json:"footer,omitempty"`
-	Topic_           MsgTopic           `json:"topic,omitempty"`
-	ListMessage_     ListMessage        `json:"list_message,omitempty"`
-	Attachments_     []utils.Attachment `json:"attachments,omitempty"`
-	QuickReplies_    []string           `json:"quick_replies,omitempty"`
-	TextLanguage     envs.Language      `json:"text_language,omitempty"`
-	CTAMessage_      CTAMessage         `json:"cta_message,omitempty"`
-	FlowMessage_     FlowMessage        `json:"flow_message,omitempty"`
+	InteractionType_     string              `json:"interaction_type,omitempty"`
+	HeaderType_          string              `json:"header_type,omitempty"`
+	HeaderText_          string              `json:"header_text,omitempty"`
+	Text_                string              `json:"text,omitempty"`
+	Footer_              string              `json:"footer,omitempty"`
+	Topic_               MsgTopic            `json:"topic,omitempty"`
+	ListMessage_         ListMessage         `json:"list_message,omitempty"`
+	Attachments_         []utils.Attachment  `json:"attachments,omitempty"`
+	QuickReplies_        []string            `json:"quick_replies,omitempty"`
+	TextLanguage         envs.Language       `json:"text_language,omitempty"`
+	CTAMessage_          CTAMessage          `json:"cta_message,omitempty"`
+	FlowMessage_         FlowMessage         `json:"flow_message,omitempty"`
+	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
 }
 
 type ListMessage struct {
@@ -50,24 +51,99 @@ type ListItems struct {
 	UUID        string `json:"uuid,omitempty"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {
+// Message order details structs, with string-like attributes to be evaluated and calculated
+type OrderAmountWithDescription struct {
+	Value       string `json:"value,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type OrderDiscount struct {
+	Value       string `json:"value,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProgramName string `json:"program_name,omitempty"`
+}
+
+type OrderPixConfig struct {
+	Key          string `json:"key,omitempty"`
+	KeyType      string `json:"key_type,omitempty"`
+	MerchantName string `json:"merchant_name,omitempty"`
+	Code         string `json:"code,omitempty"`
+}
+
+type OrderPaymentSettings struct {
+	Type        string          `json:"type,omitempty"`
+	PaymentLink string          `json:"payment_link,omitempty"`
+	PixConfig   *OrderPixConfig `json:"pix_config,omitempty"`
+}
+
+type OrderDetails struct {
+	ReferenceID     string                      `json:"reference_id,omitempty"`
+	Items           string                      `json:"item_list,omitempty"`
+	Tax             *OrderAmountWithDescription `json:"tax,omitempty"`
+	Shipping        *OrderAmountWithDescription `json:"shipping,omitempty"`
+	Discount        *OrderDiscount              `json:"discount,omitempty"`
+	PaymentSettings *OrderPaymentSettings       `json:"payment_settings,omitempty"`
+}
+
+// Message for order details, with attribute types defined such as int values
+type OrderDetailsMessage struct {
+	ReferenceID     string                `json:"reference_id,omitempty"`
+	PaymentSettings *OrderPaymentSettings `json:"payment_settings,omitempty"`
+	TotalAmount     int                   `json:"total_amount,omitempty"`
+	Order           *MessageOrder         `json:"order,omitempty"`
+}
+
+type MessageOrder struct {
+	Items    *[]MessageOrderItem                `json:"items,omitempty"`
+	Subtotal int                                `json:"subtotal,omitempty"`
+	Tax      *MessageOrderAmountWithDescription `json:"tax,omitempty"`
+	Shipping *MessageOrderAmountWithDescription `json:"shipping,omitempty"`
+	Discount *MessageOrderDiscount              `json:"discount,omitempty"`
+}
+
+type MessageOrderItem struct {
+	RetailerID string                        `json:"retailer_id,omitempty"`
+	Name       string                        `json:"name,omitempty"`
+	Quantity   int                           `json:"quantity,omitempty"`
+	Amount     MessageOrderAmountWithOffset  `json:"amount,omitempty"`
+	SaleAmount *MessageOrderAmountWithOffset `json:"sale_amount,omitempty"`
+}
+
+type MessageOrderAmountWithDescription struct {
+	Value       int    `json:"value,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type MessageOrderDiscount struct {
+	Value       int    `json:"value,omitempty"`
+	Description string `json:"description,omitempty"`
+	ProgramName string `json:"program_name,omitempty"`
+}
+
+type MessageOrderAmountWithOffset struct {
+	Value  int `json:"value"`
+	Offset int `json:"offset"`
+}
+
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
 			URN_:     urn,
 			Channel_: channel,
 		},
-		HeaderType_:      headerType,
-		InteractionType_: interactionType,
-		HeaderText_:      headerText,
-		Text_:            text,
-		Footer_:          footer,
-		ListMessage_:     listMessage,
-		Attachments_:     attachments,
-		QuickReplies_:    replyButtons,
-		Topic_:           topic,
-		CTAMessage_:      ctaMessage,
-		FlowMessage_:     flowMessage,
+		HeaderType_:          headerType,
+		InteractionType_:     interactionType,
+		HeaderText_:          headerText,
+		Text_:                text,
+		Footer_:              footer,
+		ListMessage_:         listMessage,
+		Attachments_:         attachments,
+		QuickReplies_:        replyButtons,
+		Topic_:               topic,
+		CTAMessage_:          ctaMessage,
+		FlowMessage_:         flowMessage,
+		OrderDetailsMessage_: orderDetailsMessage,
 	}
 }
 
@@ -92,3 +168,5 @@ func (m *MsgWppOut) QuickReplies() []string { return m.QuickReplies_ }
 func (m *MsgWppOut) CTAMessage() CTAMessage { return m.CTAMessage_ }
 
 func (m *MsgWppOut) FlowMessage() FlowMessage { return m.FlowMessage_ }
+
+func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDetailsMessage_ }
