@@ -1,3 +1,16 @@
+1.3.0
+----------
+ * Add support for attachments in whatsapp flows
+
+1.2.1
+----------
+ * Fix validation for dynamic lists
+
+1.2.0
+----------
+ * Refactor evaluateMessageWpp to message list
+ * Manipulate function return to avoid errors
+
 1.1.0
 ----------
  * Add support to whatsapp flows

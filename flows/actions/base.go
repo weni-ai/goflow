@@ -247,22 +247,40 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		}
 		evaluatedReplyMessage = append(evaluatedReplyMessage, evaluatedQuickReply)
 	}
+	var evaluatedListItems []flows.ListItems
 
 	for i, item := range actionListItems {
-		evaluatedTitle, err := run.EvaluateTemplate(item.Title)
-		if err != nil {
-			logEvent(events.NewError(err))
-		}
-		actionListItems[i].Title = evaluatedTitle
+		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
 
-		evaluatedDescription, err := run.EvaluateTemplate(item.Description)
+		if len(translatedListMessage) == 0 {
+			continue
+		}
+
+		evaluatedTitle, err := run.EvaluateTemplate(translatedListMessage[0])
 		if err != nil {
 			logEvent(events.NewError(err))
+			continue
 		}
-		actionListItems[i].Description = evaluatedDescription
+
+		var evaluatedDescription string
+		if len(translatedListMessage) > 1 {
+			evaluatedDescription, err = run.EvaluateTemplate(translatedListMessage[1])
+			if err != nil {
+				logEvent(events.NewError(err))
+			}
+		}
+
+		if len(evaluatedTitle) == 0 && len(evaluatedDescription) == 0 {
+			logEvent(events.NewErrorf("option title and description evaluated to empty strings, skipping"))
+			continue
+		} else if len(evaluatedTitle) == 0 {
+			logEvent(events.NewErrorf("option title text evaluated to empty string"))
+		}
+
+		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: actionListItems[i].UUID})
 	}
 
-	return evaluatedHeaderText, evaluatedFooter, evaluatedText, actionListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
+	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
 }
 
 // helper to save a run result and log it as an event
