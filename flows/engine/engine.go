@@ -123,6 +123,12 @@ func (b *Builder) WithBrainServiceFactory(f BrainServiceFactory) *Builder {
 	return b
 }
 
+// WithMetaServiceFactory sets the meta service factory
+func (b *Builder) WithMetaServiceFactory(f MetaServiceFactory) *Builder {
+	b.eng.services.meta = f
+	return b
+}
+
 // WithMaxStepsPerSprint sets the maximum number of steps allowed in a single sprint
 func (b *Builder) WithMaxStepsPerSprint(max int) *Builder {
 	b.eng.maxStepsPerSprint = max

@@ -75,3 +75,13 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 
 	return jsonx.Marshal(oe)
 }
+
+func (o *Order) FindProductByRetailerID(retailerID string) *ProductItem {
+	for _, p := range o.ProductItems {
+		if p.ProductRetailerID == retailerID {
+			return &p
+		}
+	}
+
+	return nil
+}
