@@ -13,6 +13,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var WhatsAppSystemUserToken string
+
+func SetWhatsAppSystemUserToken(t string) {
+	WhatsAppSystemUserToken = t
+}
+
 // Services groups together interfaces for several services whose implementation is provided outside of the flow engine.
 type Services interface {
 	Email(Session) (EmailService, error)
@@ -25,6 +31,7 @@ type Services interface {
 	WeniGPT(Session) (WeniGPTService, error)
 	MsgCatalog(Session, *MsgCatalog) (MsgCatalogService, error)
 	OrgContext(Session, *OrgContext) (OrgContextService, error)
+	Meta(Session) (MetaService, error)
 }
 
 // EmailService provides email functionality to the engine
@@ -59,6 +66,11 @@ type WebhookCall struct {
 // WebhookService provides webhook functionality to the engine
 type WebhookService interface {
 	Call(session Session, request *http.Request) (*WebhookCall, error)
+}
+
+// MetaService provides standardized Meta requests in the engine
+type MetaService interface {
+	OrderProductsSearch(order Order, logHTTP HTTPLogCallback) ([]byte, error)
 }
 
 // ExtractedIntent models an intent match

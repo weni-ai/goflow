@@ -27,6 +27,7 @@ import (
 	"github.com/nyaruka/goflow/services/brain"
 	"github.com/nyaruka/goflow/services/classification/wit"
 	"github.com/nyaruka/goflow/services/email/smtp"
+	"github.com/nyaruka/goflow/services/meta"
 	"github.com/nyaruka/goflow/services/webhooks"
 	"github.com/nyaruka/goflow/test"
 	"github.com/nyaruka/goflow/utils"
@@ -239,6 +240,7 @@ func testActionType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 				return dtone.NewService(http.DefaultClient, nil, "nyaruka", "123456789"), nil
 			}).
 			WithBrainServiceFactory(brain.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "http://127.0.0.1:49994")).
+			WithMetaServiceFactory(meta.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "system-user-token", "http://127.0.0.1:49994")).
 			Build()
 
 		// create session

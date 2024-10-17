@@ -34,6 +34,8 @@ type MsgCatalogServiceFactory func(flows.Session, *flows.MsgCatalog) (flows.MsgC
 
 type OrgContextServiceFactory func(flows.Session, *flows.OrgContext) (flows.OrgContextService, error)
 
+type MetaServiceFactory func(flows.Session) (flows.MetaService, error)
+
 type services struct {
 	email           EmailServiceFactory
 	webhook         WebhookServiceFactory
@@ -45,6 +47,7 @@ type services struct {
 	msgCatalog      MsgCatalogServiceFactory
 	orgContext      OrgContextServiceFactory
 	brain           BrainServiceFactory
+	meta            MetaServiceFactory
 }
 
 func newEmptyServices() *services {
@@ -78,6 +81,9 @@ func newEmptyServices() *services {
 		},
 		brain: func(flows.Session) (flows.BrainService, error) {
 			return nil, errors.New("no brain service factory configured")
+		},
+		meta: func(flows.Session) (flows.MetaService, error) {
+			return nil, errors.New("no meta service factory configured")
 		},
 	}
 }
@@ -120,4 +126,8 @@ func (s *services) OrgContext(session flows.Session, context *flows.OrgContext) 
 
 func (s *services) Brain(session flows.Session) (flows.BrainService, error) {
 	return s.brain(session)
+}
+
+func (s *services) Meta(session flows.Session) (flows.MetaService, error) {
+	return s.meta(session)
 }
