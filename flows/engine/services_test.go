@@ -34,4 +34,8 @@ func TestEmptyServices(t *testing.T) {
 	orgContextSvc, err := eng.Services().OrgContext(nil, nil)
 	assert.EqualError(t, err, "no org context service factory configured")
 	assert.Nil(t, orgContextSvc)
+
+	metaSvc, err := eng.Services().Meta(nil)
+	assert.EqualError(t, err, "no meta service factory configured")
+	assert.Nil(t, metaSvc)
 }
