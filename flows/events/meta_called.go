@@ -21,7 +21,7 @@ const TypeMetaCalled string = "meta_called"
 //         "url": "https://graph.facebook.com/v21.0/me",
 //         "status": "success",
 //         "request": "GET /me HTTP/1.1",
-//         "response": "HTTP/1.1 200 OK\r\n\r\n{\"status\":"ok"}",
+//         "response": "HTTP/1.1 200 OK\r\n\r\n{\"status\":\"ok\"}",
 //         "created_on": "2006-01-02T15:04:05Z",
 //         "elapsed_ms": 123
 //       }
