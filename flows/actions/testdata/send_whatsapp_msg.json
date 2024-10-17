@@ -201,7 +201,7 @@
         }
     },
     {
-        "description": "WhatsApp Order Details message",
+        "description": "WhatsApp Order Details message with array item list",
         "action": {
             "type": "send_whatsapp_msg",
             "uuid": "c67969d6-f400-4b5e-bb7c-e45115cd3aa4",
@@ -304,6 +304,143 @@
                         },
                         "reference_id": "123456",
                         "total_amount": 1699
+                    }
+                }
+            }
+        ],
+        "inspection": {
+            "dependencies": [],
+            "issues": [],
+            "results": [],
+            "waiting_exits": [],
+            "parent_refs": []
+        }
+    },
+    {
+        "description": "WhatsApp Order Details message with order-like item list",
+        "http_mocks": {
+            "http://127.0.0.1:49994/CATALOG_ID/products?access_token=system-user-token&fields=%5B%22category%22%2C%22name%22%2C%22retailer_id%22%2C%22availability%22%5D&filter=%7B%22or%22%3A%5B%7B%22and%22%3A%5B%7B%22retailer_id%22%3A%7B%22i_contains%22%3A%22123%22%7D%7D%5D%7D%5D%7D&summary=true": [
+                {
+                    "status": 200,
+                    "body": "{\"data\":[{\"retailer_id\":\"123\",\"name\":\"item 1\",\"id\":\"456\"}],\"summary\":{\"total_count\":1}}"
+                }
+            ]
+        },
+        "action": {
+            "type": "send_whatsapp_msg",
+            "uuid": "c67969d6-f400-4b5e-bb7c-e45115cd3aa4",
+            "header_type": "media",
+            "attachment": "image/jpeg:https://foo.bar/image.jpg",
+            "footer": "footer",
+            "interaction_type": "order_details",
+            "text": "Hi there!",
+            "button_text": "Button text",
+            "order_details": {
+                "reference_id": "123456",
+                "item_list": "{\"catalog_id\":\"CATALOG_ID\",\"text\":\"msg text\",\"product_items\":[{\"product_retailer_id\":\"123\",\"quantity\":1,\"item_price\":20.99,\"currency\":\"BRL\"}]}",
+                "tax": {
+                    "value": "2,99",
+                    "description": "tax"
+                },
+                "shipping": {
+                    "value": "9.99",
+                    "description": "shipping"
+                },
+                "discount": {
+                    "value": "5.99",
+                    "description": "discount"
+                },
+                "payment_settings": {
+                    "type": "digital-goods",
+                    "payment_link": "https://www.foo.bar",
+                    "pix_config": {
+                        "key": "key",
+                        "key_type": "key type",
+                        "merchant_name": "merchant name",
+                        "code": "code"
+                    }
+                }
+            }
+        },
+        "localization": {},
+        "events": [
+            {
+                "type": "meta_called",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "http_logs": [
+                    {
+                        "url": "http://127.0.0.1:49994/CATALOG_ID/products?access_token=****************&fields=%5B%22category%22%2C%22name%22%2C%22retailer_id%22%2C%22availability%22%5D&filter=%7B%22or%22%3A%5B%7B%22and%22%3A%5B%7B%22retailer_id%22%3A%7B%22i_contains%22%3A%22123%22%7D%7D%5D%7D%5D%7D&summary=true",
+                        "status_code": 200,
+                        "status": "success",
+                        "request": "GET /CATALOG_ID/products?access_token=****************&fields=%5B%22category%22%2C%22name%22%2C%22retailer_id%22%2C%22availability%22%5D&filter=%7B%22or%22%3A%5B%7B%22and%22%3A%5B%7B%22retailer_id%22%3A%7B%22i_contains%22%3A%22123%22%7D%7D%5D%7D%5D%7D&summary=true HTTP/1.1\r\nHost: 127.0.0.1:49994\r\nUser-Agent: goflow-testing\r\nAccept-Encoding: gzip\r\n\r\n",
+                        "response": "HTTP/1.0 200 OK\r\nContent-Length: 87\r\n\r\n{\"data\":[{\"retailer_id\":\"123\",\"name\":\"item 1\",\"id\":\"456\"}],\"summary\":{\"total_count\":1}}",
+                        "elapsed_ms": 0,
+                        "retries": 0,
+                        "created_on": "2018-10-18T14:20:30.000123456Z"
+                    }
+                ]
+            },
+            {
+                "type": "msg_wpp_created",
+                "created_on": "2018-10-18T14:20:30.000123456Z",
+                "step_uuid": "59d74b86-3e2f-4a93-aece-b05d2fdcde0c",
+                "msg": {
+                    "uuid": "9688d21d-95aa-4bed-afc7-f31b35731a3d",
+                    "urn": "tel:+12065551212?channel=57f1078f-88aa-46f4-a59a-948a5739c03d&id=123",
+                    "channel": {
+                        "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+                        "name": "My Android Phone"
+                    },
+                    "text": "Hi there!",
+                    "footer": "footer",
+                    "header_type": "media",
+                    "attachments": [
+                        "image/jpeg:https://foo.bar/image.jpg"
+                    ],
+                    "interaction_type": "order_details",
+                    "cta_message": {},
+                    "list_message": {},
+                    "flow_message": {},
+                    "order_details_message": {
+                        "order": {
+                            "discount": {
+                                "description": "discount",
+                                "value": 599
+                            },
+                            "items": [
+                                {
+                                    "amount": {
+                                        "offset": 100,
+                                        "value": 2099
+                                    },
+                                    "name": "item 1",
+                                    "quantity": 1,
+                                    "retailer_id": "123"
+                                }
+                            ],
+                            "shipping": {
+                                "description": "shipping",
+                                "value": 999
+                            },
+                            "subtotal": 2099,
+                            "tax": {
+                                "description": "tax",
+                                "value": 299
+                            }
+                        },
+                        "payment_settings": {
+                            "payment_link": "https://www.foo.bar",
+                            "pix_config": {
+                                "code": "code",
+                                "key": "key",
+                                "key_type": "key type",
+                                "merchant_name": "merchant name"
+                            },
+                            "type": "digital-goods"
+                        },
+                        "reference_id": "123456",
+                        "total_amount": 2798
                     }
                 }
             }
