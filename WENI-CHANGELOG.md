@@ -1,3 +1,7 @@
+1.4.1
+----------
+ * Feat: Accept order-like items in order details messages
+
 1.4.0
 ----------
  * Feat: WhatsApp Order Details
