@@ -173,14 +173,8 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 	orderDetailsMessage := flows.OrderDetailsMessage{}
 	if a.InteractionType == "order_details" {
 		evaluatedReferenceID, _ := run.EvaluateTemplate(a.OrderDetails.ReferenceID)
-		evaluatedOrderItems, _ := run.EvaluateTemplate(a.OrderDetails.Items)
 
-		if evaluatedOrderItems == "" {
-			logEvent(events.NewErrorf("order items evaluated to empty string"))
-			return nil
-		}
-
-		orderItems, err := parseOrderItems(a, run, evaluatedOrderItems, logEvent)
+		orderItems, err := parseOrderItems(a, run, a.OrderDetails.Items, logEvent)
 		if err != nil {
 			logEvent(events.NewErrorf("error parsing order items: %v", err))
 			return nil
@@ -305,14 +299,26 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 	return nil
 }
 
-func parseOrderItems(a *SendWppMsgAction, run flows.FlowRun, evaluatedOrderItems string, logEvent flows.EventCallback) ([]flows.MessageOrderItem, error) {
+func parseOrderItems(a *SendWppMsgAction, run flows.FlowRun, rawOrderItems string, logEvent flows.EventCallback) ([]flows.MessageOrderItem, error) {
+	evaluatedOrderItems, _ := run.EvaluateTemplate(rawOrderItems)
+	if evaluatedOrderItems == "" {
+		return nil, fmt.Errorf("order items evaluated to empty string")
+	}
+
 	tempOrderItems := []map[string]interface{}{}
 	// try to parse it as an array of items
 	err := json.Unmarshal([]byte(evaluatedOrderItems), &tempOrderItems)
 	if err != nil {
 		// try to parse it as an order-like structure
+		orderItemsXValue, _ := run.EvaluateTemplateValue(rawOrderItems)
+
+		orderItemsJSON, err := orderItemsXValue.MarshalJSON()
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling order items: %v", err)
+		}
+
 		order := flows.Order{}
-		err = json.Unmarshal([]byte(evaluatedOrderItems), &order)
+		err = json.Unmarshal(orderItemsJSON, &order)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshalling order items: %v", err)
 		}
@@ -441,6 +447,10 @@ func searchMetaForOrderItems(a *SendWppMsgAction, run flows.FlowRun, order flows
 					},
 				})
 			}
+		}
+
+		if len(orderItems) != len(order.ProductItems) {
+			logEvent(events.NewErrorf("not all provided order items were found in Meta, requested %d, found %d", len(order.ProductItems), len(orderItems)))
 		}
 
 		return orderItems, nil
