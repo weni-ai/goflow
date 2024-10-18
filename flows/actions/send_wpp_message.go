@@ -3,6 +3,7 @@ package actions
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -172,98 +173,11 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 	orderDetailsMessage := flows.OrderDetailsMessage{}
 	if a.InteractionType == "order_details" {
 		evaluatedReferenceID, _ := run.EvaluateTemplate(a.OrderDetails.ReferenceID)
-		evaluatedOrderItems, _ := run.EvaluateTemplate(a.OrderDetails.Items)
 
-		if evaluatedOrderItems == "" {
-			logEvent(events.NewErrorf("order items evaluated to empty string"))
-			return nil
-		}
-
-		tempOrderItems := []map[string]interface{}{}
-		err := json.Unmarshal([]byte(evaluatedOrderItems), &tempOrderItems)
+		orderItems, err := parseOrderItems(a, run, a.OrderDetails.Items, logEvent)
 		if err != nil {
-			logEvent(events.NewErrorf("error unmarshalling order items: %v", err))
+			logEvent(events.NewErrorf("error parsing order items: %v", err))
 			return nil
-		}
-
-		if len(tempOrderItems) == 0 {
-			logEvent(events.NewErrorf("order items evaluated to empty array"))
-			return nil
-		}
-
-		orderItems := []flows.MessageOrderItem{}
-		for _, item := range tempOrderItems {
-			if item["quantity"] == nil {
-				logEvent(events.NewErrorf("order item quantity is nil"))
-				return nil
-			}
-			convertedQuantity, isFloat := item["quantity"].(float64)
-			if !isFloat {
-				logEvent(events.NewErrorf("error reading order item quantity: %v", item["quantity"]))
-				return nil
-			}
-
-			if item["amount"] == nil {
-				logEvent(events.NewErrorf("order item amount is required"))
-				return nil
-			}
-			var convertedAmount float64
-			var convertedOffset float64
-			itemAmount, ok := item["amount"].(map[string]interface{})
-			if !ok {
-				logEvent(events.NewErrorf("error reading order item amount: %v", item["amount"]))
-				return nil
-			}
-			convertedAmount, isFloat = itemAmount["value"].(float64)
-			if !isFloat {
-				logEvent(events.NewErrorf("error reading order item amount: %v", itemAmount["value"]))
-				return nil
-			}
-
-			convertedOffset, isFloat = itemAmount["offset"].(float64)
-			if !isFloat {
-				logEvent(events.NewErrorf("error reading order item amount offset: %v", itemAmount["offset"]))
-				return nil
-			}
-
-			orderItem := flows.MessageOrderItem{
-				RetailerID: item["retailer_id"].(string),
-				Name:       item["name"].(string),
-				Quantity:   int(convertedQuantity),
-				Amount: flows.MessageOrderAmountWithOffset{
-					Value:  int(convertedAmount),
-					Offset: int(convertedOffset),
-				},
-			}
-
-			if item["sale_amount"] != nil {
-				itemSaleAmount, ok := item["sale_amount"].(map[string]interface{})
-				if !ok {
-					logEvent(events.NewErrorf("error reading order item sale amount: %v", item["sale_amount"]))
-					return nil
-				}
-				convertedSaleAmount, isFloat := itemSaleAmount["value"].(float64)
-				if !isFloat {
-					logEvent(events.NewErrorf("error converting order item sale amount %s: %v", itemSaleAmount["value"], err))
-					return nil
-				}
-
-				convertedSaleAmountOffset, isFloat := itemSaleAmount["offset"].(float64)
-				if !isFloat {
-					logEvent(events.NewErrorf("error converting order item sale amount offset %s: %v", itemSaleAmount["offset"], err))
-					return nil
-				}
-
-				if convertedSaleAmount > 0 {
-					orderItem.SaleAmount = &flows.MessageOrderAmountWithOffset{
-						Value:  int(convertedSaleAmount),
-						Offset: int(convertedSaleAmountOffset),
-					}
-				}
-
-			}
-
-			orderItems = append(orderItems, orderItem)
 		}
 
 		evaluatedOrderTax, _ := run.EvaluateTemplate(a.OrderDetails.Tax.Value)
@@ -383,4 +297,164 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 	}
 
 	return nil
+}
+
+func parseOrderItems(a *SendWppMsgAction, run flows.FlowRun, rawOrderItems string, logEvent flows.EventCallback) ([]flows.MessageOrderItem, error) {
+	evaluatedOrderItems, _ := run.EvaluateTemplate(rawOrderItems)
+	if evaluatedOrderItems == "" {
+		return nil, fmt.Errorf("order items evaluated to empty string")
+	}
+
+	tempOrderItems := []map[string]interface{}{}
+	// try to parse it as an array of items
+	err := json.Unmarshal([]byte(evaluatedOrderItems), &tempOrderItems)
+	if err != nil {
+		// try to parse it as an order-like structure
+		orderItemsXValue, _ := run.EvaluateTemplateValue(rawOrderItems)
+
+		orderItemsJSON, err := orderItemsXValue.MarshalJSON()
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling order items: %v", err)
+		}
+
+		order := flows.Order{}
+		err = json.Unmarshal(orderItemsJSON, &order)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling order items: %v", err)
+		}
+
+		tempOrderItems, err = searchMetaForOrderItems(a, run, order, logEvent)
+		if err != nil {
+			return nil, fmt.Errorf("error searching for order items: %v", err)
+		}
+	}
+
+	if len(tempOrderItems) == 0 {
+		return nil, fmt.Errorf("order items evaluated to empty array")
+	}
+
+	orderItems := []flows.MessageOrderItem{}
+	for _, item := range tempOrderItems {
+		if item["quantity"] == nil {
+			return nil, fmt.Errorf("order item quantity is nil")
+		}
+		convertedQuantity, isFloat := item["quantity"].(float64)
+		if !isFloat {
+			return nil, fmt.Errorf("error reading order item quantity: %v", item["quantity"])
+		}
+
+		if item["amount"] == nil {
+			return nil, fmt.Errorf("order item amount is required")
+		}
+		var convertedAmount float64
+		var convertedOffset float64
+		itemAmount, ok := item["amount"].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("error reading order item amount: %v", item["amount"])
+		}
+		convertedAmount, isFloat = itemAmount["value"].(float64)
+		if !isFloat {
+			return nil, fmt.Errorf("error reading order item amount: %v", itemAmount["value"])
+		}
+
+		convertedOffset, isFloat = itemAmount["offset"].(float64)
+		if !isFloat {
+			return nil, fmt.Errorf("error reading order item amount offset: %v", itemAmount["offset"])
+		}
+
+		orderItem := flows.MessageOrderItem{
+			RetailerID: item["retailer_id"].(string),
+			Name:       item["name"].(string),
+			Quantity:   int(convertedQuantity),
+			Amount: flows.MessageOrderAmountWithOffset{
+				Value:  int(convertedAmount),
+				Offset: int(convertedOffset),
+			},
+		}
+
+		if item["sale_amount"] != nil {
+			itemSaleAmount, ok := item["sale_amount"].(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("error reading order item sale amount: %v", item["sale_amount"])
+			}
+			convertedSaleAmount, isFloat := itemSaleAmount["value"].(float64)
+			if !isFloat {
+				return nil, fmt.Errorf("error converting order item sale amount %s: %v", itemSaleAmount["value"], err)
+			}
+
+			convertedSaleAmountOffset, isFloat := itemSaleAmount["offset"].(float64)
+			if !isFloat {
+				return nil, fmt.Errorf("error converting order item sale amount offset %s: %v", itemSaleAmount["offset"], err)
+			}
+
+			if convertedSaleAmount > 0 {
+				orderItem.SaleAmount = &flows.MessageOrderAmountWithOffset{
+					Value:  int(convertedSaleAmount),
+					Offset: int(convertedSaleAmountOffset),
+				}
+			}
+
+		}
+
+		orderItems = append(orderItems, orderItem)
+	}
+
+	return orderItems, nil
+}
+
+func searchMetaForOrderItems(a *SendWppMsgAction, run flows.FlowRun, order flows.Order, logEvent flows.EventCallback) ([]map[string]interface{}, error) {
+	svc, err := run.Session().Engine().Services().Meta(run.Session())
+	if err != nil {
+		return nil, err
+	}
+
+	httpLogger := &flows.HTTPLogger{}
+	responseJSON, err := svc.OrderProductsSearch(order, httpLogger.Log)
+
+	if len(httpLogger.Logs) > 0 {
+		logEvent(events.NewMetaCalled(httpLogger.Logs))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if responseJSON != nil {
+		var response struct {
+			Data []struct {
+				RetailerID string `json:"retailer_id"`
+				Name       string `json:"name"`
+			} `json:"data"`
+		}
+		err = json.Unmarshal(responseJSON, &response)
+		if err != nil {
+			return nil, err
+		}
+
+		// mount the order items with the item name on it, mapped by the retailer id
+		orderItems := []map[string]interface{}{}
+		for _, product := range response.Data {
+			existingItem := order.FindProductByRetailerID(product.RetailerID)
+			if existingItem != nil {
+				amount, _ := existingItem.ItemPrice.Float64()
+				orderItems = append(orderItems, map[string]interface{}{
+					"retailer_id": existingItem.ProductRetailerID,
+					"name":        product.Name,
+					"quantity":    float64(existingItem.Quantity),
+					"amount": map[string]interface{}{
+						"value":  amount * 100,
+						"offset": float64(100),
+					},
+				})
+			}
+		}
+
+		if len(orderItems) != len(order.ProductItems) {
+			logEvent(events.NewErrorf("not all provided order items were found in Meta, requested %d, found %d", len(order.ProductItems), len(orderItems)))
+		}
+
+		return orderItems, nil
+	}
+
+	return nil, fmt.Errorf("unknown error fetching products")
 }

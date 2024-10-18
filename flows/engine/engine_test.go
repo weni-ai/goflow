@@ -34,6 +34,8 @@ func TestBuilder(t *testing.T) {
 	assert.EqualError(t, err, "no org context service factory configured")
 	_, err = eng.Services().Brain(nil)
 	assert.EqualError(t, err, "no brain service factory configured")
+	_, err = eng.Services().Meta(nil)
+	assert.EqualError(t, err, "no meta service factory configured")
 
 	// include a webhook service
 	webhookSvc := webhooks.NewService(&http.Client{}, nil, nil, map[string]string{"User-Agent": "goflow"}, 1000)

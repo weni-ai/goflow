@@ -21,12 +21,6 @@ type service struct {
 	maxBodyBytes   int
 }
 
-var whatsAppSystemUserToken string
-
-func SetWhatsAppSystemUserToken(t string) {
-	whatsAppSystemUserToken = t
-}
-
 // NewServiceFactory creates a new webhook service factory
 func NewServiceFactory(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAccess *httpx.AccessConfig, defaultHeaders map[string]string, maxBodyBytes int) engine.WebhookServiceFactory {
 	return func(flows.Session) (flows.WebhookService, error) {
@@ -61,7 +55,7 @@ func (s *service) Call(session flows.Session, request *http.Request) (*flows.Web
 
 	// If we have a system user token, add it to the headers
 	if request.Header.Get("X-Weni-Whatsapp-Token") != "" {
-		request.Header.Set("Authorization", "Bearer "+whatsAppSystemUserToken)
+		request.Header.Set("Authorization", "Bearer "+flows.WhatsAppSystemUserToken)
 		request.Header.Del("X-Weni-Whatsapp-Token")
 	}
 

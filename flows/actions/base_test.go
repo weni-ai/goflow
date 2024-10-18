@@ -27,10 +27,12 @@ import (
 	"github.com/nyaruka/goflow/services/brain"
 	"github.com/nyaruka/goflow/services/classification/wit"
 	"github.com/nyaruka/goflow/services/email/smtp"
+	"github.com/nyaruka/goflow/services/meta"
 	"github.com/nyaruka/goflow/services/webhooks"
 	"github.com/nyaruka/goflow/test"
 	"github.com/nyaruka/goflow/utils"
 	"github.com/nyaruka/goflow/utils/smtpx"
+	"github.com/shopspring/decimal"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -216,6 +218,25 @@ func testActionType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 					"audio/mp3:http://s3.amazon.com/bucket/test.mp3",
 				},
 			)
+			itemPrice, _ := decimal.NewFromString("20.99")
+			msg.SetOrder(&flows.Order{
+				CatalogID: "CATALOG_ID",
+				Text:      "order msg text",
+				ProductItems: []flows.ProductItem{
+					{
+						Currency:          "BRL",
+						ItemPrice:         itemPrice,
+						ProductRetailerID: "RETAILER_ID_1",
+						Quantity:          1,
+					},
+					{
+						Currency:          "BRL",
+						ItemPrice:         itemPrice,
+						ProductRetailerID: "RETAILER_ID_2",
+						Quantity:          1,
+					},
+				},
+			})
 			trigger = triggers.NewBuilder(env, flow.Reference(), contact).Msg(msg).Build()
 			ignoreEventCount = 1 // need to ignore the msg_received event this trigger creates
 		}
@@ -239,6 +260,7 @@ func testActionType(t *testing.T, assetsJSON json.RawMessage, typeName string) {
 				return dtone.NewService(http.DefaultClient, nil, "nyaruka", "123456789"), nil
 			}).
 			WithBrainServiceFactory(brain.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "token", "http://127.0.0.1:49994")).
+			WithMetaServiceFactory(meta.NewServiceFactory(http.DefaultClient, nil, nil, map[string]string{"User-Agent": "goflow-testing"}, 10000, "system-user-token", "http://127.0.0.1:49994")).
 			Build()
 
 		// create session
