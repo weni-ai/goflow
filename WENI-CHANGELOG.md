@@ -1,3 +1,7 @@
+1.4.2
+----------
+ * Using URN identity for brain
+
 1.4.1
 ----------
  * Feat: Accept order-like items in order details messages
