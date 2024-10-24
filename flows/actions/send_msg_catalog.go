@@ -175,12 +175,18 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				hasVtexAds = context.OrgContext.HasVtexAds()
 			}
 
+			context = orgContext.GetHideUnavaliableByChannelUUID()
+			var hideUnavaliable bool
+			if context != nil {
+				hideUnavaliable = context.OrgContext.HideUnavaliable()
+			}
+
 			language := "eng"
 			if run.Contact().Language() != envs.NilLanguage && run.Contact().Language() != "base" {
 				language = string(run.Contact().Language())
 			}
 
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, language)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavaliable, language)
 			catalogCall, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				if catalogCall != nil {
