@@ -1,3 +1,7 @@
+1.5.0
+----------
+ * Use hideUnavailable for product search
+
 1.4.2
 ----------
  * Using URN identity for brain
