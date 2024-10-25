@@ -51,9 +51,9 @@ func (c *OrgContextAssets) GetHasVtexAdsByChannelUUID() *OrgContext {
 	return nil
 }
 
-func (c *OrgContextAssets) GetHideUnavaliableByChannelUUID() *OrgContext {
+func (c *OrgContextAssets) GetHideUnavailableByChannelUUID() *OrgContext {
 	for _, c := range c.byChannelUUID {
-		if c.OrgContext.HideUnavaliable() {
+		if c.OrgContext.HideUnavailable() {
 			return c
 		}
 	}
@@ -67,7 +67,7 @@ func (c *OrgContext) Reference() *assets.OrgContextReference {
 	if c == nil {
 		return nil
 	}
-	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavaliable())
+	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavailable())
 }
 
 type OrgContextAssets struct {

@@ -29,11 +29,11 @@ type MsgCatalogParam struct {
 	PostalCode      string     `json:"postal_code,omitempty"`
 	SellerId        string     `json:"seller_id,omitempty"`
 	HasVtexAds      bool       `json:"vtex_ads,omitempty"`
-	HideUnavaliable bool       `json:"hide_unavaliable"`
+	HideUnavailable bool       `json:"hide_unavailable"`
 	Language        string     `json:"language"`
 }
 
-func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtexAds bool, hideUnavaliable bool, language string) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtexAds bool, hideUnavailable bool, language string) MsgCatalogParam {
 	p := MsgCatalogParam{
 		ProductSearch:   productSearch,
 		ChannelUUID:     channelUUID,
@@ -43,7 +43,7 @@ func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType
 		PostalCode:      postalCode,
 		SellerId:        sellerId,
 		HasVtexAds:      hasVtexAds,
-		HideUnavaliable: hideUnavaliable,
+		HideUnavailable: hideUnavailable,
 		Language:        language,
 	}
 	return p
