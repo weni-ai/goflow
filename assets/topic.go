@@ -9,28 +9,34 @@ import (
 // TopicUUID is the UUID of a topic
 type TopicUUID uuids.UUID
 
+// QueueUUID is the UUID of a queue related to wenichats
+type QueueUUID string
+
 // Topic categorizes tickets
 //
-//   {
-//     "uuid": "cd48bd11-08b9-44e3-9778-8e26adf08a7a",
-//     "name": "Weather"
-//   }
+//	{
+//	  "uuid": "cd48bd11-08b9-44e3-9778-8e26adf08a7a",
+//	  "name": "Weather",
+//	  "queue_uuid": "3108d8c2-2a93-4db8-b7c1-d4b1b9c812b3"
+//	}
 //
 // @asset topic
 type Topic interface {
 	UUID() TopicUUID
 	Name() string
+	QueueUUID() QueueUUID
 }
 
 // TopicReference is used to reference a topic
 type TopicReference struct {
-	UUID TopicUUID `json:"uuid" validate:"required,uuid"`
-	Name string    `json:"name"`
+	UUID      TopicUUID `json:"uuid" validate:"required,uuid"`
+	Name      string    `json:"name"`
+	QueueUUID QueueUUID `json:"queue_uuid"`
 }
 
 // NewTopicReference creates a new topic reference with the given UUID and name
-func NewTopicReference(uuid TopicUUID, name string) *TopicReference {
-	return &TopicReference{UUID: uuid, Name: name}
+func NewTopicReference(uuid TopicUUID, name string, queueUUID QueueUUID) *TopicReference {
+	return &TopicReference{UUID: uuid, Name: name, QueueUUID: queueUUID}
 }
 
 // Type returns the name of the asset type
