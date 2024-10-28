@@ -27,7 +27,8 @@ const TypeOpenTicket string = "open_ticket"
 //	  },
 //	  "topic": {
 //	    "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
-//	    "name": "Weather"
+//	    "name": "Weather",
+//			"queue_uuid": ""
 //	  },
 //	  "body": "@input",
 //	  "assignee": {"email": "bob@nyaruka.com", "name": "Bob McTickets"},

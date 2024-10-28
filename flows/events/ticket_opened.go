@@ -34,6 +34,7 @@ type Ticket struct {
 //       },
 //       "topic": {
 //         "uuid": "add17edf-0b6e-4311-bcd7-a64b2a459157",
+//				 "queue_uuid": "",
 //         "name": "Weather"
 //       },
 //       "body": "Where are my cookies?",
