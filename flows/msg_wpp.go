@@ -23,6 +23,7 @@ type MsgWppOut struct {
 	CTAMessage_          CTAMessage          `json:"cta_message,omitempty"`
 	FlowMessage_         FlowMessage         `json:"flow_message,omitempty"`
 	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
+	Templating_          *MsgTemplating      `json:"templating,omitempty"`
 }
 
 type ListMessage struct {
@@ -125,7 +126,7 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, topic MsgTopic) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, templating *MsgTemplating, topic MsgTopic) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -144,6 +145,7 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		CTAMessage_:          ctaMessage,
 		FlowMessage_:         flowMessage,
 		OrderDetailsMessage_: orderDetailsMessage,
+		Templating_:          templating,
 	}
 }
 
@@ -170,3 +172,5 @@ func (m *MsgWppOut) CTAMessage() CTAMessage { return m.CTAMessage_ }
 func (m *MsgWppOut) FlowMessage() FlowMessage { return m.FlowMessage_ }
 
 func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDetailsMessage_ }
+
+func (m *MsgWppOut) Templating() *MsgTemplating { return m.Templating_ }

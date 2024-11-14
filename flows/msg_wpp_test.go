@@ -34,6 +34,7 @@ func TestMsgWppOut(t *testing.T) {
 			utils.Attachment("audio/mp3:https://example.com/test.mp3"),
 		},
 		nil,
+		nil,
 		flows.MsgTopicAgent,
 	)
 
