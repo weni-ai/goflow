@@ -1,3 +1,7 @@
+1.5.1
+----------
+ * Support MsgTemplating in WhatsApp messages
+
 1.5.0
 ----------
  * Use hideUnavailable for product search
