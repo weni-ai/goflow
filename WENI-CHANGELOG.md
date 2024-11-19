@@ -1,3 +1,7 @@
+1.5.2
+----------
+ * Add queue uuid on topic
+
 1.5.1
 ----------
  * Support MsgTemplating in WhatsApp messages
