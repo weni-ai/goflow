@@ -316,6 +316,7 @@ func TestEventMarshaling(t *testing.T) {
 							},
 							"topic": {
 								"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+								"queue_uuid": "",
                     			"name": "Weather"
 							},
 							"uuid": "78d1fe0d-7e39-461e-81c3-a6a25f15ed69"
@@ -542,6 +543,7 @@ func TestEventMarshaling(t *testing.T) {
 					},
 					"topic": {
 						"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+						"queue_uuid": "",
          				"name": "Weather"
 					},
 					"body": "Where are my cookies?",

@@ -46,6 +46,7 @@ func TestContact(t *testing.T) {
 		"topics": [
 			{
 				"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+				"queue_uuid": "",
 				"name": "Weather"
 			}
 		]
