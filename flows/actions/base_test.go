@@ -468,7 +468,7 @@ func TestConstructors(t *testing.T) {
 			actions.NewOpenTicket(
 				actionUUID,
 				assets.NewTicketerReference(assets.TicketerUUID("0baee364-07a7-4c93-9778-9f55a35903bb"), "Support Tickets"),
-				assets.NewTopicReference("472a7a73-96cb-4736-b567-056d987cc5b4", "Weather"),
+				assets.NewTopicReference("472a7a73-96cb-4736-b567-056d987cc5b4", "Weather", ""),
 				"Where are my cookies?",
 				assets.NewUserReference("bob@nyaruka.com", "Bob McTickets"),
 				"Ticket",
@@ -482,6 +482,7 @@ func TestConstructors(t *testing.T) {
 				},
 				"topic": {
 					"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+					"queue_uuid": "",
 					"name": "Weather"
 				},
 				"body": "Where are my cookies?",

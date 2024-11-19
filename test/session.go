@@ -64,6 +64,7 @@ var sessionAssets = `{
     "topics": [
         {
             "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+            "queue_uuid": "",
             "name": "Weather"
         },
         {
@@ -343,6 +344,7 @@ var sessionTrigger = `{
                 },
                 "topic": {
                     "uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+                    "queue_uuid": "",
                     "name": "Weather"
                 },
                 "assignee": {"email": "bob@nyaruka.com", "name": "Bob"}
