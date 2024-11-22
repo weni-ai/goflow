@@ -172,6 +172,7 @@
                 },
                 {
                     "base_language": "eng",
+                    "broadcast_type": "D",
                     "created_on": "2018-07-06T12:30:21.123456789Z",
                     "step_uuid": "8720f157-ca1c-432f-9c0b-2014ddc77094",
                     "translations": {
@@ -189,6 +190,7 @@
                 },
                 {
                     "base_language": "eng",
+                    "broadcast_type": "D",
                     "created_on": "2018-07-06T12:30:23.123456789Z",
                     "groups": [
                         {
@@ -646,6 +648,7 @@
                             },
                             {
                                 "base_language": "eng",
+                                "broadcast_type": "D",
                                 "created_on": "2018-07-06T12:30:21.123456789Z",
                                 "step_uuid": "8720f157-ca1c-432f-9c0b-2014ddc77094",
                                 "translations": {
@@ -663,6 +666,7 @@
                             },
                             {
                                 "base_language": "eng",
+                                "broadcast_type": "D",
                                 "created_on": "2018-07-06T12:30:23.123456789Z",
                                 "groups": [
                                     {
