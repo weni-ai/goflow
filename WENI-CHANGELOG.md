@@ -1,3 +1,7 @@
+1.5.4
+----------
+ * Fix release
+
 1.5.3
 ----------
  * Add new broadcast_type attribute
