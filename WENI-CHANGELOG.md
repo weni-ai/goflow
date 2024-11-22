@@ -1,3 +1,7 @@
+1.5.3
+----------
+ * Add new broadcast_type attribute
+
 1.5.2
 ----------
  * Add queue uuid on topic
