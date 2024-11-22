@@ -113,6 +113,7 @@ func TestEventMarshaling(t *testing.T) {
 			),
 			`{
 				"base_language": "eng",
+				"broadcast_type": "D",
 				"contacts": [
 					{
 						"name": "Jim",

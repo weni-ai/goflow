@@ -60,7 +60,7 @@ type BroadcastCreatedEvent struct {
 	Groups        []*assets.GroupReference                `json:"groups,omitempty" validate:"dive"`
 	Contacts      []*flows.ContactReference               `json:"contacts,omitempty" validate:"dive"`
 	URNs          []urns.URN                              `json:"urns,omitempty" validate:"dive,urn"`
-	BroadcastType BroadcastType                           `json:"broadcast_type"`
+	BroadcastType BroadcastType                           `json:"broadcast_type,omitempty"`
 }
 
 // NewBroadcastCreated creates a new outgoing msg event for the given recipients
