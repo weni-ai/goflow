@@ -21,12 +21,12 @@ const TypeSendBroadcast string = "send_broadcast"
 // The URNs and text fields may be templates. A [event:broadcast_created] event will be created for each unique urn, contact and group
 // with the evaluated text.
 //
-//   {
-//     "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
-//     "type": "send_broadcast",
-//     "urns": ["tel:+12065551212"],
-//     "text": "Hi @contact.name, are you ready to complete today's survey?"
-//   }
+//	{
+//	  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
+//	  "type": "send_broadcast",
+//	  "urns": ["tel:+12065551212"],
+//	  "text": "Hi @contact.name, are you ready to complete today's survey?"
+//	}
 //
 // @action send_broadcast
 type SendBroadcastAction struct {
@@ -84,7 +84,7 @@ func (a *SendBroadcastAction) Execute(run flows.FlowRun, step flows.Step, logMod
 
 	// if we have any recipients, log an event
 	if len(urnList) > 0 || len(contactRefs) > 0 || len(groupRefs) > 0 {
-		logEvent(events.NewBroadcastCreated(translations, run.Flow().Language(), groupRefs, contactRefs, urnList))
+		logEvent(events.NewBroadcastCreated(translations, run.Flow().Language(), groupRefs, contactRefs, urnList, events.BroadcastTypeDefault))
 	}
 
 	return nil

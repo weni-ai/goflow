@@ -109,6 +109,7 @@ func TestEventMarshaling(t *testing.T) {
 					flows.NewContactReference(flows.ContactUUID("b2aaf598-1bb3-4c7d-b6bb-1f8dbe2ac16f"), "Jim"),
 				},
 				[]urns.URN{urns.URN("tel:+12345678900")},
+				events.BroadcastTypeDefault,
 			),
 			`{
 				"base_language": "eng",
