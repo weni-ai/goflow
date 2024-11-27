@@ -35,6 +35,7 @@ func TestMsgWppOut(t *testing.T) {
 		},
 		nil,
 		nil,
+		nil,
 		flows.MsgTopicAgent,
 	)
 

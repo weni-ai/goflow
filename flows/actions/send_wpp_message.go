@@ -285,14 +285,14 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, a.Topic)
+		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, a.Topic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, flows.NilMsgTopic)
+		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, flows.NilMsgTopic)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 

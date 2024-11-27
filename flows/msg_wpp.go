@@ -24,8 +24,18 @@ type MsgWppOut struct {
 	FlowMessage_         FlowMessage         `json:"flow_message,omitempty"`
 	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
 	Templating_          *MsgTemplating      `json:"templating,omitempty"`
+	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
 }
 
+type ButtonComponent struct {
+	SubType    string        `json:"sub_type"`
+	Parameters []ButtonParam `json:"parameters"`
+}
+
+type ButtonParam struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
 type ListMessage struct {
 	ButtonText string      `json:"button_text,omitempty"`
 	ListItems  []ListItems `json:"list_items,omitempty"`
@@ -126,7 +136,7 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, templating *MsgTemplating, topic MsgTopic) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -146,6 +156,7 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		FlowMessage_:         flowMessage,
 		OrderDetailsMessage_: orderDetailsMessage,
 		Templating_:          templating,
+		Buttons_:             buttons,
 	}
 }
 
@@ -174,3 +185,5 @@ func (m *MsgWppOut) FlowMessage() FlowMessage { return m.FlowMessage_ }
 func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDetailsMessage_ }
 
 func (m *MsgWppOut) Templating() *MsgTemplating { return m.Templating_ }
+
+func (m *MsgWppOut) Buttons() []ButtonComponent { return m.Buttons_ }
