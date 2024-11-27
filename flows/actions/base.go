@@ -249,35 +249,29 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 	}
 	var evaluatedListItems []flows.ListItems
 
-	for i, item := range actionListItems {
-		translatedListMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "list_message", []string{item.Title, item.Description}, languages)
+	for _, item := range actionListItems {
+		translatedListItemTitle := run.GetTranslatedTextArray(uuids.UUID(item.UUID), "title", []string{item.Title}, languages)[0]
+		translatedListItemDescription := run.GetTranslatedTextArray(uuids.UUID(item.UUID), "description", []string{item.Description}, languages)[0]
 
-		if len(translatedListMessage) == 0 {
-			continue
-		}
-
-		evaluatedTitle, err := run.EvaluateTemplate(translatedListMessage[0])
+		evaluatedTitle, err := run.EvaluateTemplate(translatedListItemTitle)
 		if err != nil {
 			logEvent(events.NewError(err))
 			continue
 		}
 
-		var evaluatedDescription string
-		if len(translatedListMessage) > 1 {
-			evaluatedDescription, err = run.EvaluateTemplate(translatedListMessage[1])
-			if err != nil {
-				logEvent(events.NewError(err))
-			}
+		evaluatedDescription, err := run.EvaluateTemplate(translatedListItemDescription)
+		if err != nil {
+			logEvent(events.NewError(err))
 		}
 
-		if len(evaluatedTitle) == 0 && len(evaluatedDescription) == 0 {
+		if evaluatedTitle == "" && evaluatedDescription == "" {
 			logEvent(events.NewErrorf("option title and description evaluated to empty strings, skipping"))
 			continue
-		} else if len(evaluatedTitle) == 0 {
+		} else if evaluatedTitle == "" {
 			logEvent(events.NewErrorf("option title text evaluated to empty string"))
 		}
 
-		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: actionListItems[i].UUID})
+		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: item.UUID})
 	}
 
 	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
