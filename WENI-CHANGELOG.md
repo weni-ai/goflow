@@ -1,3 +1,8 @@
+1.5.5
+----------
+ * fix: list message translations
+ * feat: add button component to wpp message
+
 1.5.4
 ----------
  * Fix release
