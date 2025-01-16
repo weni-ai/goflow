@@ -60,6 +60,15 @@ func (c *OrgContextAssets) GetHideUnavailableByChannelUUID() *OrgContext {
 	return nil
 }
 
+func (c *OrgContextAssets) GetExtraPromptByChannelUUID() *OrgContext {
+	for _, c := range c.byChannelUUID {
+		if c.OrgContext.ExtraPrompt() != "" {
+			return c
+		}
+	}
+	return nil
+}
+
 func (c *OrgContext) Asset() assets.OrgContext { return c.OrgContext }
 
 // Reference returns a reference to this context

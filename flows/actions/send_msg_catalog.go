@@ -181,12 +181,18 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				hideUnavailable = context.OrgContext.HideUnavailable()
 			}
 
+			context = orgContext.GetExtraPromptByChannelUUID()
+			var extraPrompt string
+			if context != nil {
+				extraPrompt = context.OrgContext.ExtraPrompt()
+			}
+
 			language := "eng"
 			if run.Contact().Language() != envs.NilLanguage && run.Contact().Language() != "base" {
 				language = string(run.Contact().Language())
 			}
 
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavailable, language)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavailable, extraPrompt, language)
 			catalogCall, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				if catalogCall != nil {
