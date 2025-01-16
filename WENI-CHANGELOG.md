@@ -1,3 +1,7 @@
+1.6.0
+----------
+ * Add extra prompt in org context
+
 1.5.5
 ----------
  * fix: list message translations
