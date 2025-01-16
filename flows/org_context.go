@@ -67,7 +67,7 @@ func (c *OrgContext) Reference() *assets.OrgContextReference {
 	if c == nil {
 		return nil
 	}
-	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavailable())
+	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavailable(), c.ExtraPrompt())
 }
 
 type OrgContextAssets struct {
