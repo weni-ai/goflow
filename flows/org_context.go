@@ -60,6 +60,15 @@ func (c *OrgContextAssets) GetHideUnavailableByChannelUUID() *OrgContext {
 	return nil
 }
 
+func (c *OrgContextAssets) GetExtraPromptByChannelUUID() *OrgContext {
+	for _, c := range c.byChannelUUID {
+		if c.OrgContext.ExtraPrompt() != "" {
+			return c
+		}
+	}
+	return nil
+}
+
 func (c *OrgContext) Asset() assets.OrgContext { return c.OrgContext }
 
 // Reference returns a reference to this context
@@ -67,7 +76,7 @@ func (c *OrgContext) Reference() *assets.OrgContextReference {
 	if c == nil {
 		return nil
 	}
-	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavailable())
+	return assets.NewOrgContextReference(c.Context(), c.ProjectUUID(), c.HasVtexAds(), c.HideUnavailable(), c.ExtraPrompt())
 }
 
 type OrgContextAssets struct {
