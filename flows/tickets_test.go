@@ -36,6 +36,7 @@ func TestTickets(t *testing.T) {
 		"topics": [
 			{
 				"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4",
+				"queue_uuid": "",
 				"name": "Weather"
 			},
 			{
@@ -64,7 +65,7 @@ func TestTickets(t *testing.T) {
 	weather := sa.Topics().Get("472a7a73-96cb-4736-b567-056d987cc5b4")
 	assert.Equal(t, assets.TopicUUID("472a7a73-96cb-4736-b567-056d987cc5b4"), weather.UUID())
 	assert.Equal(t, "Weather", weather.Name())
-	assert.Equal(t, assets.NewTopicReference("472a7a73-96cb-4736-b567-056d987cc5b4", "Weather"), weather.Reference())
+	assert.Equal(t, assets.NewTopicReference("472a7a73-96cb-4736-b567-056d987cc5b4", "Weather", ""), weather.Reference())
 
 	assert.Equal(t, weather, sa.Topics().FindByName("Weather"))
 	assert.Equal(t, weather, sa.Topics().FindByName("WEATHER"))
@@ -112,7 +113,7 @@ func TestTickets(t *testing.T) {
 	ticket2, err := flows.ReadTicket(sa, []byte(`{
 		"uuid": "5a4af021-d2c2-47fc-9abc-abbb8635d8c0", 
 		"ticketer": {"uuid": "d605bb96-258d-4097-ad0a-080937db2212", "name": "Support Tickets"},
-		"topic": {"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4", "name": "Weather"},
+		"topic": {"uuid": "472a7a73-96cb-4736-b567-056d987cc5b4", "queue_uuid":"" ,"name": "Weather"},
 		"subject": "Old Ticket",
 		"body": "Where are my shoes?",
 		"assignee": {"email": "bob@nyaruka.com", "name": "Bob"}

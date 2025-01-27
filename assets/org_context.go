@@ -11,17 +11,21 @@ type OrgContext interface {
 	ChannelUUID() ChannelUUID
 	ProjectUUID() uuids.UUID
 	HasVtexAds() bool
+	HideUnavailable() bool
+	ExtraPrompt() string
 }
 
 type OrgContextReference struct {
-	Context     string     `json:"context"`
-	UUID        string     `json:"uuid"`
-	ProjectUUID uuids.UUID `json:"project_uuid"`
-	HasVtexAds  bool       `json:"vtex_ads"`
+	Context         string     `json:"context"`
+	UUID            string     `json:"uuid"`
+	ProjectUUID     uuids.UUID `json:"project_uuid"`
+	HasVtexAds      bool       `json:"vtex_ads"`
+	HideUnavailable bool       `json:"hide_unavailable"`
+	ExtraPrompt     string     `json:"extra_prompt"`
 }
 
-func NewOrgContextReference(orgContext string, projectUUID uuids.UUID, hasVtexAds bool) *OrgContextReference {
-	return &OrgContextReference{Context: orgContext, ProjectUUID: projectUUID, HasVtexAds: hasVtexAds}
+func NewOrgContextReference(orgContext string, projectUUID uuids.UUID, hasVtexAds bool, hideUnavailable bool, extraPrompt string) *OrgContextReference {
+	return &OrgContextReference{Context: orgContext, ProjectUUID: projectUUID, HasVtexAds: hasVtexAds, HideUnavailable: hideUnavailable, ExtraPrompt: extraPrompt}
 }
 
 func (r *OrgContextReference) Type() string {

@@ -1,3 +1,40 @@
+1.6.0
+----------
+ * Add extra prompt in org context
+
+1.5.5
+----------
+ * fix: list message translations
+ * feat: add button component to wpp message
+
+1.5.4
+----------
+ * Fix release
+
+1.5.3
+----------
+ * Add new broadcast_type attribute
+
+1.5.2
+----------
+ * Add queue uuid on topic
+
+1.5.1
+----------
+ * Support MsgTemplating in WhatsApp messages
+
+1.5.0
+----------
+ * Use hideUnavailable for product search
+
+1.4.2
+----------
+ * Using URN identity for brain
+
+1.4.1
+----------
+ * Feat: Accept order-like items in order details messages
+
 1.4.0
 ----------
  * Feat: WhatsApp Order Details
