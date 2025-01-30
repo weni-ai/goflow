@@ -150,6 +150,10 @@ func (v *FieldValue) QueryValue() interface{} {
 	return nil
 }
 
+func (v *FieldValue) Type() assets.FieldType {
+	return v.field.Type()
+}
+
 // FieldValues is the set of all field values for a contact
 type FieldValues map[string]*FieldValue
 
