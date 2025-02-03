@@ -1,3 +1,7 @@
+1.6.1
+----------
+ * Add field type getter
+
 1.6.0
 ----------
  * Add extra prompt in org context
