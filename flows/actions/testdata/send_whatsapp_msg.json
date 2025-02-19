@@ -46,6 +46,7 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hola!",
+                    "smart": false,
                     "footer": "footer",
                     "header_type": "media",
                     "interaction_type": "list",
@@ -102,6 +103,7 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hi there!",
+                    "smart": false,
                     "footer": "footer",
                     "header_type": "text",
                     "interaction_type": "cta_url",
@@ -167,6 +169,7 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hi there!",
+                    "smart": false,
                     "footer": "footer",
                     "header_type": "text",
                     "interaction_type": "flow_msg",
@@ -252,6 +255,7 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hi there!",
+                    "smart": false,
                     "footer": "footer",
                     "header_type": "media",
                     "attachments": [
@@ -399,6 +403,7 @@
                         "name": "My Android Phone"
                     },
                     "text": "Hi there!",
+                    "smart": false,
                     "footer": "footer",
                     "header_type": "media",
                     "attachments": [
