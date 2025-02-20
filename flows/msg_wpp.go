@@ -27,13 +27,9 @@ type MsgWppOut struct {
 	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
 
 	// fields for msg_catalog
-	Header_        string         `json:"header,omitempty"`
-	Body_          string         `json:"body,omitempty"`
-	Products_      []ProductEntry `json:"products,omitempty"`
-	Action_        string         `json:"action,omitempty"`
-	Smart_         bool           `json:"smart"`
-	ProductSearch_ string         `json:"product_search,omitempty"`
-	SendCatalog_   bool           `json:"send_catalog,omitempty"`
+	Products_         []ProductEntry `json:"products,omitempty"`
+	ActionButtonText_ string         `json:"action_button_text,omitempty"`
+	SendCatalog_      bool           `json:"send_catalog,omitempty"`
 }
 
 type ButtonComponent struct {
@@ -145,7 +141,7 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, header string, body string, products []ProductEntry, action string, smart bool, productSearch string, sendCatalog bool) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -166,12 +162,8 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		OrderDetailsMessage_: orderDetailsMessage,
 		Templating_:          templating,
 		Buttons_:             buttons,
-		Header_:              header,
-		Body_:                body,
 		Products_:            products,
-		Action_:              action,
-		Smart_:               smart,
-		ProductSearch_:       productSearch,
+		ActionButtonText_:    actionButtonText,
 		SendCatalog_:         sendCatalog,
 	}
 }
@@ -204,16 +196,8 @@ func (m *MsgWppOut) Templating() *MsgTemplating { return m.Templating_ }
 
 func (m *MsgWppOut) Buttons() []ButtonComponent { return m.Buttons_ }
 
-func (m *MsgWppOut) Header() string { return m.Header_ }
-
-func (m *MsgWppOut) Body() string { return m.Body_ }
-
 func (m *MsgWppOut) Products() []ProductEntry { return m.Products_ }
 
-func (m *MsgWppOut) Action() string { return m.Action_ }
-
-func (m *MsgWppOut) Smart() bool { return m.Smart_ }
-
-func (m *MsgWppOut) ProductSearch() string { return m.ProductSearch_ }
+func (m *MsgWppOut) ActionButtonText() string { return m.ActionButtonText_ }
 
 func (m *MsgWppOut) SendCatalog() bool { return m.SendCatalog_ }

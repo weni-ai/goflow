@@ -37,12 +37,8 @@ func TestMsgWppOut(t *testing.T) {
 		nil,
 		nil,
 		flows.MsgTopicAgent,
-		"header",
-		"body",
 		[]flows.ProductEntry{{Product: "product", ProductRetailerIDs: []string{"product_1"}}},
 		"action",
-		false,
-		"productSearch",
 		false,
 	)
 
@@ -62,8 +58,6 @@ func TestMsgWppOut(t *testing.T) {
 		"order_details_message": {},
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
 		"topic": "agent",
-		"header": "header",
-		"body": "body",
 		"products": [
 			{
 				"Product": "product",
@@ -72,8 +66,6 @@ func TestMsgWppOut(t *testing.T) {
 				]
 			}
 		],
-		"action": "action",
-		"smart": false,
-		"product_search": "productSearch"
+		"action_button_text": "action"
 	}`), marshaled, "JSON mismatch")
 }
