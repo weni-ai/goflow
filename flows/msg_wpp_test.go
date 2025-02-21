@@ -60,8 +60,8 @@ func TestMsgWppOut(t *testing.T) {
 		"topic": "agent",
 		"products": [
 			{
-				"Product": "product",
-				"ProductRetailerIDs": [
+				"product": "product",
+				"product_retailer_ids": [
 					"product_1"
 				]
 			}
