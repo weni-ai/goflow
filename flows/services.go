@@ -100,8 +100,8 @@ type ExternalServiceCall struct {
 }
 
 type ProductEntry struct {
-	Product            string
-	ProductRetailerIDs []string
+	Product            string   `json:"product,omitempty"`
+	ProductRetailerIDs []string `json:"product_retailer_ids,omitempty"`
 }
 
 type MsgCatalogCall struct {

@@ -37,6 +37,9 @@ func TestMsgWppOut(t *testing.T) {
 		nil,
 		nil,
 		flows.MsgTopicAgent,
+		[]flows.ProductEntry{{Product: "product", ProductRetailerIDs: []string{"product_1"}}},
+		"action",
+		false,
 	)
 
 	// test marshaling our msg
@@ -54,6 +57,15 @@ func TestMsgWppOut(t *testing.T) {
 		"flow_message": {},
 		"order_details_message": {},
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
-		"topic": "agent"
+		"topic": "agent",
+		"products": [
+			{
+				"product": "product",
+				"product_retailer_ids": [
+					"product_1"
+				]
+			}
+		],
+		"action_button_text": "action"
 	}`), marshaled, "JSON mismatch")
 }

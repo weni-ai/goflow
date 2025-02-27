@@ -25,6 +25,11 @@ type MsgWppOut struct {
 	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
 	Templating_          *MsgTemplating      `json:"templating,omitempty"`
 	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
+
+	// fields for msg_catalog
+	Products_         []ProductEntry `json:"products,omitempty"`
+	ActionButtonText_ string         `json:"action_button_text,omitempty"`
+	SendCatalog_      bool           `json:"send_catalog,omitempty"`
 }
 
 type ButtonComponent struct {
@@ -136,7 +141,7 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -157,6 +162,9 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		OrderDetailsMessage_: orderDetailsMessage,
 		Templating_:          templating,
 		Buttons_:             buttons,
+		Products_:            products,
+		ActionButtonText_:    actionButtonText,
+		SendCatalog_:         sendCatalog,
 	}
 }
 
@@ -187,3 +195,9 @@ func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDe
 func (m *MsgWppOut) Templating() *MsgTemplating { return m.Templating_ }
 
 func (m *MsgWppOut) Buttons() []ButtonComponent { return m.Buttons_ }
+
+func (m *MsgWppOut) Products() []ProductEntry { return m.Products_ }
+
+func (m *MsgWppOut) ActionButtonText() string { return m.ActionButtonText_ }
+
+func (m *MsgWppOut) SendCatalog() bool { return m.SendCatalog_ }

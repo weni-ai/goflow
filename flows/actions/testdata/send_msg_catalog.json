@@ -5,13 +5,13 @@
             "type": "send_msg_catalog",
             "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
             "productSearch": "",
-            "productViewSettings":{
+            "productViewSettings": {
                 "header": "header",
                 "body": "body",
                 "footer": "footer",
                 "action": "menu"
             },
-            "search_type":"default",
+            "search_type": "default",
             "automaticProductSearch": true,
             "topic": "spam",
             "seller_id": "12",
@@ -26,7 +26,7 @@
             "type": "send_msg_catalog",
             "uuid": "ad154980-7bf7-4ab8-8728-545fd6378912",
             "productSearch": "",
-            "productViewSettings":{
+            "productViewSettings": {
                 "header": "header",
                 "body": "body",
                 "footer": "footer",
@@ -43,7 +43,7 @@
             "sendCatalog": false,
             "search_type": "",
             "postal_code": "00000000",
-            "seller_id":"12"
+            "seller_id": "12"
         },
         "events": [
             {
@@ -89,9 +89,13 @@
             "search_type": "vtex",
             "search_url": "https://search.vtex.com/api/catalog_system/pub/products/search",
             "postal_code": "00000000",
-            "seller_id":"12",
+            "seller_id": "12",
             "automaticProductSearch": false,
-            "products": [{"product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"}]
+            "products": [
+                {
+                    "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
+                }
+            ]
         },
         "events": [
             {
@@ -134,8 +138,8 @@
                     "header": "header text ",
                     "products": [
                         {
-                            "Product": "product_retailer_id",
-                            "ProductRetailerIDs": [
+                            "product": "product_retailer_id",
+                            "product_retailer_ids": [
                                 "732a611c-296c-4396-8273-096c1eb96ad1"
                             ]
                         }
@@ -165,7 +169,7 @@
             "search_type": "vtex",
             "search_url": "https://search.vtex.com.br/api/io/_v/api/intelligent-search/product_search",
             "postal_code": "00000000",
-            "seller_id":"12",
+            "seller_id": "12",
             "automaticProductSearch": false,
             "products": [
                 {
@@ -210,8 +214,8 @@
                     "action": "Menu",
                     "products": [
                         {
-                            "Product": "product_retailer_id",
-                            "ProductRetailerIDs": [
+                            "product": "product_retailer_id",
+                            "product_retailer_ids": [
                                 "732a611c-296c-4396-8273-096c1eb96ad1"
                             ]
                         }
@@ -238,7 +242,7 @@
             "search_url": "https://search.vtex.com.br/api/checkout/pub/orderForms/simulation",
             "automaticProductSearch": false,
             "postal_code": "00000000",
-            "seller_id":"12",
+            "seller_id": "12",
             "products": [
                 {
                     "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
@@ -282,8 +286,8 @@
                     "action": "Menu",
                     "products": [
                         {
-                            "Product": "product_retailer_id",
-                            "ProductRetailerIDs": [
+                            "product": "product_retailer_id",
+                            "product_retailer_ids": [
                                 "732a611c-296c-4396-8273-096c1eb96ad1"
                             ]
                         }
