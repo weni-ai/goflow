@@ -1,3 +1,7 @@
+1.7.0
+----------
+ * Add support for catalog message in whatsapp messages
+
 1.6.1
 ----------
  * Add field type getter
