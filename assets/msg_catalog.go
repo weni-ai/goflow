@@ -21,32 +21,34 @@ type MsgCatalogReference struct {
 }
 
 type MsgCatalogParam struct {
-	ProductSearch   string     `json:"product_search,omitempty"`
-	ChannelUUID     uuids.UUID `json:"channel_uuid,omitempty"`
-	SearchType      string     `json:"search_type,omitempty"`
-	SearchUrl       string     `json:"search_url,omitempty"`
-	ApiType         string     `json:"api_type,omitempty"`
-	PostalCode      string     `json:"postal_code,omitempty"`
-	SellerId        string     `json:"seller_id,omitempty"`
-	HasVtexAds      bool       `json:"vtex_ads,omitempty"`
-	HideUnavailable bool       `json:"hide_unavailable"`
-	ExtraPrompt     string     `json:"extra_prompt"`
-	Language        string     `json:"language"`
+	ProductSearch        string     `json:"product_search,omitempty"`
+	ChannelUUID          uuids.UUID `json:"channel_uuid,omitempty"`
+	SearchType           string     `json:"search_type,omitempty"`
+	SearchUrl            string     `json:"search_url,omitempty"`
+	ApiType              string     `json:"api_type,omitempty"`
+	PostalCode           string     `json:"postal_code,omitempty"`
+	SellerId             string     `json:"seller_id,omitempty"`
+	HasVtexAds           bool       `json:"vtex_ads,omitempty"`
+	HideUnavailable      bool       `json:"hide_unavailable"`
+	ExtraPrompt          string     `json:"extra_prompt"`
+	Language             string     `json:"language"`
+	CartSimulationParams string     `json:"cart_simulation_params"`
 }
 
-func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtexAds bool, hideUnavailable bool, extraPrompt string, language string) MsgCatalogParam {
+func NewMsgCatalogParam(productSearch string, channelUUID uuids.UUID, searchType string, searchUrl string, apiType string, postalCode string, sellerId string, hasVtexAds bool, hideUnavailable bool, extraPrompt string, language string, cartSimulationParams string) MsgCatalogParam {
 	p := MsgCatalogParam{
-		ProductSearch:   productSearch,
-		ChannelUUID:     channelUUID,
-		SearchType:      searchType,
-		SearchUrl:       searchUrl,
-		ApiType:         apiType,
-		PostalCode:      postalCode,
-		SellerId:        sellerId,
-		HasVtexAds:      hasVtexAds,
-		HideUnavailable: hideUnavailable,
-		ExtraPrompt:     extraPrompt,
-		Language:        language,
+		ProductSearch:        productSearch,
+		ChannelUUID:          channelUUID,
+		SearchType:           searchType,
+		SearchUrl:            searchUrl,
+		ApiType:              apiType,
+		PostalCode:           postalCode,
+		SellerId:             sellerId,
+		HasVtexAds:           hasVtexAds,
+		HideUnavailable:      hideUnavailable,
+		ExtraPrompt:          extraPrompt,
+		Language:             language,
+		CartSimulationParams: cartSimulationParams,
 	}
 	return p
 }

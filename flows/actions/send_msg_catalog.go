@@ -75,14 +75,15 @@ type ProductViewSettings struct {
 }
 
 type searchSettings struct {
-	SearchUrl  string `json:"search_url,omitempty"`
-	SearchType string `json:"search_type"`
-	PostalCode string `json:"postal_code"`
-	SellerId   string `json:"seller_id"`
+	SearchUrl            string `json:"search_url,omitempty"`
+	SearchType           string `json:"search_type"`
+	PostalCode           string `json:"postal_code"`
+	SellerId             string `json:"seller_id"`
+	CartSimulationParams string `json:"cart_simulation_params"`
 }
 
 // NewSendMsgCatalog creates a new send msg catalog action
-func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch bool, searchUrl string, searchType string, postalCode string, sellerId string, allURNs bool) *SendMsgCatalogAction {
+func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, productSearch string, products []map[string]string, automaticSearch bool, searchUrl string, searchType string, postalCode string, sellerId string, cartSimulationParams string, allURNs bool) *SendMsgCatalogAction {
 	return &SendMsgCatalogAction{
 		baseAction: newBaseAction(TypeSendMsgCatalog, uuid),
 		createMsgCatalogAction: createMsgCatalogAction{
@@ -97,10 +98,11 @@ func NewSendMsgCatalog(uuid flows.ActionUUID, header, body, footer, action, prod
 			ProductSearch:   productSearch,
 		},
 		searchSettings: searchSettings{
-			SearchUrl:  searchUrl,
-			SearchType: searchType,
-			PostalCode: postalCode,
-			SellerId:   sellerId,
+			SearchUrl:            searchUrl,
+			SearchType:           searchType,
+			PostalCode:           postalCode,
+			SellerId:             sellerId,
+			CartSimulationParams: cartSimulationParams,
 		},
 		AllURNs: allURNs,
 	}
@@ -133,7 +135,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 		}
 	}
 
-	evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, a.PostalCode, a.SearchUrl, a.SellerId, logEvent)
+	evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId, evaluatedCartSimulationParams := a.evaluateMessageCatalog(run, nil, a.ProductViewSettings.Header, a.ProductViewSettings.Body, a.ProductViewSettings.Footer, a.Products, a.SendCatalog, a.PostalCode, a.SearchUrl, a.SellerId, a.CartSimulationParams, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -192,7 +194,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				language = string(run.Contact().Language())
 			}
 
-			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavailable, extraPrompt, language)
+			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavailable, extraPrompt, language, evaluatedCartSimulationParams)
 			catalogCall, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
 				if catalogCall != nil {
