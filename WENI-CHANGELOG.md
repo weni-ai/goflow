@@ -1,3 +1,7 @@
+1.8.0
+----------
+ * feat: add FromBCP47 function to convert BCP47 codes to Locale
+
 1.7.0
 ----------
  * Add support for catalog message in whatsapp messages
