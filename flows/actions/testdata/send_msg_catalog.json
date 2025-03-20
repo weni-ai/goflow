@@ -33,6 +33,7 @@
                 "action": "menu"
             },
             "automaticProductSearch": false,
+            "cart_simulation_params": "",
             "products": [
                 {
                     "product_retailer_id": "7ac68bc8-a137-4cb2-a4a7-3a2858e0c1d5"
@@ -91,6 +92,7 @@
             "postal_code": "00000000",
             "seller_id": "12",
             "automaticProductSearch": false,
+            "cart_simulation_params": "",
             "products": [
                 {
                     "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
@@ -171,6 +173,7 @@
             "postal_code": "00000000",
             "seller_id": "12",
             "automaticProductSearch": false,
+            "cart_simulation_params": "",
             "products": [
                 {
                     "product_retailer_id": "732a611c-296c-4396-8273-096c1eb96ad1"
@@ -242,6 +245,7 @@
             "search_url": "https://search.vtex.com.br/api/checkout/pub/orderForms/simulation",
             "automaticProductSearch": false,
             "postal_code": "00000000",
+            "cart_simulation_params": "",
             "seller_id": "12",
             "products": [
                 {
