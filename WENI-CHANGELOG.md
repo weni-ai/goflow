@@ -1,3 +1,7 @@
+1.9.0
+----------
+ * feat: add cart simulation parameter support
+
 1.8.0
 ----------
  * feat: add FromBCP47 function to convert BCP47 codes to Locale
