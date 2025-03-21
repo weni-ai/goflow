@@ -84,6 +84,12 @@ const triggerJSON = `{
 			"nfm_reply": {
 				"name": "Flow Wpp",
 				"response_json": "{\"flow_token\": \"<FLOW_TOKEN>\", \"optional_param1\": \"<value1>\", \"optional_param2\": \"<value2>\"}"
+			},
+			"ig_comment": {
+				"text": "hello",
+				"from": {
+					"id": "1234567890",
+					"username": "bob"
 			}
 	},
 	"triggered_on": "2023-10-05T19:35:25.576204487Z",
