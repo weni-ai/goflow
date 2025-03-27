@@ -54,12 +54,12 @@ type MsgIn struct {
 type MsgOut struct {
 	BaseMsg
 
-	QuickReplies_  []string       `json:"quick_replies,omitempty"`
-	Templating_    *MsgTemplating `json:"templating,omitempty"`
-	Topic_         MsgTopic       `json:"topic,omitempty"`
-	TextLanguage   envs.Language  `json:"text_language,omitempty"`
-	IGComment_     string         `json:"ig_comment,omitempty"`
-	IGResponseType string         `json:"ig_response_type,omitempty"`
+	QuickReplies_   []string       `json:"quick_replies,omitempty"`
+	Templating_     *MsgTemplating `json:"templating,omitempty"`
+	Topic_          MsgTopic       `json:"topic,omitempty"`
+	TextLanguage    envs.Language  `json:"text_language,omitempty"`
+	IGComment_      string         `json:"ig_comment,omitempty"`
+	IGResponseType_ string         `json:"ig_response_type,omitempty"`
 }
 
 // NewMsgIn creates a new incoming message
@@ -85,11 +85,11 @@ func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, atta
 			Text_:        text,
 			Attachments_: attachments,
 		},
-		QuickReplies_:  quickReplies,
-		Templating_:    templating,
-		Topic_:         topic,
-		IGComment_:     igComment,
-		IGResponseType: igResponseType,
+		QuickReplies_:   quickReplies,
+		Templating_:     templating,
+		Topic_:          topic,
+		IGComment_:      igComment,
+		IGResponseType_: igResponseType,
 	}
 }
 
@@ -165,6 +165,12 @@ func (m *MsgOut) Templating() *MsgTemplating { return m.Templating_ }
 
 // Topic returns the topic to use to send this message (if any)
 func (m *MsgOut) Topic() MsgTopic { return m.Topic_ }
+
+// IGComment returns the IG comment to use to send this message (if any)
+func (m *MsgOut) IGComment() string { return m.IGComment_ }
+
+// IGResponseType returns the IG response type to use to send this message (if any)
+func (m *MsgOut) IGResponseType() string { return m.IGResponseType_ }
 
 // MsgTemplating represents any substituted message template that should be applied when sending this message
 type MsgTemplating struct {
