@@ -22,22 +22,24 @@ const TypeSendMsg string = "send_msg"
 //
 // A [event:msg_created] event will be created with the evaluated text.
 //
-//   {
-//     "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
-//     "type": "send_msg",
-//     "text": "Hi @contact.name, are you ready to complete today's survey?",
-//     "attachments": [],
-//     "all_urns": false,
-//     "templating": {
-//       "uuid": "32c2ead6-3fa3-4402-8e27-9cc718175c5a",
-//       "template": {
-//         "uuid": "3ce100b7-a734-4b4e-891b-350b1279ade2",
-//         "name": "revive_issue"
-//       },
-//       "variables": ["@contact.name"]
-//     },
-//     "topic": "event"
-//   }
+//	{
+//	  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
+//	  "type": "send_msg",
+//	  "text": "Hi @contact.name, are you ready to complete today's survey?",
+//	  "attachments": [],
+//	  "all_urns": false,
+//	  "templating": {
+//	    "uuid": "32c2ead6-3fa3-4402-8e27-9cc718175c5a",
+//	    "template": {
+//	      "uuid": "3ce100b7-a734-4b4e-891b-350b1279ade2",
+//	      "name": "revive_issue"
+//	    },
+//	    "variables": ["@contact.name"]
+//	  },
+//	  "topic": "event"
+//	  "ig_comment": "0123456789",
+//	  "ig_response_type": "comment"
+//	}
 //
 // @action send_msg
 type SendMsgAction struct {
@@ -45,9 +47,11 @@ type SendMsgAction struct {
 	universalAction
 	createMsgAction
 
-	AllURNs    bool           `json:"all_urns,omitempty"`
-	Templating *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
-	Topic      flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	AllURNs        bool           `json:"all_urns,omitempty"`
+	Templating     *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
+	Topic          flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	IGComment      string         `json:"ig_comment,omitempty"`
+	IGResponseType string         `json:"ig_response_type,omitempty"`
 }
 
 // Templating represents the templating that should be used if possible
@@ -81,6 +85,7 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 	}
 
 	evaluatedText, evaluatedAttachments, evaluatedQuickReplies := a.evaluateMessage(run, nil, a.Text, a.Attachments, a.QuickReplies, logEvent)
+	evaluatedIGComment := a.evaluateMessageIG(run, nil, a.IGComment, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -122,14 +127,14 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 			}
 		}
 
-		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic)
+		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, a.IGResponseType)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic)
+		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, a.IGResponseType)
 		logEvent(events.NewMsgCreated(msg))
 	}
 

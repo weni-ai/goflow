@@ -74,6 +74,8 @@ func TestMsgOut(t *testing.T) {
 		nil,
 		nil,
 		flows.MsgTopicAgent,
+		"0123456789",
+		"comment",
 	)
 
 	// test marshaling our msg
@@ -86,7 +88,9 @@ func TestMsgOut(t *testing.T) {
 		"channel": {"uuid":"61f38f46-a856-4f90-899e-905691784159", "name":"My Android"},
 		"text": "Hi there",
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
-		"topic": "agent"
+		"topic": "agent",
+		"ig_comment": "0123456789",
+		"ig_response_type": "comment"
 	}`), marshaled, "JSON mismatch")
 }
 

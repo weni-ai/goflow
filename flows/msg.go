@@ -54,10 +54,12 @@ type MsgIn struct {
 type MsgOut struct {
 	BaseMsg
 
-	QuickReplies_ []string       `json:"quick_replies,omitempty"`
-	Templating_   *MsgTemplating `json:"templating,omitempty"`
-	Topic_        MsgTopic       `json:"topic,omitempty"`
-	TextLanguage  envs.Language  `json:"text_language,omitempty"`
+	QuickReplies_  []string       `json:"quick_replies,omitempty"`
+	Templating_    *MsgTemplating `json:"templating,omitempty"`
+	Topic_         MsgTopic       `json:"topic,omitempty"`
+	TextLanguage   envs.Language  `json:"text_language,omitempty"`
+	IGComment_     string         `json:"ig_comment,omitempty"`
+	IGResponseType string         `json:"ig_response_type,omitempty"`
 }
 
 // NewMsgIn creates a new incoming message
@@ -74,7 +76,7 @@ func NewMsgIn(uuid MsgUUID, urn urns.URN, channel *assets.ChannelReference, text
 }
 
 // NewMsgOut creates a new outgoing message
-func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic) *MsgOut {
+func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic, igComment string, igResponseType string) *MsgOut {
 	return &MsgOut{
 		BaseMsg: BaseMsg{
 			UUID_:        MsgUUID(uuids.New()),
@@ -83,9 +85,11 @@ func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, atta
 			Text_:        text,
 			Attachments_: attachments,
 		},
-		QuickReplies_: quickReplies,
-		Templating_:   templating,
-		Topic_:        topic,
+		QuickReplies_:  quickReplies,
+		Templating_:    templating,
+		Topic_:         topic,
+		IGComment_:     igComment,
+		IGResponseType: igResponseType,
 	}
 }
 
