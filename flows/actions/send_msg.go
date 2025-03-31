@@ -47,11 +47,16 @@ type SendMsgAction struct {
 	universalAction
 	createMsgAction
 
-	AllURNs        bool           `json:"all_urns,omitempty"`
-	Templating     *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
-	Topic          flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
-	IGComment      string         `json:"ig_comment,omitempty"`
-	IGResponseType string         `json:"ig_response_type,omitempty"`
+	AllURNs           bool               `json:"all_urns,omitempty"`
+	Templating        *Templating        `json:"templating,omitempty" validate:"omitempty,dive"`
+	Topic             flows.MsgTopic     `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	InstagramSettings *InstagramSettings `json:"instagram_settings,omitempty"`
+}
+
+type InstagramSettings struct {
+	ResponseType string `json:"response_type,omitempty"`
+	CommentID    string `json:"comment_id,omitempty"`
+	Tag          string `json:"tag,omitempty"`
 }
 
 // Templating represents the templating that should be used if possible
@@ -85,7 +90,7 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 	}
 
 	evaluatedText, evaluatedAttachments, evaluatedQuickReplies := a.evaluateMessage(run, nil, a.Text, a.Attachments, a.QuickReplies, logEvent)
-	evaluatedIGComment := a.evaluateMessageIG(run, nil, a.IGComment, logEvent)
+	evaluatedIGComment := a.evaluateMessageIG(run, nil, a.InstagramSettings.CommentID, logEvent)
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -127,14 +132,14 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 			}
 		}
 
-		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, a.IGResponseType)
+		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, a.InstagramSettings.ResponseType)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, a.IGResponseType)
+		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, a.InstagramSettings.ResponseType)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
