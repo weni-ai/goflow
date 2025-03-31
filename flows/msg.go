@@ -60,6 +60,7 @@ type MsgOut struct {
 	TextLanguage    envs.Language  `json:"text_language,omitempty"`
 	IGComment_      string         `json:"ig_comment,omitempty"`
 	IGResponseType_ string         `json:"ig_response_type,omitempty"`
+	IGTag_          string         `json:"ig_tag,omitempty"`
 }
 
 // NewMsgIn creates a new incoming message
@@ -76,7 +77,7 @@ func NewMsgIn(uuid MsgUUID, urn urns.URN, channel *assets.ChannelReference, text
 }
 
 // NewMsgOut creates a new outgoing message
-func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic, igComment string, igResponseType string) *MsgOut {
+func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic, igComment string, igResponseType string, igTag string) *MsgOut {
 	return &MsgOut{
 		BaseMsg: BaseMsg{
 			UUID_:        MsgUUID(uuids.New()),
@@ -90,6 +91,7 @@ func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, atta
 		Topic_:          topic,
 		IGComment_:      igComment,
 		IGResponseType_: igResponseType,
+		IGTag_:          igTag,
 	}
 }
 
@@ -171,6 +173,9 @@ func (m *MsgOut) IGComment() string { return m.IGComment_ }
 
 // IGResponseType returns the IG response type to use to send this message (if any)
 func (m *MsgOut) IGResponseType() string { return m.IGResponseType_ }
+
+// IGTag returns the IG tag to use to send this message (if any)
+func (m *MsgOut) IGTag() string { return m.IGTag_ }
 
 // MsgTemplating represents any substituted message template that should be applied when sending this message
 type MsgTemplating struct {

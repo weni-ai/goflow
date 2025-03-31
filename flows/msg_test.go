@@ -76,6 +76,7 @@ func TestMsgOut(t *testing.T) {
 		flows.MsgTopicAgent,
 		"0123456789",
 		"comment",
+		"human_agent",
 	)
 
 	// test marshaling our msg

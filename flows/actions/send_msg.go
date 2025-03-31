@@ -97,17 +97,19 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 	evaluatedText, evaluatedAttachments, evaluatedQuickReplies := a.evaluateMessage(run, nil, a.Text, a.Attachments, a.QuickReplies, logEvent)
 
 	var evaluatedIGComment string
-	var responseType string
+	var IGresponseType string
+	var IGTag string
 	if a.InstagramSettings != nil {
 		evaluatedIGComment = a.evaluateMessageIG(run, nil, a.InstagramSettings.CommentID, logEvent)
-		responseType = a.InstagramSettings.ResponseType
+		IGresponseType = a.InstagramSettings.ResponseType
+		IGTag = a.InstagramSettings.Tag
 	}
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
 	sa := run.Session().Assets()
 
-	// create a new message for each URN+channel destination
+	// create a new message for each URN+channel destination	
 	for _, dest := range destinations {
 		var channelRef *assets.ChannelReference
 		if dest.Channel != nil {
@@ -143,14 +145,14 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 			}
 		}
 
-		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, responseType)
+		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, IGresponseType, IGTag)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, responseType)
+		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, IGresponseType, IGTag)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
