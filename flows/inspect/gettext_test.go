@@ -19,6 +19,9 @@ func TestLocalizableText(t *testing.T) {
 		"Hi there",
 		[]string{"image:https://example.com/test.jpg", "audio:https://example.com/test.mp3"},
 		[]string{"Yes", "No"},
+		"",
+		"",
+		"",
 		false,
 	)
 
