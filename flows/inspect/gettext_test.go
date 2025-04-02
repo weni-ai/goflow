@@ -48,6 +48,7 @@ func TestLocalizableText(t *testing.T) {
 			"foo",
 			"bar"
 		],
+		"instagram_settings": {},
 		"quick_replies": [
 			"foo",
 			"bar"

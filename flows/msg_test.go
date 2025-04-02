@@ -91,7 +91,8 @@ func TestMsgOut(t *testing.T) {
 		"attachments": ["image/jpeg:https://example.com/test.jpg", "audio/mp3:https://example.com/test.mp3"],
 		"topic": "agent",
 		"ig_comment": "0123456789",
-		"ig_response_type": "comment"
+		"ig_response_type": "comment",
+		"ig_tag": "human_agent"
 	}`), marshaled, "JSON mismatch")
 }
 
