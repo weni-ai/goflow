@@ -44,19 +44,23 @@ type BaseMsg struct {
 type MsgIn struct {
 	BaseMsg
 
-	ExternalID_ string    `json:"external_id,omitempty"`
-	Order_      *Order    `json:"order,omitempty"`
-	NFMReply_   *NFMReply `json:"nfm_reply,omitempty"`
+	ExternalID_ string     `json:"external_id,omitempty"`
+	Order_      *Order     `json:"order,omitempty"`
+	NFMReply_   *NFMReply  `json:"nfm_reply,omitempty"`
+	IGComment_  *IGComment `json:"ig_comment,omitempty"`
 }
 
 // MsgOut represents a outgoing message to the session contact
 type MsgOut struct {
 	BaseMsg
 
-	QuickReplies_ []string       `json:"quick_replies,omitempty"`
-	Templating_   *MsgTemplating `json:"templating,omitempty"`
-	Topic_        MsgTopic       `json:"topic,omitempty"`
-	TextLanguage  envs.Language  `json:"text_language,omitempty"`
+	QuickReplies_   []string       `json:"quick_replies,omitempty"`
+	Templating_     *MsgTemplating `json:"templating,omitempty"`
+	Topic_          MsgTopic       `json:"topic,omitempty"`
+	TextLanguage    envs.Language  `json:"text_language,omitempty"`
+	IGCommentID_    string         `json:"ig_comment,omitempty"`
+	IGResponseType_ string         `json:"ig_response_type,omitempty"`
+	IGTag_          string         `json:"ig_tag,omitempty"`
 }
 
 // NewMsgIn creates a new incoming message
@@ -73,7 +77,7 @@ func NewMsgIn(uuid MsgUUID, urn urns.URN, channel *assets.ChannelReference, text
 }
 
 // NewMsgOut creates a new outgoing message
-func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic) *MsgOut {
+func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, attachments []utils.Attachment, quickReplies []string, templating *MsgTemplating, topic MsgTopic, igCommentID string, igResponseType string, igTag string) *MsgOut {
 	return &MsgOut{
 		BaseMsg: BaseMsg{
 			UUID_:        MsgUUID(uuids.New()),
@@ -82,9 +86,12 @@ func NewMsgOut(urn urns.URN, channel *assets.ChannelReference, text string, atta
 			Text_:        text,
 			Attachments_: attachments,
 		},
-		QuickReplies_: quickReplies,
-		Templating_:   templating,
-		Topic_:        topic,
+		QuickReplies_:   quickReplies,
+		Templating_:     templating,
+		Topic_:          topic,
+		IGCommentID_:    igCommentID,
+		IGResponseType_: igResponseType,
+		IGTag_:          igTag,
 	}
 }
 
@@ -142,6 +149,10 @@ func (m *MsgIn) NFMReply() *NFMReply { return m.NFMReply_ }
 
 func (m *MsgIn) SetNFMReply(nfmReply *NFMReply) { m.NFMReply_ = nfmReply }
 
+func (m *MsgIn) IGComment() *IGComment { return m.IGComment_ }
+
+func (m *MsgIn) SetIGComment(igComment *IGComment) { m.IGComment_ = igComment }
+
 // ExternalID returns the optional external ID of this incoming message
 func (m *MsgIn) ExternalID() string { return m.ExternalID_ }
 
@@ -156,6 +167,15 @@ func (m *MsgOut) Templating() *MsgTemplating { return m.Templating_ }
 
 // Topic returns the topic to use to send this message (if any)
 func (m *MsgOut) Topic() MsgTopic { return m.Topic_ }
+
+// IGCommentID returns the IG comment ID to use to send this message (if any)
+func (m *MsgOut) IGCommentID() string { return m.IGCommentID_ }
+
+// IGResponseType returns the IG response type to use to send this message (if any)
+func (m *MsgOut) IGResponseType() string { return m.IGResponseType_ }
+
+// IGTag returns the IG tag to use to send this message (if any)
+func (m *MsgOut) IGTag() string { return m.IGTag_ }
 
 // MsgTemplating represents any substituted message template that should be applied when sending this message
 type MsgTemplating struct {

@@ -597,6 +597,9 @@ func TestConstructors(t *testing.T) {
 				"Hi there",
 				[]string{"http://example.com/red.jpg"},
 				[]string{"Red", "Blue"},
+				"0123456789",
+				"comment",
+				"human_agent",
 				true,
 			),
 			`{
@@ -605,7 +608,12 @@ func TestConstructors(t *testing.T) {
 			"text": "Hi there",
 			"attachments": ["http://example.com/red.jpg"],
 			"quick_replies": ["Red", "Blue"],
-			"all_urns": true
+			"all_urns": true,
+			"instagram_settings": {
+				"comment_id": "0123456789",
+				"response_type": "comment",
+				"tag": "human_agent"
+			}
 		}`,
 		},
 		{

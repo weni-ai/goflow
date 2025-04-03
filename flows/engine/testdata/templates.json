@@ -479,6 +479,7 @@
             "external_id": "",
             "nfm_reply": null,
             "order": null,
+            "ig_comment": null,
             "text": "Hi there",
             "type": "msg",
             "urn": "tel:+12065551212",

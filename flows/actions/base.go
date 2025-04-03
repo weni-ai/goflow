@@ -124,6 +124,15 @@ func (a *baseAction) evaluateMessage(run flows.FlowRun, languages []envs.Languag
 	return evaluatedText, evaluatedAttachments, evaluatedQuickReplies
 }
 
+func (a *baseAction) evaluateMessageIG(run flows.FlowRun, languages []envs.Language, actionIGComment string, logEvent flows.EventCallback) string {
+	evaluatedIGComment, err := run.EvaluateTemplate(actionIGComment)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	return evaluatedIGComment
+}
+
 func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []map[string]string, sendCatalog bool, postalCode string, url string, sellerId string, cartSimulationParams string, logEvent flows.EventCallback) (string, string, string, string, string, string, string) {
 	localizedHeader := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader}, languages)[0]
 	evaluatedHeader, err := run.EvaluateTemplate(localizedHeader)

@@ -433,6 +433,9 @@ func TestEventMarshaling(t *testing.T) {
 					nil,
 					nil,
 					flows.NilMsgTopic,
+					"",
+					"",
+					"",
 				),
 			),
 			`{
