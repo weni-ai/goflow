@@ -108,6 +108,7 @@ type MsgCatalogCall struct {
 	ResponseJSON       []byte
 	ProductRetailerIDS []ProductEntry
 	Traces             []*httpx.Trace
+	SearchKeywords     []string
 }
 
 type OrgContextCall struct {

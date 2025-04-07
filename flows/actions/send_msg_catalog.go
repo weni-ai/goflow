@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -197,6 +198,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			params := assets.NewMsgCatalogParam(evaluatedSearch, uuids.UUID(dest.Channel.UUID()), a.SearchType, evaluatedURL, apiType, evaluatedPostalCode, evaluatedSellerId, hasVtexAds, hideUnavailable, extraPrompt, language, evaluatedCartSimulationParams)
 			catalogCall, err := a.call(run, step, params, mc, logEvent)
 			if err != nil {
+				searchKeywords := []byte{}
 				if catalogCall != nil {
 					for _, trace := range catalogCall.Traces {
 						call := &flows.WebhookCall{Trace: trace}
@@ -204,8 +206,15 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 							logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
 						}
 					}
+					if catalogCall.SearchKeywords != nil {
+						keywordsJSON := map[string][]string{"keywords": catalogCall.SearchKeywords}
+						searchKeywords, err = json.Marshal(keywordsJSON)
+						if err != nil {
+							logEvent(events.NewError(err))
+						}
+					}
 				}
-				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", nil, logEvent)
+				a.saveResult(run, step, a.ResultName, fmt.Sprintf("%s", err), CategoryFailure, "", "", searchKeywords, logEvent)
 				return nil
 			}
 			for _, trace := range catalogCall.Traces {
