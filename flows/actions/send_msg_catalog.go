@@ -221,7 +221,21 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				call := &flows.WebhookCall{Trace: trace}
 				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
 			}
-			a.saveResult(run, step, a.ResultName, string(catalogCall.ResponseJSON), CategorySuccess, "", "", catalogCall.ResponseJSON, logEvent)
+			
+			extraData := make(map[string]interface{})
+			if catalogCall.SearchKeywords != nil {
+				extraData["keywords"] = catalogCall.SearchKeywords
+			}
+			if catalogCall.ResponseJSON != nil {
+				extraData["response"] = json.RawMessage(catalogCall.ResponseJSON)
+			}
+			
+			extra, err := json.Marshal(extraData)
+			if err != nil {
+				logEvent(events.NewError(err))
+			}
+			
+			a.saveResult(run, step, a.ResultName, string(catalogCall.ResponseJSON), CategorySuccess, "", "", extra, logEvent)
 			ProductEntries = catalogCall.ProductRetailerIDS
 		} else {
 			a.saveResult(run, step, a.ResultName, "", CategorySuccess, "", "", nil, logEvent)
