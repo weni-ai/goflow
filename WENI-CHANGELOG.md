@@ -1,3 +1,7 @@
+1.11.0
+----------
+ * Modify service logic to include search keywords in call results
+
 1.10.0
 ----------
  * Add support for Instagram replies: comments, by tag and private reply
