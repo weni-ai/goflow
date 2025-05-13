@@ -40,6 +40,8 @@ func TestMsgWppOut(t *testing.T) {
 		[]flows.ProductEntry{{Product: "product", ProductRetailerIDs: []string{"product_1"}}},
 		"action",
 		false,
+		"",
+		"",
 	)
 
 	// test marshaling our msg
