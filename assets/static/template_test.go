@@ -24,7 +24,7 @@ func TestTemplate(t *testing.T) {
 	assert.Equal(t, 1, translation.VariableCount())
 	assert.Equal(t, "0162a7f4_dfe4_4c96_be07_854d5dba3b2b", translation.Namespace())
 
-	template := NewTemplate(assets.TemplateUUID("8a9c1f73-5059-46a0-ba4a-6390979c01d3"), "hello", []*TemplateTranslation{translation})
+	template := NewTemplate(assets.TemplateUUID("8a9c1f73-5059-46a0-ba4a-6390979c01d3"), "hello", "", []*TemplateTranslation{translation})
 	assert.Equal(t, assets.TemplateUUID("8a9c1f73-5059-46a0-ba4a-6390979c01d3"), template.UUID())
 	assert.Equal(t, "hello", template.Name())
 	assert.Equal(t, 1, len(template.Translations()))

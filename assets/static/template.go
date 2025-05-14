@@ -11,15 +11,17 @@ type Template struct {
 	t struct {
 		UUID         assets.TemplateUUID    `json:"uuid"         validate:"required,uuid"`
 		Name         string                 `json:"name"`
+		Category     string                 `json:"category"`
 		Translations []*TemplateTranslation `json:"translations"`
 	}
 }
 
 // NewTemplate creates a new template
-func NewTemplate(uuid assets.TemplateUUID, name string, translations []*TemplateTranslation) *Template {
+func NewTemplate(uuid assets.TemplateUUID, name string, category string, translations []*TemplateTranslation) *Template {
 	t := &Template{}
 	t.t.UUID = uuid
 	t.t.Name = name
+	t.t.Category = category
 	t.t.Translations = translations
 	return t
 }
@@ -38,6 +40,9 @@ func (t *Template) Translations() []assets.TemplateTranslation {
 	}
 	return trs
 }
+
+// Category returns the category of this template
+func (t *Template) Category() string { return t.t.Category }
 
 // UnmarshalJSON is our unmarshaller for json data
 func (t *Template) UnmarshalJSON(data []byte) error { return jsonx.Unmarshal(data, &t.t) }

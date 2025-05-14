@@ -40,6 +40,7 @@ type Template interface {
 	UUID() TemplateUUID
 	Name() string
 	Translations() []TemplateTranslation
+	Category() string
 }
 
 // TemplateTranslation represents a single translation for a specific template and channel
@@ -56,11 +57,12 @@ type TemplateTranslation interface {
 type TemplateReference struct {
 	UUID TemplateUUID `json:"uuid" validate:"required,uuid"`
 	Name string       `json:"name"`
+	Category string     `json:"category"`
 }
 
 // NewTemplateReference creates a new template reference with the given UUID and name
-func NewTemplateReference(uuid TemplateUUID, name string) *TemplateReference {
-	return &TemplateReference{UUID: uuid, Name: name}
+func NewTemplateReference(uuid TemplateUUID, name string, category string) *TemplateReference {
+	return &TemplateReference{UUID: uuid, Name: name, Category: category}
 }
 
 // GenericUUID returns the untyped UUID

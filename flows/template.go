@@ -27,7 +27,7 @@ func (t *Template) Reference() *assets.TemplateReference {
 	if t == nil {
 		return nil
 	}
-	return assets.NewTemplateReference(t.UUID(), t.Name())
+	return assets.NewTemplateReference(t.UUID(), t.Name(), t.Category())
 }
 
 // FindTranslation finds the matching translation for the passed in channel and languages (in priority order)
