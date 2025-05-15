@@ -152,6 +152,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			regexLegacySeller := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/checkout\/pub\/orderForms\/simulation$`)
 			regexIntelligent := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/product_search(\/)?([\\?&]([^&=]+)=([^&=]+))?$`)
 			regexSponsored := regexp.MustCompile(`^https:\/\/([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.com(\.br)?\/api\/io\/_v\/api\/intelligent-search\/sponsored_products(\/)?$`)
+			regexLinx := regexp.MustCompile(`^https:\/\/api\.linximpulse\.com\/engage\/search\/v3\/search(\?([^=]+=[^&]*)?(&[^=]+=[^&]*)*)?$`)
 			if regexLegacy.MatchString(evaluatedURL) {
 				apiType = "legacy"
 			} else if regexIntelligent.MatchString(evaluatedURL) {
@@ -160,6 +161,8 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				apiType = "legacy"
 			} else if regexSponsored.MatchString(evaluatedURL) {
 				apiType = "sponsored"
+			} else if regexLinx.MatchString(evaluatedURL) {
+				apiType = "linx"
 			}
 		}
 
@@ -221,7 +224,7 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 				call := &flows.WebhookCall{Trace: trace}
 				logEvent(events.NewWebhookCalled(call, callStatus(call, nil, false), ""))
 			}
-			
+
 			extraData := make(map[string]interface{})
 			if catalogCall.SearchKeywords != nil {
 				extraData["keywords"] = catalogCall.SearchKeywords
@@ -229,12 +232,12 @@ func (a *SendMsgCatalogAction) Execute(run flows.FlowRun, step flows.Step, logMo
 			if catalogCall.ResponseJSON != nil {
 				extraData["response"] = json.RawMessage(catalogCall.ResponseJSON)
 			}
-			
+
 			extra, err := json.Marshal(extraData)
 			if err != nil {
 				logEvent(events.NewError(err))
 			}
-			
+
 			a.saveResult(run, step, a.ResultName, string(catalogCall.ResponseJSON), CategorySuccess, "", "", extra, logEvent)
 			ProductEntries = catalogCall.ProductRetailerIDS
 		} else {
