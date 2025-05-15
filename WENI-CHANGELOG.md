@@ -1,3 +1,7 @@
+1.12.0
+----------
+ * feat: add regex matching for Linx API in SendMsgCatalogAction
+
 1.11.0
 ----------
  * Modify service logic to include search keywords in call results
