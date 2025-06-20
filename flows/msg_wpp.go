@@ -30,6 +30,9 @@ type MsgWppOut struct {
 	Products_         []ProductEntry `json:"products,omitempty"`
 	ActionButtonText_ string         `json:"action_button_text,omitempty"`
 	SendCatalog_      bool           `json:"send_catalog,omitempty"`
+
+	ActionType_       string `json:"action_type,omitempty"`
+	ActionExternalID_ string `json:"action_external_id,omitempty"`
 }
 
 type ButtonComponent struct {
@@ -141,7 +144,7 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -165,6 +168,8 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		Products_:            products,
 		ActionButtonText_:    actionButtonText,
 		SendCatalog_:         sendCatalog,
+		ActionType_:          actionType,
+		ActionExternalID_:    actionExternalID,
 	}
 }
 
@@ -201,3 +206,7 @@ func (m *MsgWppOut) Products() []ProductEntry { return m.Products_ }
 func (m *MsgWppOut) ActionButtonText() string { return m.ActionButtonText_ }
 
 func (m *MsgWppOut) SendCatalog() bool { return m.SendCatalog_ }
+
+func (m *MsgWppOut) ActionType() string { return m.ActionType_ }
+
+func (m *MsgWppOut) ActionExternalID() string { return m.ActionExternalID_ }

@@ -1,3 +1,11 @@
+1.13.0
+----------
+ * feat: extend MsgWppOut structure to include ActionType and ActionExternalID fields, and update related functions
+
+1.12.0
+----------
+ * feat: add regex matching for Linx API in SendMsgCatalogAction
+
 1.11.0
 ----------
  * Modify service logic to include search keywords in call results
