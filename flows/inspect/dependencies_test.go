@@ -121,6 +121,7 @@ func TestDependencies(t *testing.T) {
 			"uuid": "31c06b7c-010d-4f91-9590-d3fbdc2fb7ac"
 		},
 		{
+			"category": "",
 			"missing": true,
 			"name": "Welcome",
 			"type": "template",
