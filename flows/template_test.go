@@ -35,7 +35,7 @@ func TestTemplates(t *testing.T) {
 	tt1 := static.NewTemplateTranslation(*channel1, envs.Language("eng"), envs.NilCountry, "Hello {{1}}", 1, "")
 	tt2 := static.NewTemplateTranslation(*channel1, envs.Language("spa"), envs.Country("EC"), "Que tal {{1}}", 1, "")
 	tt3 := static.NewTemplateTranslation(*channel1, envs.Language("spa"), envs.Country("ES"), "Hola {{1}}", 1, "")
-	template := NewTemplate(static.NewTemplate("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", []*static.TemplateTranslation{tt1, tt2, tt3}))
+	template := NewTemplate(static.NewTemplate("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", "", []*static.TemplateTranslation{tt1, tt2, tt3}))
 
 	tas := NewTemplateAssets([]assets.Template{template})
 
@@ -103,6 +103,6 @@ func TestTemplates(t *testing.T) {
 
 	template = tas.Get(assets.TemplateUUID("c520cbda-e118-440f-aaf6-c0485088384f"))
 	assert.NotNil(t, template)
-	assert.Equal(t, assets.NewTemplateReference("c520cbda-e118-440f-aaf6-c0485088384f", "greeting"), template.Reference())
+	assert.Equal(t, assets.NewTemplateReference("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", ""), template.Reference())
 	assert.Equal(t, (*assets.TemplateReference)(nil), (*Template)(nil).Reference())
 }
