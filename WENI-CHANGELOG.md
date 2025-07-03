@@ -1,3 +1,7 @@
+1.14.0
+----------
+ * feat: add Category field to Template and TemplateReference, update related constructors and tests
+
 1.13.0
 ----------
  * feat: extend MsgWppOut structure to include ActionType and ActionExternalID fields, and update related functions
