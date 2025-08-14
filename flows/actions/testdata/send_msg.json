@@ -344,7 +344,7 @@
                 "template": {
                     "uuid": "b620b463-8d15-427f-b2e3-4f44f9f071ec",
                     "name": "missing",
-                    "category": "marketing"
+                    "category": ""
                 },
                 "variables": [
                     "@contact.name",
@@ -385,7 +385,7 @@
                     "name": "missing",
                     "type": "template",
                     "missing": true,
-                    "category": "marketing"
+                    "category": ""
                 }
             ],
             "issues": [
@@ -398,7 +398,7 @@
                         "uuid": "b620b463-8d15-427f-b2e3-4f44f9f071ec",
                         "name": "missing",
                         "type": "template",
-                        "category": "marketing"
+                        "category": ""
                     }
                 }
             ],
@@ -418,7 +418,7 @@
                 "template": {
                     "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                     "name": "affirmation",
-                    "category": "marketing"
+                    "category": ""
                 },
                 "variables": [
                     "@contact.name",
@@ -444,7 +444,7 @@
                         "template": {
                             "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                             "name": "affirmation",
-                            "category": "marketing"
+                            "category": ""
                         },
                         "language": "eng",
                         "country": "US",
@@ -474,7 +474,7 @@
                     "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                     "name": "affirmation",
                     "type": "template",
-                    "category": "marketing"
+                    "category": ""
                 }
             ],
             "issues": [],
@@ -494,7 +494,7 @@
                 "template": {
                     "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                     "name": "affirmation",
-                    "category": "marketing"
+                    "category": ""
                 },
                 "variables": [
                     "@contact.name",
@@ -529,7 +529,7 @@
                         "template": {
                             "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                             "name": "affirmation",
-                            "category": "marketing"
+                            "category": ""
                         },
                         "language": "spa",
                         "country": "",
@@ -560,7 +560,7 @@
                     "uuid": "5722e1fd-fe32-4e74-ac78-3cf41a6adb7e",
                     "name": "affirmation",
                     "type": "template",
-                    "category": "marketing"
+                    "category": ""
                 }
             ],
             "issues": [],
@@ -580,7 +580,7 @@
                 "template": {
                     "uuid": "2edc8dfd-aef0-41cf-a900-8a71bdb00900",
                     "name": "wakeup",
-                    "category": "marketing"
+                    "category": ""
                 },
                 "variables": []
             }
@@ -602,7 +602,7 @@
                         "template": {
                             "uuid": "2edc8dfd-aef0-41cf-a900-8a71bdb00900",
                             "name": "wakeup",
-                            "category": "marketing"
+                            "category": ""
                         },
                         "language": "eng",
                         "country": "",
@@ -623,7 +623,7 @@
                     "uuid": "2edc8dfd-aef0-41cf-a900-8a71bdb00900",
                     "name": "wakeup",
                     "type": "template",
-                    "category": "marketing"
+                    "category": ""
                 }
             ],
             "issues": [],
