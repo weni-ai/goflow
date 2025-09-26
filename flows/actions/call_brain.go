@@ -60,7 +60,6 @@ func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flow
 
 	evaluatedText, evaluatedAttachment, _ := a.evaluateMessage(run, nil, entry, attachments, nil, logEvent)
 
-	contactURN := run.Contact().PreferredURN()
 	svc, err := run.Session().Engine().Services().Brain(run.Session())
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -74,7 +73,7 @@ func (a *CallBrainAction) call(run flows.FlowRun, step flows.Step, logEvent flow
 		projectUUID = c.OrgContext.ProjectUUID()
 	}
 
-	call, err := svc.Call(run.Session(), projectUUID, evaluatedText, contactURN.URN(), evaluatedAttachment)
+	call, err := svc.Call(run.Session(), projectUUID, evaluatedText, run.Contact(), evaluatedAttachment)
 
 	if err != nil {
 		logEvent(events.NewError(err))
