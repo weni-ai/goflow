@@ -1,3 +1,7 @@
+1.15.0
+----------
+ * refactor: update BrainService Call
+
 1.14.1
 ----------
  * fix: update message templating to use template reference instead of UUID
