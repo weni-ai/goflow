@@ -93,6 +93,11 @@ type OrderPaymentSettings struct {
 	Type        string          `json:"type,omitempty"`
 	PaymentLink string          `json:"payment_link,omitempty"`
 	PixConfig   *OrderPixConfig `json:"pix_config,omitempty"`
+	OffsiteCardPay *OffsiteCardPay `json:"offsite_card_pay,omitempty"`
+}
+type OffsiteCardPay struct {
+	LastFourDigits string `json:"last_four_digits,omitempty"`
+	CredentialID  string `json:"credential_id,omitempty"`
 }
 
 type OrderDetails struct {
