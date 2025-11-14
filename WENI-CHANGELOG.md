@@ -1,3 +1,7 @@
+1.16.0
+----------
+ * Add OffsiteCardPay struct to OrderPaymentSettings for enhanced payment details
+
 1.15.0
 ----------
  * refactor: update BrainService Call
