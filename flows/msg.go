@@ -179,11 +179,22 @@ func (m *MsgOut) IGTag() string { return m.IGTag_ }
 
 // MsgTemplating represents any substituted message template that should be applied when sending this message
 type MsgTemplating struct {
-	Template_  *assets.TemplateReference `json:"template"`
-	Language_  envs.Language             `json:"language"`
-	Country_   envs.Country              `json:"country"`
-	Variables_ []string                  `json:"variables,omitempty"`
-	Namespace_ string                    `json:"namespace"`
+	Template_      *assets.TemplateReference `json:"template"`
+	Language_      envs.Language             `json:"language"`
+	Country_       envs.Country              `json:"country"`
+	Variables_     []string                  `json:"variables,omitempty"`
+	Namespace_     string                    `json:"namespace"`
+	CarouselCards_ []CarouselCard            `json:"carousel_cards,omitempty"`
+}
+type CarouselCard struct {
+	Body    []string             `json:"body,omitempty"`
+	Buttons []CarouselCardButton `json:"buttons,omitempty"`
+}
+
+type CarouselCardButton struct {
+	SubType   string `json:"sub_type"`  // quick_reply, url, phone_number
+	Text      string `json:"text"`      // button label text
+	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url, phone number for phone_number
 }
 
 // Template returns the template this msg template is for
@@ -201,13 +212,17 @@ func (t MsgTemplating) Variables() []string { return t.Variables_ }
 // Namespace returns the namespace that should be for the template
 func (t MsgTemplating) Namespace() string { return t.Namespace_ }
 
+// CarouselCards returns the carousel cards that should be used for the template
+func (t MsgTemplating) CarouselCards() []CarouselCard { return t.CarouselCards_ }
+
 // NewMsgTemplating creates and returns a new msg template
-func NewMsgTemplating(template *assets.TemplateReference, language envs.Language, country envs.Country, variables []string, namespace string) *MsgTemplating {
+func NewMsgTemplating(template *assets.TemplateReference, language envs.Language, country envs.Country, variables []string, namespace string, carouselCards []CarouselCard) *MsgTemplating {
 	return &MsgTemplating{
-		Template_:  template,
-		Language_:  language,
-		Country_:   country,
-		Variables_: variables,
-		Namespace_: namespace,
+		Template_:      template,
+		Language_:      language,
+		Country_:       country,
+		Variables_:     variables,
+		Namespace_:     namespace,
+		CarouselCards_: carouselCards,
 	}
 }
