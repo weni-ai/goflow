@@ -187,13 +187,13 @@ type MsgTemplating struct {
 	CarouselCards_ []CarouselCard            `json:"carousel_cards,omitempty"`
 }
 type CarouselCard struct {
-	Body    []string             `json:"body,omitempty"`
+	Body    string               `json:"body,omitempty"`
+	Index   int                  `json:"index,omitempty"`
 	Buttons []CarouselCardButton `json:"buttons,omitempty"`
 }
 
 type CarouselCardButton struct {
 	SubType   string `json:"sub_type"`  // quick_reply, url, phone_number
-	Text      string `json:"text"`      // button label text
 	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url, phone number for phone_number
 }
 

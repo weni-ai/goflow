@@ -68,13 +68,13 @@ type Templating struct {
 }
 
 type CarouselCard struct {
-	Body    []string             `json:"body,omitempty"`
+	Body    string               `json:"body,omitempty"`
+	Index   int                  `json:"index,omitempty"`
 	Buttons []CarouselCardButton `json:"buttons,omitempty"`
 }
 
 type CarouselCardButton struct {
 	SubType   string `json:"sub_type"`  // quick_reply, url, phone_number
-	Text      string `json:"text"`      // button label text
 	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url, phone number for phone_number
 }
 
@@ -157,33 +157,29 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 					evaluatedCarouselCards = make([]flows.CarouselCard, len(a.Templating.CarouselCards))
 					for idx, carouselCard := range a.Templating.CarouselCards {
 						// Evaluate body variables
-						localizedCarouselCardsBody, _ := run.GetTextArray(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
-						evaluatedBody := make([]string, len(localizedCarouselCardsBody))
-						for i, body := range localizedCarouselCardsBody {
-							evaluated, err := run.EvaluateTemplate(body)
-							if err != nil {
-								logEvent(events.NewError(err))
-							}
-							evaluatedBody[i] = evaluated
+						localizedCarouselCardsBody := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
+						evaluatedBody, err := run.EvaluateTemplate(localizedCarouselCardsBody)
+						if err != nil {
+							logEvent(events.NewError(err))
 						}
 
 						// Evaluate button text variables
 						evaluatedButtons := make([]flows.CarouselCardButton, len(carouselCard.Buttons))
 						for i, button := range carouselCard.Buttons {
-							localizedCarouselCardsButtonsText := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.buttons.text", button.Text)
-							evaluatedButtonText, err := run.EvaluateTemplate(localizedCarouselCardsButtonsText)
+							localizedCarouselCardsButtonsParameter := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.buttons.parameter", button.Parameter)
+							evaluatedButtonParameter, err := run.EvaluateTemplate(localizedCarouselCardsButtonsParameter)
 							if err != nil {
 								logEvent(events.NewError(err))
 							}
 							evaluatedButtons[i] = flows.CarouselCardButton{
 								SubType:   button.SubType,
-								Text:      evaluatedButtonText,
-								Parameter: button.Parameter,
+								Parameter: evaluatedButtonParameter,
 							}
 						}
 
 						evaluatedCarouselCards[idx] = flows.CarouselCard{
 							Body:    evaluatedBody,
+							Index:   carouselCard.Index,
 							Buttons: evaluatedButtons,
 						}
 					}
