@@ -185,6 +185,7 @@ type MsgTemplating struct {
 	Variables_     []string                  `json:"variables,omitempty"`
 	Namespace_     string                    `json:"namespace"`
 	CarouselCards_ []CarouselCard            `json:"carousel_cards,omitempty"`
+	IsCarousel_    bool                      `json:"is_carousel,omitempty"`
 }
 type CarouselCard struct {
 	Body    string               `json:"body,omitempty"`
@@ -212,11 +213,14 @@ func (t MsgTemplating) Variables() []string { return t.Variables_ }
 // Namespace returns the namespace that should be for the template
 func (t MsgTemplating) Namespace() string { return t.Namespace_ }
 
+// IsCarousel returns whether the template is a carousel
+func (t MsgTemplating) IsCarousel() bool { return t.IsCarousel_ }
+
 // CarouselCards returns the carousel cards that should be used for the template
 func (t MsgTemplating) CarouselCards() []CarouselCard { return t.CarouselCards_ }
 
 // NewMsgTemplating creates and returns a new msg template
-func NewMsgTemplating(template *assets.TemplateReference, language envs.Language, country envs.Country, variables []string, namespace string, carouselCards []CarouselCard) *MsgTemplating {
+func NewMsgTemplating(template *assets.TemplateReference, language envs.Language, country envs.Country, variables []string, namespace string, carouselCards []CarouselCard, isCarousel bool) *MsgTemplating {
 	return &MsgTemplating{
 		Template_:      template,
 		Language_:      language,
@@ -224,5 +228,6 @@ func NewMsgTemplating(template *assets.TemplateReference, language envs.Language
 		Variables_:     variables,
 		Namespace_:     namespace,
 		CarouselCards_: carouselCards,
+		IsCarousel_:    isCarousel,
 	}
 }

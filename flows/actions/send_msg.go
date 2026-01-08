@@ -63,19 +63,9 @@ type InstagramSettings struct {
 type Templating struct {
 	UUID          uuids.UUID                `json:"uuid" validate:"required,uuid4"`
 	Template      *assets.TemplateReference `json:"template" validate:"required"`
+	IsCarousel    bool                      `json:"is_carousel,omitempty"`
 	Variables     []string                  `json:"variables" engine:"localized,evaluated"`
-	CarouselCards []CarouselCard            `json:"carousel_cards,omitempty"`
-}
-
-type CarouselCard struct {
-	Body    string               `json:"body,omitempty"`
-	Index   int                  `json:"index,omitempty"`
-	Buttons []CarouselCardButton `json:"buttons,omitempty"`
-}
-
-type CarouselCardButton struct {
-	SubType   string `json:"sub_type"`  // quick_reply, url, phone_number
-	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url, phone number for phone_number
+	CarouselCards []flows.CarouselCard      `json:"carousel_cards,omitempty"`
 }
 
 // LocalizationUUID gets the UUID which identifies this object for localization
@@ -187,7 +177,7 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 
 				evaluatedText = translation.Substitute(evaluatedVariables)
 				template := sa.Templates().Get(a.Templating.Template.UUID)
-				templating = flows.NewMsgTemplating(template.Reference(), translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace(), evaluatedCarouselCards)
+				templating = flows.NewMsgTemplating(template.Reference(), translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace(), evaluatedCarouselCards, a.Templating.IsCarousel)
 			}
 		}
 
