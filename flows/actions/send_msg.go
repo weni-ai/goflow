@@ -147,10 +147,15 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 					evaluatedCarouselCards = make([]flows.CarouselCard, len(a.Templating.CarouselCards))
 					for idx, carouselCard := range a.Templating.CarouselCards {
 						// Evaluate body variables
-						localizedCarouselCardsBody := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
-						evaluatedBody, err := run.EvaluateTemplate(localizedCarouselCardsBody)
-						if err != nil {
-							logEvent(events.NewError(err))
+						localizedCarouselCardsBody, _ := run.GetTextArray(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
+
+						evaluatedBody := make([]string, len(localizedCarouselCardsBody))
+						for i, bodyItem := range localizedCarouselCardsBody {
+							val, err := run.EvaluateTemplate(bodyItem)
+							if err != nil {
+								logEvent(events.NewError(err))
+							}
+							evaluatedBody[i] = val
 						}
 
 						// Evaluate button text variables

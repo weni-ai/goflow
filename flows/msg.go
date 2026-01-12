@@ -188,14 +188,14 @@ type MsgTemplating struct {
 	IsCarousel_    bool                      `json:"is_carousel,omitempty"`
 }
 type CarouselCard struct {
-	Body    string               `json:"body,omitempty"`
+	Body    []string             `json:"body,omitempty"`
 	Index   int                  `json:"index,omitempty"`
-	Buttons []CarouselCardButton `json:"buttons,omitempty"`
+	Buttons []CarouselCardButton `json:"buttons,omitempty"` // quick_reply and url, max 2 buttons per card
 }
 
 type CarouselCardButton struct {
-	SubType   string `json:"sub_type"`  // quick_reply, url, phone_number
-	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url, phone number for phone_number
+	SubType   string `json:"sub_type"`  // quick_reply and url
+	Parameter string `json:"parameter"` // payload for quick_reply, url variable for url
 }
 
 // Template returns the template this msg template is for
