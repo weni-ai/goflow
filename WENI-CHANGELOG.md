@@ -1,3 +1,7 @@
+1.17.0
+----------
+ * feat: add CarouselCard and CarouselCardButton types to MsgTemplating and Templating for enhanced message customization
+
 1.16.0
 ----------
  * Add OffsiteCardPay struct to OrderPaymentSettings for enhanced payment details
