@@ -61,9 +61,11 @@ type InstagramSettings struct {
 
 // Templating represents the templating that should be used if possible
 type Templating struct {
-	UUID      uuids.UUID                `json:"uuid" validate:"required,uuid4"`
-	Template  *assets.TemplateReference `json:"template" validate:"required"`
-	Variables []string                  `json:"variables" engine:"localized,evaluated"`
+	UUID          uuids.UUID                `json:"uuid" validate:"required,uuid4"`
+	Template      *assets.TemplateReference `json:"template" validate:"required"`
+	IsCarousel    bool                      `json:"is_carousel,omitempty"`
+	Variables     []string                  `json:"variables" engine:"localized,evaluated"`
+	CarouselCards []flows.CarouselCard      `json:"carousel_cards,omitempty"`
 }
 
 // LocalizationUUID gets the UUID which identifies this object for localization
@@ -109,7 +111,7 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 
 	sa := run.Session().Assets()
 
-	// create a new message for each URN+channel destination	
+	// create a new message for each URN+channel destination
 	for _, dest := range destinations {
 		var channelRef *assets.ChannelReference
 		if dest.Channel != nil {
@@ -139,10 +141,48 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 					}
 					evaluatedVariables[i] = sub
 				}
+				// Build evaluated carousel cards
+				var evaluatedCarouselCards []flows.CarouselCard
+				if len(a.Templating.CarouselCards) > 0 {
+					evaluatedCarouselCards = make([]flows.CarouselCard, len(a.Templating.CarouselCards))
+					for idx, carouselCard := range a.Templating.CarouselCards {
+						// Evaluate body variables
+						localizedCarouselCardsBody, _ := run.GetTextArray(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
+
+						evaluatedBody := make([]string, len(localizedCarouselCardsBody))
+						for i, bodyItem := range localizedCarouselCardsBody {
+							val, err := run.EvaluateTemplate(bodyItem)
+							if err != nil {
+								logEvent(events.NewError(err))
+							}
+							evaluatedBody[i] = val
+						}
+
+						// Evaluate button text variables
+						evaluatedButtons := make([]flows.CarouselCardButton, len(carouselCard.Buttons))
+						for i, button := range carouselCard.Buttons {
+							localizedCarouselCardsButtonsParameter := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.buttons.parameter", button.Parameter)
+							evaluatedButtonParameter, err := run.EvaluateTemplate(localizedCarouselCardsButtonsParameter)
+							if err != nil {
+								logEvent(events.NewError(err))
+							}
+							evaluatedButtons[i] = flows.CarouselCardButton{
+								SubType:   button.SubType,
+								Parameter: evaluatedButtonParameter,
+							}
+						}
+
+						evaluatedCarouselCards[idx] = flows.CarouselCard{
+							Body:    evaluatedBody,
+							Index:   carouselCard.Index,
+							Buttons: evaluatedButtons,
+						}
+					}
+				}
 
 				evaluatedText = translation.Substitute(evaluatedVariables)
 				template := sa.Templates().Get(a.Templating.Template.UUID)
-				templating = flows.NewMsgTemplating(template.Reference(), translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace())
+				templating = flows.NewMsgTemplating(template.Reference(), translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace(), evaluatedCarouselCards, a.Templating.IsCarousel)
 			}
 		}
 
