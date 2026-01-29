@@ -109,6 +109,7 @@ type ProductRetailerInfo struct {
 	Name        string `json:"name,omitempty"`
 	RetailerID  string `json:"retailer_id,omitempty"` // sku
 	Price       string `json:"price,omitempty"`
+	SalePrice   string `json:"sale_price,omitempty"`
 	Image       string `json:"image,omitempty"`
 	Description string `json:"description,omitempty"`
 	SellerID    string `json:"seller_id,omitempty"`
