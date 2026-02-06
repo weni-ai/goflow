@@ -100,8 +100,19 @@ type ExternalServiceCall struct {
 }
 
 type ProductEntry struct {
-	Product            string   `json:"product,omitempty"`
-	ProductRetailerIDs []string `json:"product_retailer_ids,omitempty"`
+	Product             string                `json:"product,omitempty"`
+	ProductRetailerIDs  []string              `json:"product_retailer_ids,omitempty"`
+	ProductRetailerInfo []ProductRetailerInfo `json:"product_retailer_info,omitempty"`
+}
+
+type ProductRetailerInfo struct {
+	Name        string `json:"name,omitempty"`
+	RetailerID  string `json:"retailer_id,omitempty"` // sku
+	Price       string `json:"price,omitempty"`
+	SalePrice   string `json:"sale_price,omitempty"`
+	Image       string `json:"image,omitempty"`
+	Description string `json:"description,omitempty"`
+	SellerID    string `json:"seller_id,omitempty"`
 }
 
 type MsgCatalogCall struct {

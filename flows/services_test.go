@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/nyaruka/gocommon/httpx"
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/flows"
+	"github.com/nyaruka/goflow/test"
 	"github.com/nyaruka/goflow/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -81,4 +83,62 @@ func TestHTTPLogsRedaction(t *testing.T) {
 	log2 := flows.NewHTTPLog(trace2, flows.HTTPStatusFromCode, redactor)
 	assert.Equal(t, "GET /code/****************/ HTTP/1.1\r\nHost: temba.io\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 20\r\nAccept-Encoding: gzip\r\n\r\nMy code is ****************", log2.Request)
 	assert.Equal(t, "HTTP/1.0 400 Bad Request\r\nContent-Length: 39\r\n\r\nThe code is ****************, I said ****************", log2.Response)
+}
+
+func TestProductEntry(t *testing.T) {
+	// Test ProductEntry with ProductRetailerIDs only (WPP channel)
+	entryWPP := flows.ProductEntry{
+		Product:            "product",
+		ProductRetailerIDs: []string{"sku_001", "sku_002"},
+	}
+
+	marshaledWPP, err := jsonx.Marshal(entryWPP)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{
+		"product": "product",
+		"product_retailer_ids": ["sku_001", "sku_002"]
+	}`), marshaledWPP, "WPP ProductEntry JSON mismatch")
+
+	// Test ProductEntry with ProductRetailerInfo only (WWC channel)
+	entryWWC := flows.ProductEntry{
+		Product: "product_wwc",
+		ProductRetailerInfo: []flows.ProductRetailerInfo{
+			{
+				Name:        "Product Name",
+				RetailerID:  "sku_123",
+				Price:       "10.00",
+				SalePrice:   "8.00",
+				Image:       "https://example.com/image.jpg",
+				Description: "Product description",
+				SellerID:    "seller_1",
+			},
+		},
+	}
+
+	marshaledWWC, err := jsonx.Marshal(entryWWC)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{
+		"product": "product_wwc",
+		"product_retailer_info": [
+			{
+				"name": "Product Name",
+				"retailer_id": "sku_123",
+				"price": "10.00",
+				"sale_price": "8.00",
+				"image": "https://example.com/image.jpg",
+				"description": "Product description",
+				"seller_id": "seller_1"
+			}
+		]
+	}`), marshaledWWC, "WWC ProductEntry JSON mismatch")
+
+	// Test empty ProductEntry (both fields omitted due to omitempty)
+	entryEmpty := flows.ProductEntry{}
+
+	marshaledEmpty, err := jsonx.Marshal(entryEmpty)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{}`), marshaledEmpty, "Empty ProductEntry JSON mismatch")
 }

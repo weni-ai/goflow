@@ -1,3 +1,7 @@
+1.18.0
+----------
+ * feat: add ProductEntry and ProductRetailerInfo types for enhanced product data handling in flows
+
 1.17.0
 ----------
  * feat: add CarouselCard and CarouselCardButton types to MsgTemplating and Templating for enhanced message customization
