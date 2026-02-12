@@ -109,6 +109,7 @@ func TestProductEntry(t *testing.T) {
 				RetailerID:  "sku_123",
 				Price:       "10.00",
 				SalePrice:   "8.00",
+				Currency:    "BRL",
 				Image:       "https://example.com/image.jpg",
 				Description: "Product description",
 				SellerID:    "seller_1",
@@ -127,6 +128,7 @@ func TestProductEntry(t *testing.T) {
 				"retailer_id": "sku_123",
 				"price": "10.00",
 				"sale_price": "8.00",
+				"currency": "BRL",
 				"image": "https://example.com/image.jpg",
 				"description": "Product description",
 				"seller_id": "seller_1"
