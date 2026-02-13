@@ -1,3 +1,7 @@
+1.18.1
+----------
+ * feat: add currency field to ProductRetailerInfo struct
+
 1.18.0
 ----------
  * feat: add ProductEntry and ProductRetailerInfo types for enhanced product data handling in flows
