@@ -188,7 +188,7 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 	return evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId, evaluatedCartSimulationParams
 }
 
-func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionButtonText string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, []utils.Attachment, []string) {
+func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionButtonText string, actionAttachments string, actionQuickReplies []string, actionCarouselMessage flows.CarouselMessage, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, []utils.Attachment, []string, []flows.CarouselMessage) {
 	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header_text", []string{actionHeaderText}, languages)[0]
 	evaluatedHeaderText, err := run.EvaluateTemplate(localizedHeaderText)
 	if err != nil {
@@ -289,7 +289,33 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: item.UUID})
 	}
 
-	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
+	localizedCarouselMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "carousel_message", []string{actionCarouselMessage.Body}, languages)
+	evaluatedCarouselCards := make([]flows.CarouselMessage, 0, len(localizedCarouselMessage))
+	for _, cm := range localizedCarouselMessage {
+		evaluatedCarousel, err := run.EvaluateTemplate(cm)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		evaluatedButtons := make([]flows.CarouselButton, 0, len(actionCarouselMessage.Buttons))
+		for _, cb := range actionCarouselMessage.Buttons {
+			if cb.SubType == "url" {
+				evaluatedDisplayText, err := run.EvaluateTemplate(cb.Parameters["display_text"].(string))
+				if err != nil {
+					logEvent(events.NewError(err))
+				}
+				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"display_text": evaluatedDisplayText, "url": cb.Parameters["url"].(string)}})
+			} else if cb.SubType == "quick_reply" {
+				evaluatedTitle, err := run.EvaluateTemplate(cb.Parameters["title"].(string))
+				if err != nil {
+					logEvent(events.NewError(err))
+				}
+				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"title": evaluatedTitle, "id": cb.Parameters["id"].(string)}})
+			}
+		}
+		evaluatedCarouselCards = append(evaluatedCarouselCards, flows.CarouselMessage{Body: evaluatedCarousel, Buttons: evaluatedButtons})
+	}
+
+	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage, evaluatedCarouselCards
 }
 
 // helper to save a run result and log it as an event
