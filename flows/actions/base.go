@@ -289,8 +289,12 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: item.UUID})
 	}
 
-	localizedCarouselMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "carousel_message", []string{actionCarouselMessage.Body}, languages)
-	evaluatedCarouselCards := make([]flows.CarouselMessage, 0, len(localizedCarouselMessage))
+	carouselDefaults := []string{}
+	if actionCarouselMessage.Body != "" || len(actionCarouselMessage.Buttons) > 0 {
+		carouselDefaults = []string{actionCarouselMessage.Body}
+	}
+	localizedCarouselMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "carousel_message", carouselDefaults, languages)
+	var evaluatedCarouselCards []flows.CarouselMessage
 	for _, cm := range localizedCarouselMessage {
 		evaluatedCarousel, err := run.EvaluateTemplate(cm)
 		if err != nil {
@@ -298,13 +302,14 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		}
 		evaluatedButtons := make([]flows.CarouselButton, 0, len(actionCarouselMessage.Buttons))
 		for _, cb := range actionCarouselMessage.Buttons {
-			if cb.SubType == "url" {
+			switch cb.SubType {
+			case "url":
 				evaluatedDisplayText, err := run.EvaluateTemplate(cb.Parameters["display_text"].(string))
 				if err != nil {
 					logEvent(events.NewError(err))
 				}
 				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"display_text": evaluatedDisplayText, "url": cb.Parameters["url"].(string)}})
-			} else if cb.SubType == "quick_reply" {
+			case "quick_reply":
 				evaluatedTitle, err := run.EvaluateTemplate(cb.Parameters["title"].(string))
 				if err != nil {
 					logEvent(events.NewError(err))
@@ -312,7 +317,10 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"title": evaluatedTitle, "id": cb.Parameters["id"].(string)}})
 			}
 		}
-		evaluatedCarouselCards = append(evaluatedCarouselCards, flows.CarouselMessage{Body: evaluatedCarousel, Buttons: evaluatedButtons})
+		card := flows.CarouselMessage{Body: evaluatedCarousel, Buttons: evaluatedButtons}
+		if card.Body != "" || len(card.Buttons) > 0 {
+			evaluatedCarouselCards = append(evaluatedCarouselCards, card)
+		}
 	}
 
 	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage, evaluatedCarouselCards
