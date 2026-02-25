@@ -1,3 +1,7 @@
+1.18.2
+----------
+ * fix: footer localization for evaluateMessageWpp
+
 1.18.1
 ----------
  * feat: add currency field to ProductRetailerInfo struct
