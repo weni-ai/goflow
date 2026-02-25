@@ -88,7 +88,15 @@
             "action_url": "https://www.foo.bar",
             "button_text": "Button text"
         },
-        "localization": {},
+        "localization": {
+            "spa": {
+                "ad154980-7bf7-4ab8-8728-545fd6378912": {
+                    "footer": ["pie de página"],
+                    "text": ["Hola!"],
+                    "button_text": ["Botón"]
+                }
+            }
+        },
         "events": [
             {
                 "type": "msg_wpp_created",
@@ -101,13 +109,13 @@
                         "uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
                         "name": "My Android Phone"
                     },
-                    "text": "Hi there!",
-                    "footer": "footer",
+                    "text": "Hola!",
+                    "footer": "pie de página",
                     "header_type": "text",
                     "interaction_type": "cta_url",
                     "cta_message": {
                         "url": "https://www.foo.bar",
-                        "display_text": "Button text"
+                        "display_text": "Botón"
                     },
                     "list_message": {},
                     "flow_message": {},
