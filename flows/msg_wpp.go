@@ -25,6 +25,7 @@ type MsgWppOut struct {
 	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
 	Templating_          *MsgTemplating      `json:"templating,omitempty"`
 	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
+	Cards_               []CarouselMessage   `json:"carousel,omitempty"`
 
 	// fields for msg_catalog
 	Products_         []ProductEntry `json:"products,omitempty"`
@@ -90,14 +91,14 @@ type OrderPixConfig struct {
 }
 
 type OrderPaymentSettings struct {
-	Type        string          `json:"type,omitempty"`
-	PaymentLink string          `json:"payment_link,omitempty"`
-	PixConfig   *OrderPixConfig `json:"pix_config,omitempty"`
+	Type           string          `json:"type,omitempty"`
+	PaymentLink    string          `json:"payment_link,omitempty"`
+	PixConfig      *OrderPixConfig `json:"pix_config,omitempty"`
 	OffsiteCardPay *OffsiteCardPay `json:"offsite_card_pay,omitempty"`
 }
 type OffsiteCardPay struct {
 	LastFourDigits string `json:"last_four_digits,omitempty"`
-	CredentialID  string `json:"credential_id,omitempty"`
+	CredentialID   string `json:"credential_id,omitempty"`
 }
 
 type OrderDetails struct {
@@ -149,7 +150,17 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string) *MsgWppOut {
+type CarouselMessage struct {
+	Body    string           `json:"body,omitempty"`
+	Buttons []CarouselButton `json:"buttons,omitempty"`
+}
+
+type CarouselButton struct {
+	SubType    string                 `json:"sub_type"`             // "url" or "quick_reply"
+	Parameters map[string]interface{} `json:"parameters,omitempty"` // for url: display_text, url; for quick_reply: id, title
+}
+
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -175,6 +186,7 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		SendCatalog_:         sendCatalog,
 		ActionType_:          actionType,
 		ActionExternalID_:    actionExternalID,
+		Cards_:               cards,
 	}
 }
 
@@ -199,6 +211,8 @@ func (m *MsgWppOut) QuickReplies() []string { return m.QuickReplies_ }
 func (m *MsgWppOut) CTAMessage() CTAMessage { return m.CTAMessage_ }
 
 func (m *MsgWppOut) FlowMessage() FlowMessage { return m.FlowMessage_ }
+
+func (m *MsgWppOut) Cards() []CarouselMessage { return m.Cards_ }
 
 func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDetailsMessage_ }
 

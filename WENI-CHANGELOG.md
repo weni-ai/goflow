@@ -1,3 +1,7 @@
+1.19.0
+----------
+ * feat: add CarouselMessage and CarouselButton types to MsgWppOut for enhanced message customization
+
 1.18.2
 ----------
  * fix: footer localization for evaluateMessageWpp

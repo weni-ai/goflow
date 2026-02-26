@@ -30,24 +30,24 @@ type SendWppMsgAction struct {
 	AllURNs bool           `json:"all_urns,omitempty"`
 	Topic   flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
 }
-
 type createWppMsgAction struct {
-	HeaderType                string              `json:"header_type,omitempty"`
-	HeaderText                string              `json:"header_text,omitempty"`
-	Attachment                string              `json:"attachment,omitempty"`
-	Text                      string              `json:"text,omitempty"`
-	Footer                    string              `json:"footer,omitempty"`
-	ListItems                 []flows.ListItems   `json:"list_items,omitempty"`
-	ButtonText                string              `json:"button_text,omitempty"`
-	QuickReplies              []string            `json:"quick_replies,omitempty"`
-	InteractionType           string              `json:"interaction_type,omitempty"`
-	ActionURL                 string              `json:"action_url,omitempty"`
-	FlowID                    string              `json:"flow_id,omitempty"`
-	FlowData                  flows.FlowData      `json:"flow_data,omitempty"`
-	FlowScreen                string              `json:"flow_screen,omitempty"`
-	FlowMode                  string              `json:"flow_mode,omitempty"`
-	FlowDataAttachmentNameMap map[string]string   `json:"flow_data_attachment_name_map,omitempty"`
-	OrderDetails              *flows.OrderDetails `json:"order_details,omitempty"`
+	HeaderType                string                  `json:"header_type,omitempty"`
+	HeaderText                string                  `json:"header_text,omitempty"`
+	Attachment                string                  `json:"attachment,omitempty"`
+	Text                      string                  `json:"text,omitempty"`
+	Footer                    string                  `json:"footer,omitempty"`
+	ListItems                 []flows.ListItems       `json:"list_items,omitempty"`
+	ButtonText                string                  `json:"button_text,omitempty"`
+	QuickReplies              []string                `json:"quick_replies,omitempty"`
+	InteractionType           string                  `json:"interaction_type,omitempty"`
+	ActionURL                 string                  `json:"action_url,omitempty"`
+	FlowID                    string                  `json:"flow_id,omitempty"`
+	FlowData                  flows.FlowData          `json:"flow_data,omitempty"`
+	FlowScreen                string                  `json:"flow_screen,omitempty"`
+	FlowMode                  string                  `json:"flow_mode,omitempty"`
+	FlowDataAttachmentNameMap map[string]string       `json:"flow_data_attachment_name_map,omitempty"`
+	OrderDetails              *flows.OrderDetails     `json:"order_details,omitempty"`
+	CarouselMessage           *flows.CarouselMessage   `json:"carousel_message,omitempty"`
 }
 
 type Header struct {
@@ -74,6 +74,7 @@ func NewSendWppMsg(
 	flowScreen string,
 	flowMode string,
 	orderDetails *flows.OrderDetails,
+	carouselMessage flows.CarouselMessage,
 	allURNs bool) *SendWppMsgAction {
 	return &SendWppMsgAction{
 		baseAction: newBaseAction(TypeSendWppMsg, uuid),
@@ -93,6 +94,13 @@ func NewSendWppMsg(
 			FlowScreen:      flowScreen,
 			FlowMode:        flowMode,
 			OrderDetails:    orderDetails,
+			CarouselMessage: func() *flows.CarouselMessage {
+				if carouselMessage.Body != "" || len(carouselMessage.Buttons) > 0 {
+					cm := carouselMessage
+					return &cm
+				}
+				return nil
+			}(),
 		},
 		AllURNs: allURNs,
 	}
@@ -105,7 +113,11 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 		return nil
 	}
 
-	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Footer, a.Text, a.ListItems, a.ButtonText, a.Attachment, a.QuickReplies, logEvent)
+	carouselMsg := flows.CarouselMessage{}
+	if a.CarouselMessage != nil {
+		carouselMsg = *a.CarouselMessage
+	}
+	evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage, evaluatedCarouselCards := a.evaluateMessageWpp(run, nil, a.HeaderType, a.InteractionType, a.HeaderText, a.Footer, a.Text, a.ListItems, a.ButtonText, a.Attachment, a.QuickReplies, carouselMsg, logEvent)
 
 	listMessage := flows.ListMessage{}
 	if len(evaluatedListItems) > 0 {
@@ -285,14 +297,14 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			channelRef = assets.NewChannelReference(dest.Channel.UUID(), dest.Channel.Name())
 		}
 
-		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, a.Topic, nil, "", false, "", "")
+		msg := flows.NewMsgWppOut(dest.URN.URN(), channelRef, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, a.Topic, nil, "", false, "", "", evaluatedCarouselCards)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, flows.NilMsgTopic, nil, "", false, "", "")
+			msg := flows.NewMsgWppOut(urns.NilURN, nil, a.InteractionType, a.HeaderType, evaluatedHeaderText, evaluatedText, evaluatedFooter, ctaMessage, listMessage, flowMessage, orderDetailsMessage, evaluatedAttachments, evaluatedReplyMessage, nil, nil, flows.NilMsgTopic, nil, "", false, "", "", nil)
 		logEvent(events.NewMsgWppCreated(msg))
 	}
 
