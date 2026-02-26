@@ -239,7 +239,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		logEvent(events.NewErrorf("text evaluated to empty string"))
 	}
 
-	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "footer", []string{actionFooter}, languages)[0]
 	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
 	if err != nil {
 		logEvent(events.NewError(err))
