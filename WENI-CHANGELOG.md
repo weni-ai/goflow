@@ -1,3 +1,7 @@
+1.19.1
+----------
+ * feat: add product_url field to ProductRetailerInfo and update tests for deserialization
+
 1.19.0
 ----------
  * feat: add CarouselMessage and CarouselButton types to MsgWppOut for enhanced message customization
