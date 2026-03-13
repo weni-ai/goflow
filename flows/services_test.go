@@ -113,6 +113,7 @@ func TestProductEntry(t *testing.T) {
 				Image:       "https://example.com/image.jpg",
 				Description: "Product description",
 				SellerID:    "seller_1",
+				ProductURL:  "https://example.com/product/sku_123",
 			},
 		},
 	}
@@ -131,7 +132,8 @@ func TestProductEntry(t *testing.T) {
 				"currency": "BRL",
 				"image": "https://example.com/image.jpg",
 				"description": "Product description",
-				"seller_id": "seller_1"
+				"seller_id": "seller_1",
+				"product_url": "https://example.com/product/sku_123"
 			}
 		]
 	}`), marshaledWWC, "WWC ProductEntry JSON mismatch")
@@ -143,4 +145,21 @@ func TestProductEntry(t *testing.T) {
 	require.NoError(t, err)
 
 	test.AssertEqualJSON(t, []byte(`{}`), marshaledEmpty, "Empty ProductEntry JSON mismatch")
+
+	// Test ProductRetailerInfo with product_url deserialization
+	jsonWithProductURL := []byte(`{
+		"product": "product_with_url",
+		"product_retailer_info": [
+			{
+				"name": "Item",
+				"retailer_id": "sku_456",
+				"product_url": "https://store.example.com/p/456"
+			}
+		]
+	}`)
+	var entryWithURL flows.ProductEntry
+	err = jsonx.Unmarshal(jsonWithProductURL, &entryWithURL)
+	require.NoError(t, err)
+	require.Len(t, entryWithURL.ProductRetailerInfo, 1)
+	assert.Equal(t, "https://store.example.com/p/456", entryWithURL.ProductRetailerInfo[0].ProductURL, "product_url should be deserialized correctly")
 }

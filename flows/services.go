@@ -114,6 +114,7 @@ type ProductRetailerInfo struct {
 	Image       string `json:"image,omitempty"`
 	Description string `json:"description,omitempty"`
 	SellerID    string `json:"seller_id,omitempty"`
+	ProductURL  string `json:"product_url,omitempty"`
 }
 
 type MsgCatalogCall struct {
