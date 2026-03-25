@@ -1,3 +1,7 @@
+1.20.0
+----------
+ * feat: add DirectSend and TTLSeconds fields to MsgWppOut and update related functions
+
 1.19.1
 ----------
  * feat: add product_url field to ProductRetailerInfo and update tests for deserialization
