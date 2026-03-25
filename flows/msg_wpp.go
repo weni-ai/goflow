@@ -26,6 +26,8 @@ type MsgWppOut struct {
 	Templating_          *MsgTemplating      `json:"templating,omitempty"`
 	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
 	Cards_               []CarouselMessage   `json:"carousel,omitempty"`
+	DirectSend_          bool                `json:"direct_send,omitempty"`
+	TTLSeconds_          int                 `json:"ttl_seconds,omitempty"`
 
 	// fields for msg_catalog
 	Products_         []ProductEntry `json:"products,omitempty"`
@@ -160,7 +162,7 @@ type CarouselButton struct {
 	Parameters map[string]interface{} `json:"parameters,omitempty"` // for url: display_text, url; for quick_reply: id, title
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage, directSend bool, ttlSeconds int) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
@@ -187,6 +189,8 @@ func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionTyp
 		ActionType_:          actionType,
 		ActionExternalID_:    actionExternalID,
 		Cards_:               cards,
+		DirectSend_:          directSend,
+		TTLSeconds_:          ttlSeconds,
 	}
 }
 
@@ -229,3 +233,7 @@ func (m *MsgWppOut) SendCatalog() bool { return m.SendCatalog_ }
 func (m *MsgWppOut) ActionType() string { return m.ActionType_ }
 
 func (m *MsgWppOut) ActionExternalID() string { return m.ActionExternalID_ }
+
+func (m *MsgWppOut) DirectSend() bool { return m.DirectSend_ }
+
+func (m *MsgWppOut) TTLSeconds() int { return m.TTLSeconds_ }
