@@ -151,6 +151,7 @@
             "button_text": "Button text",
             "flow_id": "19849459827734",
             "flow_screen": "WELCOME_SCREEN",
+            "flow_token": "unused",
             "flow_data": {
                 "name": "John Doe",
                 "options": "[\"option 1\",\"option 2\"]",
@@ -194,7 +195,8 @@
                             },
                             "image": "ZmFrZSBpbWFnZSBkYXRh"
                         },
-                        "flow_cta": "Button text"
+                        "flow_cta": "Button text",
+                        "flow_token": "unused"
                     },
                     "order_details_message": {}
                 }
