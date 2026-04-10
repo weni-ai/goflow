@@ -1,3 +1,7 @@
+1.20.1
+----------
+ * feat: add FlowToken field to FlowMessage and createWppMsgAction for enhanced message handling
+
 1.20.0
 ----------
  * feat: add DirectSend and TTLSeconds fields to MsgWppOut and update related functions

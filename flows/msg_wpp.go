@@ -65,6 +65,7 @@ type FlowMessage struct {
 	FlowScreen string   `json:"flow_screen,omitempty"`
 	FlowCTA    string   `json:"flow_cta,omitempty"`
 	FlowMode   string   `json:"flow_mode,omitempty"`
+	FlowToken  string   `json:"flow_token,omitempty"`
 }
 
 type ListItems struct {

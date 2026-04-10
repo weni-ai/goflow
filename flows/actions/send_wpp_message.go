@@ -45,6 +45,7 @@ type createWppMsgAction struct {
 	FlowData                  flows.FlowData          `json:"flow_data,omitempty"`
 	FlowScreen                string                  `json:"flow_screen,omitempty"`
 	FlowMode                  string                  `json:"flow_mode,omitempty"`
+	FlowToken                 string                  `json:"flow_token,omitempty"`
 	FlowDataAttachmentNameMap map[string]string       `json:"flow_data_attachment_name_map,omitempty"`
 	OrderDetails              *flows.OrderDetails     `json:"order_details,omitempty"`
 	CarouselMessage           *flows.CarouselMessage   `json:"carousel_message,omitempty"`
@@ -73,6 +74,7 @@ func NewSendWppMsg(
 	flowData flows.FlowData,
 	flowScreen string,
 	flowMode string,
+	flowToken string,
 	orderDetails *flows.OrderDetails,
 	carouselMessage flows.CarouselMessage,
 	allURNs bool) *SendWppMsgAction {
@@ -93,6 +95,7 @@ func NewSendWppMsg(
 			FlowData:        flowData,
 			FlowScreen:      flowScreen,
 			FlowMode:        flowMode,
+			FlowToken:       flowToken,
 			OrderDetails:    orderDetails,
 			CarouselMessage: func() *flows.CarouselMessage {
 				if carouselMessage.Body != "" || len(carouselMessage.Buttons) > 0 {
@@ -179,6 +182,7 @@ func (a *SendWppMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifi
 			FlowScreen: evaluatedFlowScreen,
 			FlowCTA:    evaluatedButtonText,
 			FlowMode:   a.FlowMode,
+			FlowToken:  a.FlowToken,
 		}
 	}
 
