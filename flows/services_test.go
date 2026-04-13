@@ -114,6 +114,11 @@ func TestProductEntry(t *testing.T) {
 				Description: "Product description",
 				SellerID:    "seller_1",
 				ProductURL:  "https://example.com/product/sku_123",
+				Extra: map[string]interface{}{
+					"brand":            "Acme",
+					"items_in_stock":   float64(42),
+					"nested":           map[string]interface{}{"k": "v"},
+				},
 			},
 		},
 	}
@@ -133,7 +138,12 @@ func TestProductEntry(t *testing.T) {
 				"image": "https://example.com/image.jpg",
 				"description": "Product description",
 				"seller_id": "seller_1",
-				"product_url": "https://example.com/product/sku_123"
+				"product_url": "https://example.com/product/sku_123",
+				"extra": {
+					"brand": "Acme",
+					"items_in_stock": 42,
+					"nested": {"k": "v"}
+				}
 			}
 		]
 	}`), marshaledWWC, "WWC ProductEntry JSON mismatch")
@@ -162,4 +172,29 @@ func TestProductEntry(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, entryWithURL.ProductRetailerInfo, 1)
 	assert.Equal(t, "https://store.example.com/p/456", entryWithURL.ProductRetailerInfo[0].ProductURL, "product_url should be deserialized correctly")
+
+	// Test ProductRetailerInfo extra deserialization
+	jsonWithExtra := []byte(`{
+		"product": "product_with_extra",
+		"product_retailer_info": [
+			{
+				"name": "Item",
+				"retailer_id": "sku_789",
+				"extra": {
+					"flag": true,
+					"score": 9.5,
+					"tag": "sale"
+				}
+			}
+		]
+	}`)
+	var entryWithExtra flows.ProductEntry
+	err = jsonx.Unmarshal(jsonWithExtra, &entryWithExtra)
+	require.NoError(t, err)
+	require.Len(t, entryWithExtra.ProductRetailerInfo, 1)
+	extra := entryWithExtra.ProductRetailerInfo[0].Extra
+	require.NotNil(t, extra)
+	assert.Equal(t, true, extra["flag"])
+	assert.Equal(t, 9.5, extra["score"])
+	assert.Equal(t, "sale", extra["tag"])
 }
