@@ -106,15 +106,16 @@ type ProductEntry struct {
 }
 
 type ProductRetailerInfo struct {
-	Name        string `json:"name,omitempty"`
-	RetailerID  string `json:"retailer_id,omitempty"` // sku
-	Price       string `json:"price,omitempty"`
-	SalePrice   string `json:"sale_price,omitempty"`
-	Currency    string `json:"currency,omitempty"`
-	Image       string `json:"image,omitempty"`
-	Description string `json:"description,omitempty"`
-	SellerID    string `json:"seller_id,omitempty"`
-	ProductURL  string `json:"product_url,omitempty"`
+	Name        string                 `json:"name,omitempty"`
+	RetailerID  string                 `json:"retailer_id,omitempty"` // sku
+	Price       string                 `json:"price,omitempty"`
+	SalePrice   string                 `json:"sale_price,omitempty"`
+	Currency    string                 `json:"currency,omitempty"`
+	Image       string                 `json:"image,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	SellerID    string                 `json:"seller_id,omitempty"`
+	ProductURL  string                 `json:"product_url,omitempty"`
+	Extra       map[string]interface{} `json:"extra,omitempty"`
 }
 
 type MsgCatalogCall struct {

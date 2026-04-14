@@ -1,3 +1,7 @@
+1.20.2
+----------
+ * feat: add Extra field to ProductRetailerInfo
+
 1.20.1
 ----------
  * feat: add FlowToken field to FlowMessage and createWppMsgAction for enhanced message handling
