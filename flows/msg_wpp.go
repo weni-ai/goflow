@@ -10,24 +10,25 @@ import (
 
 type MsgWppOut struct {
 	BaseMsg
-	InteractionType_     string              `json:"interaction_type,omitempty"`
-	HeaderType_          string              `json:"header_type,omitempty"`
-	HeaderText_          string              `json:"header_text,omitempty"`
-	Text_                string              `json:"text,omitempty"`
-	Footer_              string              `json:"footer,omitempty"`
-	Topic_               MsgTopic            `json:"topic,omitempty"`
-	ListMessage_         ListMessage         `json:"list_message,omitempty"`
-	Attachments_         []utils.Attachment  `json:"attachments,omitempty"`
-	QuickReplies_        []string            `json:"quick_replies,omitempty"`
-	TextLanguage         envs.Language       `json:"text_language,omitempty"`
-	CTAMessage_          CTAMessage          `json:"cta_message,omitempty"`
-	FlowMessage_         FlowMessage         `json:"flow_message,omitempty"`
-	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
-	Templating_          *MsgTemplating      `json:"templating,omitempty"`
-	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
-	Cards_               []CarouselMessage   `json:"carousel,omitempty"`
-	DirectSend_          bool                `json:"direct_send,omitempty"`
-	TTLSeconds_          int                 `json:"ttl_seconds,omitempty"`
+	InteractionType_        string              `json:"interaction_type,omitempty"`
+	HeaderType_             string              `json:"header_type,omitempty"`
+	HeaderText_             string              `json:"header_text,omitempty"`
+	Text_                   string              `json:"text,omitempty"`
+	Footer_                 string              `json:"footer,omitempty"`
+	Topic_                  MsgTopic            `json:"topic,omitempty"`
+	ListMessage_            ListMessage         `json:"list_message,omitempty"`
+	Attachments_            []utils.Attachment  `json:"attachments,omitempty"`
+	QuickReplies_           []string            `json:"quick_replies,omitempty"`
+	TextLanguage            envs.Language       `json:"text_language,omitempty"`
+	CTAMessage_             CTAMessage          `json:"cta_message,omitempty"`
+	FlowMessage_            FlowMessage         `json:"flow_message,omitempty"`
+	OrderDetailsMessage_    OrderDetailsMessage `json:"order_details_message,omitempty"`
+	Templating_             *MsgTemplating      `json:"templating,omitempty"`
+	Buttons_                []ButtonComponent   `json:"buttons,omitempty"`
+	Cards_                  []CarouselMessage   `json:"carousel,omitempty"`
+	DirectSend_             bool                `json:"direct_send,omitempty"`
+	DirectSendTemplateName_ string              `json:"direct_send_template_name,omitempty"`
+	TTLSeconds_             int                 `json:"ttl_seconds,omitempty"`
 
 	// fields for msg_catalog
 	Products_         []ProductEntry `json:"products,omitempty"`
