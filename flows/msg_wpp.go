@@ -164,35 +164,36 @@ type CarouselButton struct {
 	Parameters map[string]interface{} `json:"parameters,omitempty"` // for url: display_text, url; for quick_reply: id, title
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage, directSend bool, ttlSeconds int) *MsgWppOut {
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage, directSend bool, ttlSeconds int, directSendTemplateName string) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
 			URN_:     urn,
 			Channel_: channel,
 		},
-		HeaderType_:          headerType,
-		InteractionType_:     interactionType,
-		HeaderText_:          headerText,
-		Text_:                text,
-		Footer_:              footer,
-		ListMessage_:         listMessage,
-		Attachments_:         attachments,
-		QuickReplies_:        replyButtons,
-		Topic_:               topic,
-		CTAMessage_:          ctaMessage,
-		FlowMessage_:         flowMessage,
-		OrderDetailsMessage_: orderDetailsMessage,
-		Templating_:          templating,
-		Buttons_:             buttons,
-		Products_:            products,
-		ActionButtonText_:    actionButtonText,
-		SendCatalog_:         sendCatalog,
-		ActionType_:          actionType,
-		ActionExternalID_:    actionExternalID,
-		Cards_:               cards,
-		DirectSend_:          directSend,
-		TTLSeconds_:          ttlSeconds,
+		HeaderType_:             headerType,
+		InteractionType_:        interactionType,
+		HeaderText_:             headerText,
+		Text_:                   text,
+		Footer_:                 footer,
+		ListMessage_:            listMessage,
+		Attachments_:            attachments,
+		QuickReplies_:           replyButtons,
+		Topic_:                  topic,
+		CTAMessage_:             ctaMessage,
+		FlowMessage_:            flowMessage,
+		OrderDetailsMessage_:    orderDetailsMessage,
+		Templating_:             templating,
+		Buttons_:                buttons,
+		Products_:               products,
+		ActionButtonText_:       actionButtonText,
+		SendCatalog_:            sendCatalog,
+		ActionType_:             actionType,
+		ActionExternalID_:       actionExternalID,
+		Cards_:                  cards,
+		DirectSend_:             directSend,
+		TTLSeconds_:             ttlSeconds,
+		DirectSendTemplateName_: directSendTemplateName,
 	}
 }
 
@@ -239,3 +240,5 @@ func (m *MsgWppOut) ActionExternalID() string { return m.ActionExternalID_ }
 func (m *MsgWppOut) DirectSend() bool { return m.DirectSend_ }
 
 func (m *MsgWppOut) TTLSeconds() int { return m.TTLSeconds_ }
+
+func (m *MsgWppOut) DirectSendTemplateName() string { return m.DirectSendTemplateName_ }
