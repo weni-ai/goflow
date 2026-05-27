@@ -45,6 +45,7 @@ func TestMsgWppOut(t *testing.T) {
 		[]flows.CarouselMessage{},
 		false,
 		0,
+		"",
 	)
 
 	// test marshaling our msg

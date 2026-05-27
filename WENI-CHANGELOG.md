@@ -1,3 +1,7 @@
+1.20.3
+----------
+ * feat: add DirectSendTemplateName field to MsgWppOut
+
 1.20.2
 ----------
  * feat: add Extra field to ProductRetailerInfo
