@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -34,6 +35,198 @@ type webhook struct {
 	response string
 	body     string
 	bodyJSON string
+}
+
+func TestWebhookTimeoutHeader(t *testing.T) {
+	tcs := []struct {
+		name           string
+		header         string
+		delay          time.Duration
+		clientTimeout  time.Duration
+		expectResponse bool
+		minElapsed     time.Duration
+		maxElapsed     time.Duration
+	}{
+		{
+			name:           "header 60 succeeds with 35s delay",
+			header:         "60",
+			delay:          35 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: true,
+			minElapsed:     34 * time.Second,
+			maxElapsed:     45 * time.Second,
+		},
+		{
+			name:           "default client timeout fails with 35s delay",
+			header:         "",
+			delay:          35 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: false,
+			minElapsed:     28 * time.Second,
+			maxElapsed:     38 * time.Second,
+		},
+		{
+			name:           "header 60 fails with 65s delay at ~60s not ~30s",
+			header:         "60",
+			delay:          65 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: false,
+			minElapsed:     58 * time.Second,
+			maxElapsed:     68 * time.Second,
+		},
+		{
+			name:           "header 30 fails with 35s delay at ~30s",
+			header:         "30",
+			delay:          35 * time.Second,
+			clientTimeout:  60 * time.Second,
+			expectResponse: false,
+			minElapsed:     28 * time.Second,
+			maxElapsed:     38 * time.Second,
+		},
+		{
+			name:           "header 45 succeeds with 40s delay",
+			header:         "45",
+			delay:          40 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: true,
+			minElapsed:     39 * time.Second,
+			maxElapsed:     48 * time.Second,
+		},
+		{
+			name:           "invalid header uses client default",
+			header:         "not-a-number",
+			delay:          35 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: false,
+			minElapsed:     28 * time.Second,
+			maxElapsed:     38 * time.Second,
+		},
+		{
+			name:           "header above 60 is clamped to 60",
+			header:         "120",
+			delay:          55 * time.Second,
+			clientTimeout:  30 * time.Second,
+			expectResponse: true,
+			minElapsed:     54 * time.Second,
+			maxElapsed:     62 * time.Second,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				time.Sleep(tc.delay)
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"ok":true}`))
+			}))
+			defer server.Close()
+
+			httpClient := &http.Client{Timeout: tc.clientTimeout}
+			svc := webhooks.NewService(httpClient, nil, nil, nil, 10000)
+
+			request, err := http.NewRequest("GET", server.URL, nil)
+			require.NoError(t, err)
+			if tc.header != "" {
+				request.Header.Set("X-Weni-Webhook-Timeout", tc.header)
+			}
+
+			start := time.Now()
+			call, err := svc.Call(nil, request)
+			elapsed := time.Since(start)
+
+			assert.NoError(t, err)
+			require.NotNil(t, call)
+
+			if tc.expectResponse {
+				require.NotNil(t, call.Response)
+				assert.Equal(t, http.StatusOK, call.Response.StatusCode)
+			} else {
+				assert.Nil(t, call.Response)
+			}
+
+			assert.GreaterOrEqual(t, elapsed, tc.minElapsed, "elapsed too short: %s", elapsed)
+			assert.LessOrEqual(t, elapsed, tc.maxElapsed, "elapsed too long: %s", elapsed)
+
+			assert.Empty(t, call.Request.Header.Get("X-Weni-Webhook-Timeout"))
+		})
+	}
+}
+
+func TestWebhookTimeoutHeaderConcurrent(t *testing.T) {
+	const (
+		shortDelay = 100 * time.Millisecond
+		longDelay  = 2 * time.Second
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		delay, _ := time.ParseDuration(r.URL.Query().Get("delay"))
+		time.Sleep(delay)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+
+	httpClient := &http.Client{Timeout: 500 * time.Millisecond}
+	svc := webhooks.NewService(httpClient, nil, nil, nil, 10000)
+
+	const workers = 20
+	errs := make(chan error, workers*2)
+	done := make(chan struct{}, workers)
+
+	for i := 0; i < workers; i++ {
+		go func(useLongTimeout bool) {
+			defer func() { done <- struct{}{} }()
+
+			delay := shortDelay
+			header := "30"
+			if useLongTimeout {
+				delay = longDelay
+				header = "60"
+			}
+
+			request, err := http.NewRequest("GET", server.URL+"?delay="+delay.String(), nil)
+			if err != nil {
+				errs <- err
+				return
+			}
+			request.Header.Set("X-Weni-Webhook-Timeout", header)
+
+			call, err := svc.Call(nil, request)
+			if err != nil {
+				errs <- err
+				return
+			}
+			if call.Response == nil {
+				errs <- assert.AnError
+			}
+		}(i%2 == 0)
+	}
+
+	for i := 0; i < workers; i++ {
+		<-done
+	}
+	close(errs)
+
+	for err := range errs {
+		assert.NoError(t, err)
+	}
+}
+
+func TestClampWebhookTimeout(t *testing.T) {
+	tcs := []struct {
+		seconds  int
+		expected time.Duration
+	}{
+		{10, 30 * time.Second},
+		{30, 30 * time.Second},
+		{45, 45 * time.Second},
+		{60, 60 * time.Second},
+		{120, 60 * time.Second},
+	}
+
+	for _, tc := range tcs {
+		assert.Equal(t, tc.expected, webhooks.ClampWebhookTimeout(tc.seconds), "seconds=%d", tc.seconds)
+	}
 }
 
 func TestWebhookParsing(t *testing.T) {

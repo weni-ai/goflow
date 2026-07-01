@@ -59,18 +59,18 @@ func (s *service) Call(session flows.Session, request *http.Request) (*flows.Web
 		request.Header.Del("X-Weni-Whatsapp-Token")
 	}
 
-	timeoutHeader := request.Header.Get("X-Weni-Webhook-Timeout")
-	if timeout, err := strconv.Atoi(timeoutHeader); err == nil {
-		if timeout >= 60 {
-			timeout = 60
+	httpClient := s.httpClient
+	if timeoutHeader := request.Header.Get("X-Weni-Webhook-Timeout"); timeoutHeader != "" {
+		request.Header.Del("X-Weni-Webhook-Timeout")
+
+		if timeout, err := strconv.Atoi(timeoutHeader); err == nil {
+			client := s.httpClient.Clone()
+			client.Timeout = ClampWebhookTimeout(timeout)
+			httpClient = client
 		}
-		if timeout <= 30 {
-			timeout = 30
-		}
-		s.httpClient.Timeout = time.Second * time.Duration(timeout)
 	}
 
-	trace, err := httpx.DoTrace(s.httpClient, request, s.httpRetries, s.httpAccess, s.maxBodyBytes)
+	trace, err := httpx.DoTrace(httpClient, request, s.httpRetries, s.httpAccess, s.maxBodyBytes)
 	if trace != nil {
 		call := &flows.WebhookCall{Trace: trace}
 
@@ -88,6 +88,15 @@ func (s *service) Call(session flows.Session, request *http.Request) (*flows.Web
 	}
 
 	return nil, err
+}
+
+func ClampWebhookTimeout(seconds int) time.Duration {
+	if seconds >= 60 {
+		seconds = 60
+	} else if seconds <= 30 {
+		seconds = 30
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func ExtractJSON(body []byte) ([]byte, bool) {
