@@ -1,3 +1,11 @@
+1.20.5
+----------
+ * feat: add whatsapp_phone contact query attribute to detect phone-number WhatsApp URNs
+
+1.20.4
+----------
+ * feat: add whatsapp_bsuid contact query attribute for Meta BSUID URN matching
+
 1.20.3
 ----------
  * feat: add DirectSendTemplateName field to MsgWppOut

@@ -1,0 +1,36 @@
+package contactql_test
+
+import (
+	"testing"
+
+	"github.com/nyaruka/goflow/contactql"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestIsWhatsAppBSUIDPath(t *testing.T) {
+	assert.True(t, contactql.IsWhatsAppBSUIDPath("BR.1583576196772655"))
+	assert.True(t, contactql.IsWhatsAppBSUIDPath("br.1583576196772655"))
+	assert.True(t, contactql.IsWhatsAppBSUIDPath("US.ENT.11815799212886844830"))
+	assert.True(t, contactql.IsWhatsAppBSUIDPath("us.ent.11815799212886844830"))
+	assert.True(t, contactql.IsWhatsAppBSUIDPath("MX.abc123XYZ"))
+
+	assert.False(t, contactql.IsWhatsAppBSUIDPath("558231426933"))
+	assert.False(t, contactql.IsWhatsAppBSUIDPath("+558231426933"))
+	assert.False(t, contactql.IsWhatsAppBSUIDPath("BR1583576196772655"))
+	assert.False(t, contactql.IsWhatsAppBSUIDPath(""))
+	assert.False(t, contactql.IsWhatsAppBSUIDPath("B.123"))
+}
+
+func TestIsWhatsAppPhonePath(t *testing.T) {
+	// any country / any digit phone path — not tied to a specific DDI
+	assert.True(t, contactql.IsWhatsAppPhonePath("558231426933"))   // BR example
+	assert.True(t, contactql.IsWhatsAppPhonePath("5561986275709"))  // BR example
+	assert.True(t, contactql.IsWhatsAppPhonePath("14155552671"))    // US example
+	assert.True(t, contactql.IsWhatsAppPhonePath("447911123456"))   // UK example
+	assert.True(t, contactql.IsWhatsAppPhonePath("+558231426933"))
+
+	assert.False(t, contactql.IsWhatsAppPhonePath("BR.1583576196772655"))
+	assert.False(t, contactql.IsWhatsAppPhonePath("US.ENT.11815799212886844830"))
+	assert.False(t, contactql.IsWhatsAppPhonePath(""))
+	assert.False(t, contactql.IsWhatsAppPhonePath("BR1583576196772655"))
+}

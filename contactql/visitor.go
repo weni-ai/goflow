@@ -25,28 +25,56 @@ var operatorAliases = map[string]Operator{
 
 // Fixed attributes that can be searched
 const (
-	AttributeUUID       = "uuid"
-	AttributeID         = "id"
-	AttributeName       = "name"
-	AttributeLanguage   = "language"
-	AttributeURN        = "urn"
-	AttributeGroup      = "group"
-	AttributeTickets    = "tickets"
-	AttributeCreatedOn  = "created_on"
-	AttributeLastSeenOn = "last_seen_on"
+	AttributeUUID           = "uuid"
+	AttributeID             = "id"
+	AttributeName           = "name"
+	AttributeLanguage       = "language"
+	AttributeURN            = "urn"
+	AttributeGroup          = "group"
+	AttributeTickets        = "tickets"
+	AttributeCreatedOn      = "created_on"
+	AttributeLastSeenOn     = "last_seen_on"
+	AttributeWhatsAppBSUID  = "whatsapp_bsuid"
+	AttributeWhatsAppPhone  = "whatsapp_phone"
 )
 
 var attributes = map[string]assets.FieldType{
-	AttributeUUID:       assets.FieldTypeText,
-	AttributeID:         assets.FieldTypeText,
-	AttributeName:       assets.FieldTypeText,
-	AttributeLanguage:   assets.FieldTypeText,
-	AttributeURN:        assets.FieldTypeText,
-	AttributeGroup:      assets.FieldTypeText,
-	AttributeTickets:    assets.FieldTypeNumber,
-	AttributeCreatedOn:  assets.FieldTypeDatetime,
-	AttributeLastSeenOn: assets.FieldTypeDatetime,
+	AttributeUUID:          assets.FieldTypeText,
+	AttributeID:            assets.FieldTypeText,
+	AttributeName:          assets.FieldTypeText,
+	AttributeLanguage:      assets.FieldTypeText,
+	AttributeURN:           assets.FieldTypeText,
+	AttributeGroup:         assets.FieldTypeText,
+	AttributeTickets:       assets.FieldTypeNumber,
+	AttributeCreatedOn:     assets.FieldTypeDatetime,
+	AttributeLastSeenOn:    assets.FieldTypeDatetime,
+	AttributeWhatsAppBSUID: assets.FieldTypeText,
+	AttributeWhatsAppPhone: assets.FieldTypeText,
 }
+
+// WhatsAppBSUIDRegex matches Meta WhatsApp Business-Scoped User IDs (portfolio and parent).
+// Country code is case-insensitive; ES keyword paths are lowercased by the index normalizer.
+var WhatsAppBSUIDRegex = regexp.MustCompile(`(?i)^[a-z]{2}\.(ent\.)?[a-z0-9]+$`)
+
+// WhatsAppPhoneRegex matches phone-number WhatsApp URN paths: any digit sequence
+// (any country / DDI), with an optional leading +. BSUID paths contain a dot and do not match.
+var WhatsAppPhoneRegex = regexp.MustCompile(`^\+?[0-9]+$`)
+
+// IsWhatsAppBSUIDPath returns whether path is a WhatsApp BSUID rather than a phone number.
+func IsWhatsAppBSUIDPath(path string) bool {
+	return WhatsAppBSUIDRegex.MatchString(path)
+}
+
+// IsWhatsAppPhonePath returns whether path is a phone-number WhatsApp id (not a BSUID).
+func IsWhatsAppPhonePath(path string) bool {
+	return WhatsAppPhoneRegex.MatchString(path)
+}
+
+// WhatsAppBSUIDElasticRegexp is the Elasticsearch regexp (lowercase) for BSUID paths on urns.path.keyword.
+const WhatsAppBSUIDElasticRegexp = `[a-z]{2}\.(ent\.)?[a-z0-9]+`
+
+// WhatsAppPhoneElasticRegexp is the Elasticsearch regexp for phone-number WhatsApp paths.
+const WhatsAppPhoneElasticRegexp = `[0-9]+`
 
 // Resolver provides functions for resolving fields and groups referenced in queries
 type Resolver interface {
