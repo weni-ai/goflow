@@ -161,6 +161,13 @@ func (c *Condition) validate(env envs.Environment, resolver Resolver) error {
 		}
 	}
 
+	// whatsapp_bsuid only supports existence checks (is set / is not set)
+	if c.propKey == AttributeWhatsAppBSUID {
+		if !(c.operator == OpEqual || c.operator == OpNotEqual) || c.value != "" {
+			return NewQueryError(ErrUnsupportedComparison, "whatsapp_bsuid can only be checked as set or not set").withExtra("property", c.propKey).withExtra("operator", string(c.operator))
+		}
+	}
+
 	// if existence check, disallow certain attributes
 	if (c.operator == OpEqual || c.operator == OpNotEqual) && c.value == "" {
 		switch c.propKey {
