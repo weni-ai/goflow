@@ -26,8 +26,10 @@ func TestEvaluateQuery(t *testing.T) {
 		"name":     []interface{}{"Bob Smithwick"},
 		"tel":      []interface{}{"+59313145145"},
 		"twitter":  []interface{}{"bob_smith"},
-		"whatsapp": []interface{}{},
-		"gender":   []interface{}{"male"},
+		"whatsapp":        []interface{}{},
+		"whatsapp_bsuid":  []interface{}{"BR.1583576196772655"},
+		"whatsapp_phone":  []interface{}{},
+		"gender":          []interface{}{"male"},
 		"age":      []interface{}{decimal.NewFromFloat(36)},
 		"dob":      []interface{}{time.Date(1981, 5, 28, 13, 30, 23, 0, time.UTC)},
 		"state":    []interface{}{"Kigali"},
@@ -71,6 +73,12 @@ func TestEvaluateQuery(t *testing.T) {
 		{query: `twitter:jim_smith`, result: false},
 		{query: `twitter ~ smith`, result: true},
 		{query: `whatsapp = 4533343`, result: false},
+		{query: `whatsapp_bsuid != ""`, result: true},
+		{query: `whatsapp_bsuid = ""`, result: false},
+		{query: `whatsapp_phone != ""`, result: false},
+		{query: `whatsapp_phone = ""`, result: true},
+		{query: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, result: false}, // tel is set on testObj
+		{query: `whatsapp_bsuid != "" AND whatsapp_phone = ""`, result: true},
 
 		// text field condition
 		{query: `Gender = male`, result: true},
