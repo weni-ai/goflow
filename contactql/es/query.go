@@ -311,6 +311,32 @@ func attributeConditionToElastic(env envs.Environment, resolver contactql.Resolv
 		}
 	case contactql.AttributeTickets:
 		return numericalAttributeQuery(c, "tickets")
+	case contactql.AttributeWhatsAppBSUID:
+		// existence of a WhatsApp URN whose path matches Meta BSUID format (any country)
+		query = elastic.NewNestedQuery("urns", elastic.NewBoolQuery().Must(
+			elastic.NewTermQuery("urns.scheme", "whatsapp"),
+			elastic.NewRegexpQuery("urns.path.keyword", contactql.WhatsAppBSUIDElasticRegexp),
+		))
+		if (c.Operator() == contactql.OpEqual || c.Operator() == contactql.OpNotEqual) && value == "" {
+			if c.Operator() == contactql.OpEqual {
+				query = not(query)
+			}
+			return query
+		}
+		panic(fmt.Sprintf("unsupported whatsapp_bsuid attribute operator: %s", c.Operator()))
+	case contactql.AttributeWhatsAppPhone:
+		// existence of a WhatsApp URN whose path is a phone number (digits), not a BSUID
+		query = elastic.NewNestedQuery("urns", elastic.NewBoolQuery().Must(
+			elastic.NewTermQuery("urns.scheme", "whatsapp"),
+			elastic.NewRegexpQuery("urns.path.keyword", contactql.WhatsAppPhoneElasticRegexp),
+		))
+		if (c.Operator() == contactql.OpEqual || c.Operator() == contactql.OpNotEqual) && value == "" {
+			if c.Operator() == contactql.OpEqual {
+				query = not(query)
+			}
+			return query
+		}
+		panic(fmt.Sprintf("unsupported whatsapp_phone attribute operator: %s", c.Operator()))
 	default:
 		panic(fmt.Sprintf("unsupported contact attribute: %s", key))
 	}

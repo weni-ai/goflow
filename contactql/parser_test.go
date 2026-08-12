@@ -76,6 +76,16 @@ func TestParseQuery(t *testing.T) {
 		{text: `MAILTO ~ user@example.com`, parsed: `mailto ~ "user@example.com"`, resolver: resolver},
 		{text: `URN=ewok`, parsed: `urn = "ewok"`, resolver: resolver},
 
+		// WhatsApp BSUID attribute (existence checks only, any country)
+		{text: `whatsapp_bsuid != ""`, parsed: `whatsapp_bsuid != ""`, resolver: resolver},
+		{text: `whatsapp_bsuid = ""`, parsed: `whatsapp_bsuid = ""`, resolver: resolver},
+		{text: `whatsapp_bsuid = "BR.123"`, err: "whatsapp_bsuid can only be checked as set or not set", resolver: resolver},
+		{text: `whatsapp_bsuid ~ "BR."`, err: "contains conditions can only be used with name or URN values", resolver: resolver},
+		{text: `whatsapp_phone != ""`, parsed: `whatsapp_phone != ""`, resolver: resolver},
+		{text: `whatsapp_phone = ""`, parsed: `whatsapp_phone = ""`, resolver: resolver},
+		{text: `whatsapp_phone = "5561"`, err: "whatsapp_phone can only be checked as set or not set", resolver: resolver},
+		{text: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, parsed: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, resolver: resolver},
+
 		// explicit conditions on URN with URN redaction
 		{text: `tel=""`, parsed: `tel = ""`, redactURNs: true, resolver: resolver},
 		{text: `tel!=""`, parsed: `tel != ""`, redactURNs: true, resolver: resolver},

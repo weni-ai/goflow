@@ -509,6 +509,24 @@ func (c *Contact) QueryProperty(env envs.Environment, key string, propType conta
 				return []interface{}{*c.lastSeenOn}
 			}
 			return nil
+		case contactql.AttributeWhatsAppBSUID:
+			vals := make([]interface{}, 0)
+			for _, urn := range c.urns.WithScheme(urns.WhatsAppScheme) {
+				path := urn.URN().Path()
+				if contactql.IsWhatsAppBSUIDPath(path) {
+					vals = append(vals, path)
+				}
+			}
+			return vals
+		case contactql.AttributeWhatsAppPhone:
+			vals := make([]interface{}, 0)
+			for _, urn := range c.urns.WithScheme(urns.WhatsAppScheme) {
+				path := urn.URN().Path()
+				if contactql.IsWhatsAppPhonePath(path) {
+					vals = append(vals, path)
+				}
+			}
+			return vals
 		default:
 			return nil
 		}

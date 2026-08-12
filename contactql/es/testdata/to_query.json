@@ -1886,5 +1886,121 @@
                 }
             }
         }
+    },
+    {
+        "description": "whatsapp_bsuid is set",
+        "query": "whatsapp_bsuid!=\"\"",
+        "elastic": {
+            "nested": {
+                "path": "urns",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "term": {
+                                    "urns.scheme": "whatsapp"
+                                }
+                            },
+                            {
+                                "regexp": {
+                                    "urns.path.keyword": {
+                                        "value": "[a-z]{2}\\.(ent\\.)?[a-z0-9]+"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_bsuid is not set",
+        "query": "whatsapp_bsuid=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "nested": {
+                        "path": "urns",
+                        "query": {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "urns.scheme": "whatsapp"
+                                        }
+                                    },
+                                    {
+                                        "regexp": {
+                                            "urns.path.keyword": {
+                                                "value": "[a-z]{2}\\.(ent\\.)?[a-z0-9]+"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_phone is set",
+        "query": "whatsapp_phone!=\"\"",
+        "elastic": {
+            "nested": {
+                "path": "urns",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "term": {
+                                    "urns.scheme": "whatsapp"
+                                }
+                            },
+                            {
+                                "regexp": {
+                                    "urns.path.keyword": {
+                                        "value": "[0-9]+"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_phone is not set",
+        "query": "whatsapp_phone=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "nested": {
+                        "path": "urns",
+                        "query": {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "urns.scheme": "whatsapp"
+                                        }
+                                    },
+                                    {
+                                        "regexp": {
+                                            "urns.path.keyword": {
+                                                "value": "[0-9]+"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 ]
