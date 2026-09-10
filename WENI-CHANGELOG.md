@@ -1,3 +1,7 @@
+1.20.5
+----------
+ * feat: add named WhatsApp template parameter format, parameter names, and named placeholder substitution
+
 1.20.4
 ----------
  * feat: add whatsapp_bsuid contact query attribute for Meta BSUID URN matching

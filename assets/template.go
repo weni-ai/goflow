@@ -2,38 +2,53 @@ package assets
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nyaruka/gocommon/uuids"
 	"github.com/nyaruka/goflow/envs"
 )
+
+// WhatsApp template parameter formats as recorded from the provider.
+const (
+	ParameterFormatPositional = "positional"
+	ParameterFormatNamed      = "named"
+)
+
+// NormalizeParameterFormat returns the provider parameter format, defaulting to positional.
+func NormalizeParameterFormat(format string) string {
+	if strings.EqualFold(strings.TrimSpace(format), ParameterFormatNamed) {
+		return ParameterFormatNamed
+	}
+	return ParameterFormatPositional
+}
 
 // TemplateUUID is the UUID of a template
 type TemplateUUID uuids.UUID
 
 // Template is a message template, currently only used by WhatsApp channels
 //
-//   {
-//     "name": "revive-issue",
-//     "uuid": "14782905-81a6-4910-bc9f-93ad287b23c3",
-//     "translations": [
-//       {
-//          "language": "eng",
-//          "content": "Hi {{1}}, are you still experiencing your issue?",
-//          "channel": {
-//            "uuid": "cf26be4c-875f-4094-9e08-162c3c9dcb5b",
-//            "name": "Twilio Channel"
-//          }
-//       },
-//       {
-//          "language": "fra",
-//          "content": "Bonjour {{1}}",
-//          "channel": {
-//            "uuid": "cf26be4c-875f-4094-9e08-162c3c9dcb5b",
-//            "name": "Twilio Channel"
-//          }
-//       }
-//     ]
-//   }
+//	{
+//	  "name": "revive-issue",
+//	  "uuid": "14782905-81a6-4910-bc9f-93ad287b23c3",
+//	  "translations": [
+//	    {
+//	       "language": "eng",
+//	       "content": "Hi {{1}}, are you still experiencing your issue?",
+//	       "channel": {
+//	         "uuid": "cf26be4c-875f-4094-9e08-162c3c9dcb5b",
+//	         "name": "Twilio Channel"
+//	       }
+//	    },
+//	    {
+//	       "language": "fra",
+//	       "content": "Bonjour {{1}}",
+//	       "channel": {
+//	         "uuid": "cf26be4c-875f-4094-9e08-162c3c9dcb5b",
+//	         "name": "Twilio Channel"
+//	       }
+//	    }
+//	  ]
+//	}
 //
 // @asset template
 type Template interface {
@@ -41,6 +56,7 @@ type Template interface {
 	Name() string
 	Translations() []TemplateTranslation
 	Category() string
+	ParameterFormat() string
 }
 
 // TemplateTranslation represents a single translation for a specific template and channel
@@ -51,13 +67,15 @@ type TemplateTranslation interface {
 	Namespace() string
 	VariableCount() int
 	Channel() ChannelReference
+	ParameterFormat() string
+	ParameterNames() []string
 }
 
 // TemplateReference is used to reference a Template
 type TemplateReference struct {
-	UUID TemplateUUID `json:"uuid" validate:"required,uuid"`
-	Name string       `json:"name"`
-	Category string     `json:"category"`
+	UUID     TemplateUUID `json:"uuid" validate:"required,uuid"`
+	Name     string       `json:"name"`
+	Category string       `json:"category"`
 }
 
 // NewTemplateReference creates a new template reference with the given UUID and name
