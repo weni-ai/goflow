@@ -105,8 +105,22 @@ func evaluateConditionWithValue(env envs.Environment, resolver Resolver, c *Cond
 		asDate, _ := c.ValueAsDate(env)
 		return dateComparison(val.(time.Time), c.operator, asDate)
 	default:
+		if c.propKey == AttributeCTWASourceID {
+			return ctwaSourceIDComparison(val.(string), c.operator, c.value)
+		}
 		isName := c.propKey == AttributeName // needs to be handled as special case
 		return textComparison(val.(string), c.operator, c.value, isName)
+	}
+}
+
+func ctwaSourceIDComparison(objectVal string, op Operator, queryVal string) bool {
+	switch op {
+	case OpEqual:
+		return objectVal == queryVal
+	case OpNotEqual:
+		return objectVal != queryVal
+	default:
+		panic(fmt.Sprintf("can't query ctwa_source_id with %s", op))
 	}
 }
 
