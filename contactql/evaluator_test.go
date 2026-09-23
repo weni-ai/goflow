@@ -29,6 +29,7 @@ func TestEvaluateQuery(t *testing.T) {
 		"whatsapp":        []interface{}{},
 		"whatsapp_bsuid":  []interface{}{"BR.1583576196772655"},
 		"whatsapp_phone":  []interface{}{},
+		"ctwa_source_id":  []interface{}{"campaign-a", "Campaign-B"},
 		"gender":          []interface{}{"male"},
 		"age":      []interface{}{decimal.NewFromFloat(36)},
 		"dob":      []interface{}{time.Date(1981, 5, 28, 13, 30, 23, 0, time.UTC)},
@@ -79,6 +80,15 @@ func TestEvaluateQuery(t *testing.T) {
 		{query: `whatsapp_phone = ""`, result: true},
 		{query: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, result: false}, // tel is set on testObj
 		{query: `whatsapp_bsuid != "" AND whatsapp_phone = ""`, result: true},
+		{query: `ctwa_source_id = "campaign-a"`, result: true},
+		{query: `ctwa_source_id = "Campaign-A"`, result: false},
+		{query: `ctwa_source_id = "Campaign-B"`, result: true},
+		{query: `ctwa_source_id = "campaign-b"`, result: false},
+		{query: `ctwa_source_id != "campaign-a"`, result: false},
+		{query: `ctwa_source_id != "missing"`, result: true},
+		{query: `ctwa_source_id != ""`, result: true},
+		{query: `ctwa_source_id = ""`, result: false},
+		{query: `ctwa_source_id = " campaign-a"`, result: false},
 
 		// text field condition
 		{query: `Gender = male`, result: true},
