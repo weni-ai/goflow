@@ -23,6 +23,14 @@ func TestTemplate(t *testing.T) {
 	assert.Equal(t, "Hello {{1}}", translation.Content())
 	assert.Equal(t, 1, translation.VariableCount())
 	assert.Equal(t, "0162a7f4_dfe4_4c96_be07_854d5dba3b2b", translation.Namespace())
+	assert.Equal(t, assets.ParameterFormatPositional, translation.ParameterFormat())
+	assert.Nil(t, translation.ParameterNames())
+
+	named := NewTemplateTranslation(channel, envs.Language("por"), envs.Country("BR"), "Olá {{nome}}", 1, "ns")
+	named.SetParameterFormat("NAMED")
+	named.SetParameterNames([]string{"nome"})
+	assert.Equal(t, assets.ParameterFormatNamed, named.ParameterFormat())
+	assert.Equal(t, []string{"nome"}, named.ParameterNames())
 
 	template := NewTemplate(assets.TemplateUUID("8a9c1f73-5059-46a0-ba4a-6390979c01d3"), "hello", "", []*TemplateTranslation{translation})
 	assert.Equal(t, assets.TemplateUUID("8a9c1f73-5059-46a0-ba4a-6390979c01d3"), template.UUID())
@@ -41,4 +49,6 @@ func TestTemplate(t *testing.T) {
 	assert.Equal(t, copy.UUID(), template.UUID())
 	assert.Equal(t, copy.Translations()[0].Content(), template.Translations()[0].Content())
 	assert.Equal(t, copy.Translations()[0].Namespace(), template.Translations()[0].Namespace())
+	assert.Equal(t, assets.ParameterFormatPositional, template.ParameterFormat())
+	assert.Equal(t, assets.ParameterFormatPositional, copy.ParameterFormat())
 }

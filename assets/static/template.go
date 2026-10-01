@@ -9,10 +9,11 @@ import (
 // Template is a JSON serializable implementation of a template asset
 type Template struct {
 	t struct {
-		UUID         assets.TemplateUUID    `json:"uuid"         validate:"required,uuid"`
-		Name         string                 `json:"name"`
-		Category     string                 `json:"category"`
-		Translations []*TemplateTranslation `json:"translations"`
+		UUID            assets.TemplateUUID    `json:"uuid"         validate:"required,uuid"`
+		Name            string                 `json:"name"`
+		Category        string                 `json:"category"`
+		ParameterFormat string                 `json:"parameter_format,omitempty"`
+		Translations    []*TemplateTranslation `json:"translations"`
 	}
 }
 
@@ -44,6 +45,11 @@ func (t *Template) Translations() []assets.TemplateTranslation {
 // Category returns the category of this template
 func (t *Template) Category() string { return t.t.Category }
 
+// ParameterFormat returns the provider parameter format for this template
+func (t *Template) ParameterFormat() string {
+	return assets.NormalizeParameterFormat(t.t.ParameterFormat)
+}
+
 // UnmarshalJSON is our unmarshaller for json data
 func (t *Template) UnmarshalJSON(data []byte) error { return jsonx.Unmarshal(data, &t.t) }
 
@@ -53,12 +59,14 @@ func (t *Template) MarshalJSON() ([]byte, error) { return jsonx.Marshal(t.t) }
 // TemplateTranslation represents a single template translation
 type TemplateTranslation struct {
 	t struct {
-		Channel       assets.ChannelReference `json:"channel"         validate:"required"`
-		Content       string                  `json:"content"         validate:"required"`
-		Language      envs.Language           `json:"language"        validate:"required"`
-		Namespace     string                  `json:"namespace"`
-		Country       envs.Country            `json:"country,omitempty"`
-		VariableCount int                     `json:"variable_count"`
+		Channel         assets.ChannelReference `json:"channel"         validate:"required"`
+		Content         string                  `json:"content"         validate:"required"`
+		Language        envs.Language           `json:"language"        validate:"required"`
+		Namespace       string                  `json:"namespace"`
+		Country         envs.Country            `json:"country,omitempty"`
+		VariableCount   int                     `json:"variable_count"`
+		ParameterFormat string                  `json:"parameter_format,omitempty"`
+		ParameterNames  []string                `json:"parameter_names,omitempty"`
 	}
 }
 
@@ -88,6 +96,24 @@ func (t *TemplateTranslation) Country() envs.Country { return t.t.Country }
 
 // VariableCount returns the number of variables in this template
 func (t *TemplateTranslation) VariableCount() int { return t.t.VariableCount }
+
+// ParameterFormat returns the provider parameter format for this translation
+func (t *TemplateTranslation) ParameterFormat() string {
+	return assets.NormalizeParameterFormat(t.t.ParameterFormat)
+}
+
+// ParameterNames returns the provider-declared body parameter names for a named template
+func (t *TemplateTranslation) ParameterNames() []string { return t.t.ParameterNames }
+
+// SetParameterFormat records the provider parameter format on this translation
+func (t *TemplateTranslation) SetParameterFormat(format string) {
+	t.t.ParameterFormat = assets.NormalizeParameterFormat(format)
+}
+
+// SetParameterNames records the provider-declared body parameter names
+func (t *TemplateTranslation) SetParameterNames(names []string) {
+	t.t.ParameterNames = names
+}
 
 // Channel returns the channel this template translation is for
 func (t *TemplateTranslation) Channel() assets.ChannelReference { return t.t.Channel }

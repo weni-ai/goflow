@@ -179,13 +179,15 @@ func (m *MsgOut) IGTag() string { return m.IGTag_ }
 
 // MsgTemplating represents any substituted message template that should be applied when sending this message
 type MsgTemplating struct {
-	Template_      *assets.TemplateReference `json:"template"`
-	Language_      envs.Language             `json:"language"`
-	Country_       envs.Country              `json:"country"`
-	Variables_     []string                  `json:"variables,omitempty"`
-	Namespace_     string                    `json:"namespace"`
-	CarouselCards_ []CarouselCard            `json:"carousel_cards,omitempty"`
-	IsCarousel_    bool                      `json:"is_carousel,omitempty"`
+	Template_        *assets.TemplateReference `json:"template"`
+	Language_        envs.Language             `json:"language"`
+	Country_         envs.Country              `json:"country"`
+	Variables_       []string                  `json:"variables,omitempty"`
+	NamedVariables_  map[string]string         `json:"named_variables,omitempty"`
+	ParameterFormat_ string                    `json:"parameter_format,omitempty"`
+	Namespace_       string                    `json:"namespace"`
+	CarouselCards_   []CarouselCard            `json:"carousel_cards,omitempty"`
+	IsCarousel_      bool                      `json:"is_carousel,omitempty"`
 }
 type CarouselCard struct {
 	Body    []string             `json:"body,omitempty"`
@@ -207,8 +209,16 @@ func (t MsgTemplating) Language() envs.Language { return t.Language_ }
 // Country returns the country that should be used for the template
 func (t MsgTemplating) Country() envs.Country { return t.Country_ }
 
-// Variables returns the variables that should be substituted in the template
+// Variables returns the positional variables that should be substituted in the template
 func (t MsgTemplating) Variables() []string { return t.Variables_ }
+
+// NamedVariables returns the name-keyed values for a named template
+func (t MsgTemplating) NamedVariables() map[string]string { return t.NamedVariables_ }
+
+// ParameterFormat returns the provider parameter format for this send
+func (t MsgTemplating) ParameterFormat() string {
+	return assets.NormalizeParameterFormat(t.ParameterFormat_)
+}
 
 // Namespace returns the namespace that should be for the template
 func (t MsgTemplating) Namespace() string { return t.Namespace_ }
@@ -230,4 +240,12 @@ func NewMsgTemplating(template *assets.TemplateReference, language envs.Language
 		CarouselCards_: carouselCards,
 		IsCarousel_:    isCarousel,
 	}
+}
+
+// WithNamedVariables marks this templating as named and attaches the resolved name-keyed values.
+func (t *MsgTemplating) WithNamedVariables(vars map[string]string) *MsgTemplating {
+	t.ParameterFormat_ = assets.ParameterFormatNamed
+	t.NamedVariables_ = vars
+	t.Variables_ = nil
+	return t
 }

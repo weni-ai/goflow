@@ -79,8 +79,9 @@ func (t *TemplateTranslation) Locale() envs.Locale { return envs.NewLocale(t.Lan
 func (t *TemplateTranslation) Asset() assets.TemplateTranslation { return t.TemplateTranslation }
 
 var templateRegex = regexp.MustCompile(`({{\d+}})`)
+var namedPlaceholderRegex = regexp.MustCompile(`{{([^{}]+)}}`)
 
-// Substitute substitutes the passed in variables in our template
+// Substitute substitutes the passed in positional variables in our template
 func (t *TemplateTranslation) Substitute(vars []string) string {
 	s := string(t.Content())
 	for i, v := range vars {
@@ -91,6 +92,17 @@ func (t *TemplateTranslation) Substitute(vars []string) string {
 	s = templateRegex.ReplaceAllString(s, "")
 
 	return s
+}
+
+// SubstituteNamed substitutes named parameters in a single pass so a value cannot inject another placeholder.
+func (t *TemplateTranslation) SubstituteNamed(vars map[string]string) string {
+	return namedPlaceholderRegex.ReplaceAllStringFunc(t.Content(), func(match string) string {
+		name := match[2 : len(match)-2]
+		if v, ok := vars[name]; ok {
+			return v
+		}
+		return ""
+	})
 }
 
 // TemplateAssets is our type for all the templates in an environment

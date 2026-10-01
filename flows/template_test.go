@@ -30,6 +30,26 @@ func TestTemplateTranslation(t *testing.T) {
 	}
 }
 
+func TestTemplateTranslationNamed(t *testing.T) {
+	channel := assets.NewChannelReference("0bce5fd3-c215-45a0-bcb8-2386eb194175", "Test Channel")
+	asset := static.NewTemplateTranslation(*channel, envs.Language("por"), envs.Country("BR"), "Olá {{nome}}, sua cota {{cota}} vence em {{data}}", 3, "")
+	asset.SetParameterFormat(assets.ParameterFormatNamed)
+	asset.SetParameterNames([]string{"nome", "cota", "data"})
+	tt := NewTemplateTranslation(asset)
+
+	assert.Equal(t, assets.ParameterFormatNamed, tt.ParameterFormat())
+	assert.Equal(t, []string{"nome", "cota", "data"}, tt.ParameterNames())
+	assert.Equal(t,
+		"Olá João, sua cota 045 vence em 10/09/2026",
+		tt.SubstituteNamed(map[string]string{"data": "10/09/2026", "nome": "João", "cota": "045"}),
+	)
+	assert.Equal(t, "Olá João, sua cota  vence em ", tt.SubstituteNamed(map[string]string{"nome": "João"}))
+	assert.Equal(t, "Olá João {{outro}}, sua cota 045 vence em ", tt.SubstituteNamed(map[string]string{
+		"nome": "João {{outro}}",
+		"cota": "045",
+	}))
+}
+
 func TestTemplates(t *testing.T) {
 	channel1 := assets.NewChannelReference("0bce5fd3-c215-45a0-bcb8-2386eb194175", "Test Channel")
 	tt1 := static.NewTemplateTranslation(*channel1, envs.Language("eng"), envs.NilCountry, "Hello {{1}}", 1, "")
