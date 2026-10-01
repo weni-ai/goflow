@@ -30,12 +30,32 @@ func TestTemplateTranslation(t *testing.T) {
 	}
 }
 
+func TestTemplateTranslationNamed(t *testing.T) {
+	channel := assets.NewChannelReference("0bce5fd3-c215-45a0-bcb8-2386eb194175", "Test Channel")
+	asset := static.NewTemplateTranslation(*channel, envs.Language("por"), envs.Country("BR"), "Olá {{nome}}, sua cota {{cota}} vence em {{data}}", 3, "")
+	asset.SetParameterFormat(assets.ParameterFormatNamed)
+	asset.SetParameterNames([]string{"nome", "cota", "data"})
+	tt := NewTemplateTranslation(asset)
+
+	assert.Equal(t, assets.ParameterFormatNamed, tt.ParameterFormat())
+	assert.Equal(t, []string{"nome", "cota", "data"}, tt.ParameterNames())
+	assert.Equal(t,
+		"Olá João, sua cota 045 vence em 10/09/2026",
+		tt.SubstituteNamed(map[string]string{"data": "10/09/2026", "nome": "João", "cota": "045"}),
+	)
+	assert.Equal(t, "Olá João, sua cota  vence em ", tt.SubstituteNamed(map[string]string{"nome": "João"}))
+	assert.Equal(t, "Olá João {{outro}}, sua cota 045 vence em ", tt.SubstituteNamed(map[string]string{
+		"nome": "João {{outro}}",
+		"cota": "045",
+	}))
+}
+
 func TestTemplates(t *testing.T) {
 	channel1 := assets.NewChannelReference("0bce5fd3-c215-45a0-bcb8-2386eb194175", "Test Channel")
 	tt1 := static.NewTemplateTranslation(*channel1, envs.Language("eng"), envs.NilCountry, "Hello {{1}}", 1, "")
 	tt2 := static.NewTemplateTranslation(*channel1, envs.Language("spa"), envs.Country("EC"), "Que tal {{1}}", 1, "")
 	tt3 := static.NewTemplateTranslation(*channel1, envs.Language("spa"), envs.Country("ES"), "Hola {{1}}", 1, "")
-	template := NewTemplate(static.NewTemplate("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", []*static.TemplateTranslation{tt1, tt2, tt3}))
+	template := NewTemplate(static.NewTemplate("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", "", []*static.TemplateTranslation{tt1, tt2, tt3}))
 
 	tas := NewTemplateAssets([]assets.Template{template})
 
@@ -103,6 +123,6 @@ func TestTemplates(t *testing.T) {
 
 	template = tas.Get(assets.TemplateUUID("c520cbda-e118-440f-aaf6-c0485088384f"))
 	assert.NotNil(t, template)
-	assert.Equal(t, assets.NewTemplateReference("c520cbda-e118-440f-aaf6-c0485088384f", "greeting"), template.Reference())
+	assert.Equal(t, assets.NewTemplateReference("c520cbda-e118-440f-aaf6-c0485088384f", "greeting", ""), template.Reference())
 	assert.Equal(t, (*assets.TemplateReference)(nil), (*Template)(nil).Reference())
 }

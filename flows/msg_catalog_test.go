@@ -46,8 +46,8 @@ func TestMsgCatalogOut(t *testing.T) {
 		"product_search": "productSearch",
 		"products": [
 			{
-				"Product": "product",
-				"ProductRetailerIDs": [
+				"product": "product",
+				"product_retailer_ids": [
 					"product_1"
 				]
 			}

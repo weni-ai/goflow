@@ -39,6 +39,7 @@ type baseResume struct {
 	resumedOn   time.Time
 	order       *flows.Order
 	nfmReply    *flows.NFMReply
+	igComment   *flows.IGComment
 }
 
 // creates a new base resume
@@ -54,6 +55,7 @@ func (r *baseResume) Contact() *flows.Contact       { return r.contact }
 func (r *baseResume) ResumedOn() time.Time          { return r.resumedOn }
 func (r *baseResume) Order() *flows.Order           { return r.order }
 func (r *baseResume) NFMReply() *flows.NFMReply     { return r.nfmReply }
+func (r *baseResume) IGComment() *flows.IGComment   { return r.igComment }
 
 // Apply applies our state changes and saves any events to the run
 func (r *baseResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
@@ -121,6 +123,7 @@ type baseResumeEnvelope struct {
 	ResumedOn   time.Time       `json:"resumed_on" validate:"required"`
 	Order       json.RawMessage `json:"order,omitempty"`
 	NFMReply    json.RawMessage `json:"nfm_reply,omitempty"`
+	IGComment   json.RawMessage `json:"ig_comment,omitempty"`
 }
 
 // ReadResume reads a resume from the given JSON
@@ -163,6 +166,11 @@ func (r *baseResume) unmarshal(sessionAssets flows.SessionAssets, e *baseResumeE
 			return errors.Wrap(err, "unable to read nfm reply")
 		}
 	}
+	if e.IGComment != nil {
+		if r.igComment, err = flows.ReadIGComment(sessionAssets, e.IGComment, missing); err != nil {
+			return errors.Wrap(err, "unable to read ig comment")
+		}
+	}
 	return nil
 }
 
@@ -191,6 +199,12 @@ func (r *baseResume) marshal(e *baseResumeEnvelope) error {
 	}
 	if r.nfmReply != nil {
 		e.NFMReply, err = jsonx.Marshal(r.nfmReply)
+		if err != nil {
+			return err
+		}
+	}
+	if r.igComment != nil {
+		e.IGComment, err = jsonx.Marshal(r.igComment)
 		if err != nil {
 			return err
 		}

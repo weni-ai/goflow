@@ -53,6 +53,7 @@ func TestMsgInput(t *testing.T) {
 		"external_id": types.NewXText("ext12345"),
 		"order":       nil,
 		"nfm_reply":   nil,
+		"ig_comment":  nil,
 	}), flows.Context(env, input))
 
 	// check marshaling to JSON

@@ -42,3 +42,46 @@ func TestToBCP47(t *testing.T) {
 		assert.Equal(t, tc.bcp47, envs.NewLocale(tc.lang, tc.country).ToBCP47())
 	}
 }
+
+func TestFromBCP47(t *testing.T) {
+	tests := []struct {
+		bcp47   string
+		lang    envs.Language
+		country envs.Country
+	}{
+		{``, envs.NilLanguage, envs.NilCountry},
+		{`ca`, envs.Language(`cat`), envs.NilCountry},
+		{`de`, envs.Language(`deu`), envs.NilCountry},
+		{`en`, envs.Language(`eng`), envs.NilCountry},
+		{`fi`, envs.Language(`fin`), envs.NilCountry},
+		{`fr`, envs.Language(`fra`), envs.NilCountry},
+		{`ja`, envs.Language(`jpn`), envs.NilCountry},
+		{`ko`, envs.Language(`kor`), envs.NilCountry},
+		{`pl`, envs.Language(`pol`), envs.NilCountry},
+		{`pt`, envs.Language(`por`), envs.NilCountry},
+		{`ru`, envs.Language(`rus`), envs.NilCountry},
+		{`es`, envs.Language(`spa`), envs.NilCountry},
+		{`sv`, envs.Language(`swe`), envs.NilCountry},
+		{`zh`, envs.Language(`zho`), envs.NilCountry},
+		{`en-US`, envs.Language(`eng`), envs.Country(`US`)},
+		{`es-EC`, envs.Language(`spa`), envs.Country(`EC`)},
+		{`zh-CN`, envs.Language(`zho`), envs.Country(`CN`)},
+	}
+
+	for _, tc := range tests {
+		locale, err := envs.FromBCP47(tc.bcp47)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.lang, locale.Language)
+		assert.Equal(t, tc.country, locale.Country)
+	}
+
+	// test error cases
+	_, err := envs.FromBCP47("xxx")
+	assert.Error(t, err)
+
+	_, err = envs.FromBCP47("en-XXX")
+	assert.Error(t, err)
+
+	_, err = envs.FromBCP47("en-US-extra")
+	assert.Error(t, err)
+}

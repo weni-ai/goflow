@@ -39,6 +39,7 @@ const TypeMsg string = "msg"
 //			    "attachments": ["https://s3.amazon.com/mybucket/attachment.jpg"],
 //		        "order": {"catalog_id": "12345678", "product_items": [{"currency": "USD", "item_price": "599.9", "product_retailer_id": "12345678", "quantity": "1"}]},
 //	            "nfm_reply": {"name": "flow", "response_json": "{}"}
+//	            "ig_comment": {"text": "hello", "from": {"id": "1234567890", "username": "bob"}, "media": [{"ad_id": "1234567890", "id": "1234567890", "media_product_type": "image", "original_media_id": "1234567890"}], "time": 1234567890, "id": 1234567890}
 //			  },
 //			  "resumed_on": "2000-01-01T00:00:00.000000000-00:00"
 //			}
@@ -73,6 +74,11 @@ func (r *MsgResume) Apply(run flows.FlowRun, logEvent flows.EventCallback) {
 	nfmReply := r.NFMReply()
 	if nfmReply != nil {
 		r.msg.SetNFMReply(nfmReply)
+	}
+
+	igComment := r.IGComment()
+	if igComment != nil {
+		r.msg.SetIGComment(igComment)
 	}
 
 	// update our input

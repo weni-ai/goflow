@@ -31,6 +31,7 @@ type MsgInput struct {
 	externalID  string
 	order       *flows.Order
 	nfmReply    *flows.NFMReply
+	igComment   *flows.IGComment
 }
 
 // NewMsg creates a new user input based on a message
@@ -49,6 +50,7 @@ func NewMsg(assets flows.SessionAssets, msg *flows.MsgIn, createdOn time.Time) *
 		externalID:  msg.ExternalID(),
 		order:       msg.Order(),
 		nfmReply:    msg.NFMReply(),
+		igComment:   msg.IGComment(),
 	}
 }
 
@@ -64,7 +66,7 @@ func NewMsg(assets flows.SessionAssets, msg *flows.MsgIn, createdOn time.Time) *
 //			external_id:text -> the external ID of the input
 //		    order:object -> the order of the input
 //	        nfm_reply:object -> the nfm_reply of the input
-//
+//	        ig_comment:object -> the ig_comment of the input
 // @context input
 func (i *MsgInput) Context(env envs.Environment) map[string]types.XValue {
 	attachments := make([]types.XValue, len(i.attachments))
@@ -90,6 +92,7 @@ func (i *MsgInput) Context(env envs.Environment) map[string]types.XValue {
 		"external_id": types.NewXText(i.externalID),
 		"order":       flows.Context(env, i.order),
 		"nfm_reply":   flows.Context(env, i.nfmReply),
+		"ig_comment":  flows.Context(env, i.igComment),
 	}
 }
 
@@ -118,6 +121,7 @@ type msgInputEnvelope struct {
 	ExternalID  string             `json:"external_id,omitempty"`
 	Order       *flows.Order       `json:"order,omitempty"`
 	NFMReply    *flows.NFMReply    `json:"nfm_reply,omitempty"`
+	IGComment   *flows.IGComment   `json:"ig_comment,omitempty"`
 }
 
 func readMsgInput(sessionAssets flows.SessionAssets, data json.RawMessage, missing assets.MissingCallback) (flows.Input, error) {
@@ -134,6 +138,7 @@ func readMsgInput(sessionAssets flows.SessionAssets, data json.RawMessage, missi
 		externalID:  e.ExternalID,
 		order:       e.Order,
 		nfmReply:    e.NFMReply,
+		igComment:   e.IGComment,
 	}
 
 	if err := i.unmarshal(sessionAssets, &e.baseInputEnvelope, missing); err != nil {
@@ -152,6 +157,7 @@ func (i *MsgInput) MarshalJSON() ([]byte, error) {
 		ExternalID:  i.externalID,
 		Order:       i.order,
 		NFMReply:    i.nfmReply,
+		IGComment:   i.igComment,
 	}
 
 	i.marshal(&e.baseInputEnvelope)

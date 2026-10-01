@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/nyaruka/gocommon/httpx"
+	"github.com/nyaruka/gocommon/jsonx"
 	"github.com/nyaruka/goflow/flows"
+	"github.com/nyaruka/goflow/test"
 	"github.com/nyaruka/goflow/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -81,4 +83,118 @@ func TestHTTPLogsRedaction(t *testing.T) {
 	log2 := flows.NewHTTPLog(trace2, flows.HTTPStatusFromCode, redactor)
 	assert.Equal(t, "GET /code/****************/ HTTP/1.1\r\nHost: temba.io\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 20\r\nAccept-Encoding: gzip\r\n\r\nMy code is ****************", log2.Request)
 	assert.Equal(t, "HTTP/1.0 400 Bad Request\r\nContent-Length: 39\r\n\r\nThe code is ****************, I said ****************", log2.Response)
+}
+
+func TestProductEntry(t *testing.T) {
+	// Test ProductEntry with ProductRetailerIDs only (WPP channel)
+	entryWPP := flows.ProductEntry{
+		Product:            "product",
+		ProductRetailerIDs: []string{"sku_001", "sku_002"},
+	}
+
+	marshaledWPP, err := jsonx.Marshal(entryWPP)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{
+		"product": "product",
+		"product_retailer_ids": ["sku_001", "sku_002"]
+	}`), marshaledWPP, "WPP ProductEntry JSON mismatch")
+
+	// Test ProductEntry with ProductRetailerInfo only (WWC channel)
+	entryWWC := flows.ProductEntry{
+		Product: "product_wwc",
+		ProductRetailerInfo: []flows.ProductRetailerInfo{
+			{
+				Name:        "Product Name",
+				RetailerID:  "sku_123",
+				Price:       "10.00",
+				SalePrice:   "8.00",
+				Currency:    "BRL",
+				Image:       "https://example.com/image.jpg",
+				Description: "Product description",
+				SellerID:    "seller_1",
+				ProductURL:  "https://example.com/product/sku_123",
+				Extra: map[string]interface{}{
+					"brand":            "Acme",
+					"items_in_stock":   float64(42),
+					"nested":           map[string]interface{}{"k": "v"},
+				},
+			},
+		},
+	}
+
+	marshaledWWC, err := jsonx.Marshal(entryWWC)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{
+		"product": "product_wwc",
+		"product_retailer_info": [
+			{
+				"name": "Product Name",
+				"retailer_id": "sku_123",
+				"price": "10.00",
+				"sale_price": "8.00",
+				"currency": "BRL",
+				"image": "https://example.com/image.jpg",
+				"description": "Product description",
+				"seller_id": "seller_1",
+				"product_url": "https://example.com/product/sku_123",
+				"extra": {
+					"brand": "Acme",
+					"items_in_stock": 42,
+					"nested": {"k": "v"}
+				}
+			}
+		]
+	}`), marshaledWWC, "WWC ProductEntry JSON mismatch")
+
+	// Test empty ProductEntry (both fields omitted due to omitempty)
+	entryEmpty := flows.ProductEntry{}
+
+	marshaledEmpty, err := jsonx.Marshal(entryEmpty)
+	require.NoError(t, err)
+
+	test.AssertEqualJSON(t, []byte(`{}`), marshaledEmpty, "Empty ProductEntry JSON mismatch")
+
+	// Test ProductRetailerInfo with product_url deserialization
+	jsonWithProductURL := []byte(`{
+		"product": "product_with_url",
+		"product_retailer_info": [
+			{
+				"name": "Item",
+				"retailer_id": "sku_456",
+				"product_url": "https://store.example.com/p/456"
+			}
+		]
+	}`)
+	var entryWithURL flows.ProductEntry
+	err = jsonx.Unmarshal(jsonWithProductURL, &entryWithURL)
+	require.NoError(t, err)
+	require.Len(t, entryWithURL.ProductRetailerInfo, 1)
+	assert.Equal(t, "https://store.example.com/p/456", entryWithURL.ProductRetailerInfo[0].ProductURL, "product_url should be deserialized correctly")
+
+	// Test ProductRetailerInfo extra deserialization
+	jsonWithExtra := []byte(`{
+		"product": "product_with_extra",
+		"product_retailer_info": [
+			{
+				"name": "Item",
+				"retailer_id": "sku_789",
+				"extra": {
+					"flag": true,
+					"score": 9.5,
+					"tag": "sale"
+				}
+			}
+		]
+	}`)
+	var entryWithExtra flows.ProductEntry
+	err = jsonx.Unmarshal(jsonWithExtra, &entryWithExtra)
+	require.NoError(t, err)
+	require.Len(t, entryWithExtra.ProductRetailerInfo, 1)
+	extra := entryWithExtra.ProductRetailerInfo[0].Extra
+	require.NotNil(t, extra)
+	assert.Equal(t, true, extra["flag"])
+	assert.Equal(t, 9.5, extra["score"])
+	assert.Equal(t, "sale", extra["tag"])
 }

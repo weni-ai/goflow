@@ -124,7 +124,16 @@ func (a *baseAction) evaluateMessage(run flows.FlowRun, languages []envs.Languag
 	return evaluatedText, evaluatedAttachments, evaluatedQuickReplies
 }
 
-func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []map[string]string, sendCatalog bool, postalCode string, url string, sellerId string, logEvent flows.EventCallback) (string, string, string, string, string, string) {
+func (a *baseAction) evaluateMessageIG(run flows.FlowRun, languages []envs.Language, actionIGComment string, logEvent flows.EventCallback) string {
+	evaluatedIGComment, err := run.EvaluateTemplate(actionIGComment)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	return evaluatedIGComment
+}
+
+func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.Language, actionHeader string, actionBody string, actionFooter string, products []map[string]string, sendCatalog bool, postalCode string, url string, sellerId string, cartSimulationParams string, logEvent flows.EventCallback) (string, string, string, string, string, string, string) {
 	localizedHeader := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionHeader}, languages)[0]
 	evaluatedHeader, err := run.EvaluateTemplate(localizedHeader)
 	if err != nil {
@@ -170,10 +179,16 @@ func (a *baseAction) evaluateMessageCatalog(run flows.FlowRun, languages []envs.
 		logEvent(events.NewError(err))
 	}
 
-	return evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId
+	localizedCartSimulationParams := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "cart_simulation_params", []string{cartSimulationParams}, languages)[0]
+	evaluatedCartSimulationParams, err := run.EvaluateTemplate(localizedCartSimulationParams)
+	if err != nil {
+		logEvent(events.NewError(err))
+	}
+
+	return evaluatedHeader, evaluatedBody, evaluatedFooter, evaluatedPostalCode, evaluatedURL, evaluatedSellerId, evaluatedCartSimulationParams
 }
 
-func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionButtonText string, actionAttachments string, actionQuickReplies []string, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, []utils.Attachment, []string) {
+func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Language, actionHeaderType string, actionInteractionType string, actionHeaderText string, actionFooter string, actionText string, actionListItems []flows.ListItems, actionButtonText string, actionAttachments string, actionQuickReplies []string, actionCarouselMessage flows.CarouselMessage, logEvent flows.EventCallback) (string, string, string, []flows.ListItems, string, []utils.Attachment, []string, []flows.CarouselMessage) {
 	localizedHeaderText := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header_text", []string{actionHeaderText}, languages)[0]
 	evaluatedHeaderText, err := run.EvaluateTemplate(localizedHeaderText)
 	if err != nil {
@@ -224,7 +239,7 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		logEvent(events.NewErrorf("text evaluated to empty string"))
 	}
 
-	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "header", []string{actionFooter}, languages)[0]
+	localizedFooter := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "footer", []string{actionFooter}, languages)[0]
 	evaluatedFooter, err := run.EvaluateTemplate(localizedFooter)
 	if err != nil {
 		logEvent(events.NewError(err))
@@ -274,7 +289,41 @@ func (a *baseAction) evaluateMessageWpp(run flows.FlowRun, languages []envs.Lang
 		evaluatedListItems = append(evaluatedListItems, flows.ListItems{Title: evaluatedTitle, Description: evaluatedDescription, UUID: item.UUID})
 	}
 
-	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage
+	carouselDefaults := []string{}
+	if actionCarouselMessage.Body != "" || len(actionCarouselMessage.Buttons) > 0 {
+		carouselDefaults = []string{actionCarouselMessage.Body}
+	}
+	localizedCarouselMessage := run.GetTranslatedTextArray(uuids.UUID(a.UUID()), "carousel_message", carouselDefaults, languages)
+	var evaluatedCarouselCards []flows.CarouselMessage
+	for _, cm := range localizedCarouselMessage {
+		evaluatedCarousel, err := run.EvaluateTemplate(cm)
+		if err != nil {
+			logEvent(events.NewError(err))
+		}
+		evaluatedButtons := make([]flows.CarouselButton, 0, len(actionCarouselMessage.Buttons))
+		for _, cb := range actionCarouselMessage.Buttons {
+			switch cb.SubType {
+			case "url":
+				evaluatedDisplayText, err := run.EvaluateTemplate(cb.Parameters["display_text"].(string))
+				if err != nil {
+					logEvent(events.NewError(err))
+				}
+				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"display_text": evaluatedDisplayText, "url": cb.Parameters["url"].(string)}})
+			case "quick_reply":
+				evaluatedTitle, err := run.EvaluateTemplate(cb.Parameters["title"].(string))
+				if err != nil {
+					logEvent(events.NewError(err))
+				}
+				evaluatedButtons = append(evaluatedButtons, flows.CarouselButton{SubType: cb.SubType, Parameters: map[string]interface{}{"title": evaluatedTitle, "id": cb.Parameters["id"].(string)}})
+			}
+		}
+		card := flows.CarouselMessage{Body: evaluatedCarousel, Buttons: evaluatedButtons}
+		if card.Body != "" || len(card.Buttons) > 0 {
+			evaluatedCarouselCards = append(evaluatedCarouselCards, card)
+		}
+	}
+
+	return evaluatedHeaderText, evaluatedFooter, evaluatedText, evaluatedListItems, evaluatedButtonText, evaluatedAttachments, evaluatedReplyMessage, evaluatedCarouselCards
 }
 
 // helper to save a run result and log it as an event

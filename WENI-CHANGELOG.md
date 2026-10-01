@@ -1,3 +1,104 @@
+1.21.0
+----------
+ * feat: add ctwa_source_id contact query attribute for Click to WhatsApp campaign source ids
+ * fix: build smart router zeroshot options in category order so tests are stable
+
+1.20.5
+----------
+ * feat: add named WhatsApp template parameter format, parameter names, and named placeholder substitution
+
+1.20.4
+----------
+ * feat: add whatsapp_bsuid contact query attribute for Meta BSUID URN matching
+
+1.20.3
+----------
+ * feat: add DirectSendTemplateName field to MsgWppOut
+
+1.20.2
+----------
+ * feat: add Extra field to ProductRetailerInfo
+
+1.20.1
+----------
+ * feat: add FlowToken field to FlowMessage and createWppMsgAction for enhanced message handling
+
+1.20.0
+----------
+ * feat: add DirectSend and TTLSeconds fields to MsgWppOut and update related functions
+
+1.19.1
+----------
+ * feat: add product_url field to ProductRetailerInfo and update tests for deserialization
+
+1.19.0
+----------
+ * feat: add CarouselMessage and CarouselButton types to MsgWppOut for enhanced message customization
+
+1.18.2
+----------
+ * fix: footer localization for evaluateMessageWpp
+
+1.18.1
+----------
+ * feat: add currency field to ProductRetailerInfo struct
+
+1.18.0
+----------
+ * feat: add ProductEntry and ProductRetailerInfo types for enhanced product data handling in flows
+
+1.17.0
+----------
+ * feat: add CarouselCard and CarouselCardButton types to MsgTemplating and Templating for enhanced message customization
+
+1.16.0
+----------
+ * Add OffsiteCardPay struct to OrderPaymentSettings for enhanced payment details
+
+1.15.0
+----------
+ * refactor: update BrainService Call
+
+1.14.1
+----------
+ * fix: update message templating to use template reference instead of UUID
+
+1.14.0
+----------
+ * feat: add Category field to Template and TemplateReference, update related constructors and tests
+
+1.13.0
+----------
+ * feat: extend MsgWppOut structure to include ActionType and ActionExternalID fields, and update related functions
+
+1.12.0
+----------
+ * feat: add regex matching for Linx API in SendMsgCatalogAction
+
+1.11.0
+----------
+ * Modify service logic to include search keywords in call results
+
+1.10.0
+----------
+ * Add support for Instagram replies: comments, by tag and private reply
+
+1.9.0
+----------
+ * feat: add cart simulation parameter support
+
+1.8.0
+----------
+ * feat: add FromBCP47 function to convert BCP47 codes to Locale
+
+1.7.0
+----------
+ * Add support for catalog message in whatsapp messages
+
+1.6.1
+----------
+ * Add field type getter
+
 1.6.0
 ----------
  * Add extra prompt in org context

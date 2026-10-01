@@ -128,7 +128,9 @@ func TestNewFlow(t *testing.T) {
                 {
                    "type": "send_msg",
                    "uuid": "76112ef2-790e-4b5b-84cb-e910f191a335",
-                   "text": "Do you like beer?"
+                   "text": "Do you like beer?",
+					"instagram_settings": {
+					}
                 }
             ],
             "router": {
@@ -223,6 +225,9 @@ func TestNewFlow(t *testing.T) {
 						"Do you like beer?",
 						nil,
 						nil,
+						"",
+						"",
+						"",
 						false,
 					),
 				},

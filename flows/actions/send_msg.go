@@ -22,22 +22,24 @@ const TypeSendMsg string = "send_msg"
 //
 // A [event:msg_created] event will be created with the evaluated text.
 //
-//   {
-//     "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
-//     "type": "send_msg",
-//     "text": "Hi @contact.name, are you ready to complete today's survey?",
-//     "attachments": [],
-//     "all_urns": false,
-//     "templating": {
-//       "uuid": "32c2ead6-3fa3-4402-8e27-9cc718175c5a",
-//       "template": {
-//         "uuid": "3ce100b7-a734-4b4e-891b-350b1279ade2",
-//         "name": "revive_issue"
-//       },
-//       "variables": ["@contact.name"]
-//     },
-//     "topic": "event"
-//   }
+//	{
+//	  "uuid": "8eebd020-1af5-431c-b943-aa670fc74da9",
+//	  "type": "send_msg",
+//	  "text": "Hi @contact.name, are you ready to complete today's survey?",
+//	  "attachments": [],
+//	  "all_urns": false,
+//	  "templating": {
+//	    "uuid": "32c2ead6-3fa3-4402-8e27-9cc718175c5a",
+//	    "template": {
+//	      "uuid": "3ce100b7-a734-4b4e-891b-350b1279ade2",
+//	      "name": "revive_issue"
+//	    },
+//	    "variables": ["@contact.name"]
+//	  },
+//	  "topic": "event"
+//	  "ig_comment": "0123456789",
+//	  "ig_response_type": "comment"
+//	}
 //
 // @action send_msg
 type SendMsgAction struct {
@@ -45,29 +47,43 @@ type SendMsgAction struct {
 	universalAction
 	createMsgAction
 
-	AllURNs    bool           `json:"all_urns,omitempty"`
-	Templating *Templating    `json:"templating,omitempty" validate:"omitempty,dive"`
-	Topic      flows.MsgTopic `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	AllURNs           bool               `json:"all_urns,omitempty"`
+	Templating        *Templating        `json:"templating,omitempty" validate:"omitempty,dive"`
+	Topic             flows.MsgTopic     `json:"topic,omitempty" validate:"omitempty,msg_topic"`
+	InstagramSettings *InstagramSettings `json:"instagram_settings,omitempty"`
+}
+
+type InstagramSettings struct {
+	ResponseType string `json:"response_type,omitempty"`
+	CommentID    string `json:"comment_id,omitempty"`
+	Tag          string `json:"tag,omitempty"`
 }
 
 // Templating represents the templating that should be used if possible
 type Templating struct {
-	UUID      uuids.UUID                `json:"uuid" validate:"required,uuid4"`
-	Template  *assets.TemplateReference `json:"template" validate:"required"`
-	Variables []string                  `json:"variables" engine:"localized,evaluated"`
+	UUID          uuids.UUID                `json:"uuid" validate:"required,uuid4"`
+	Template      *assets.TemplateReference `json:"template" validate:"required"`
+	IsCarousel    bool                      `json:"is_carousel,omitempty"`
+	Variables     []string                  `json:"variables" engine:"localized,evaluated"`
+	CarouselCards []flows.CarouselCard      `json:"carousel_cards,omitempty"`
 }
 
 // LocalizationUUID gets the UUID which identifies this object for localization
 func (t *Templating) LocalizationUUID() uuids.UUID { return t.UUID }
 
 // NewSendMsg creates a new send msg action
-func NewSendMsg(uuid flows.ActionUUID, text string, attachments []string, quickReplies []string, allURNs bool) *SendMsgAction {
+func NewSendMsg(uuid flows.ActionUUID, text string, attachments []string, quickReplies []string, commentID string, responseType string, tag string, allURNs bool) *SendMsgAction {
 	return &SendMsgAction{
 		baseAction: newBaseAction(TypeSendMsg, uuid),
 		createMsgAction: createMsgAction{
 			Text:         text,
 			Attachments:  attachments,
 			QuickReplies: quickReplies,
+		},
+		InstagramSettings: &InstagramSettings{
+			CommentID:    commentID,
+			ResponseType: responseType,
+			Tag:          tag,
 		},
 		AllURNs: allURNs,
 	}
@@ -81,6 +97,15 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 	}
 
 	evaluatedText, evaluatedAttachments, evaluatedQuickReplies := a.evaluateMessage(run, nil, a.Text, a.Attachments, a.QuickReplies, logEvent)
+
+	var evaluatedIGComment string
+	var IGresponseType string
+	var IGTag string
+	if a.InstagramSettings != nil {
+		evaluatedIGComment = a.evaluateMessageIG(run, nil, a.InstagramSettings.CommentID, logEvent)
+		IGresponseType = a.InstagramSettings.ResponseType
+		IGTag = a.InstagramSettings.Tag
+	}
 
 	destinations := run.Contact().ResolveDestinations(a.AllURNs)
 
@@ -116,20 +141,59 @@ func (a *SendMsgAction) Execute(run flows.FlowRun, step flows.Step, logModifier 
 					}
 					evaluatedVariables[i] = sub
 				}
+				// Build evaluated carousel cards
+				var evaluatedCarouselCards []flows.CarouselCard
+				if len(a.Templating.CarouselCards) > 0 {
+					evaluatedCarouselCards = make([]flows.CarouselCard, len(a.Templating.CarouselCards))
+					for idx, carouselCard := range a.Templating.CarouselCards {
+						// Evaluate body variables
+						localizedCarouselCardsBody, _ := run.GetTextArray(uuids.UUID(a.Templating.UUID), "carousel_cards.body", carouselCard.Body)
+
+						evaluatedBody := make([]string, len(localizedCarouselCardsBody))
+						for i, bodyItem := range localizedCarouselCardsBody {
+							val, err := run.EvaluateTemplate(bodyItem)
+							if err != nil {
+								logEvent(events.NewError(err))
+							}
+							evaluatedBody[i] = val
+						}
+
+						// Evaluate button text variables
+						evaluatedButtons := make([]flows.CarouselCardButton, len(carouselCard.Buttons))
+						for i, button := range carouselCard.Buttons {
+							localizedCarouselCardsButtonsParameter := run.GetText(uuids.UUID(a.Templating.UUID), "carousel_cards.buttons.parameter", button.Parameter)
+							evaluatedButtonParameter, err := run.EvaluateTemplate(localizedCarouselCardsButtonsParameter)
+							if err != nil {
+								logEvent(events.NewError(err))
+							}
+							evaluatedButtons[i] = flows.CarouselCardButton{
+								SubType:   button.SubType,
+								Parameter: evaluatedButtonParameter,
+							}
+						}
+
+						evaluatedCarouselCards[idx] = flows.CarouselCard{
+							Body:    evaluatedBody,
+							Index:   carouselCard.Index,
+							Buttons: evaluatedButtons,
+						}
+					}
+				}
 
 				evaluatedText = translation.Substitute(evaluatedVariables)
-				templating = flows.NewMsgTemplating(a.Templating.Template, translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace())
+				template := sa.Templates().Get(a.Templating.Template.UUID)
+				templating = flows.NewMsgTemplating(template.Reference(), translation.Language(), translation.Country(), evaluatedVariables, translation.Namespace(), evaluatedCarouselCards, a.Templating.IsCarousel)
 			}
 		}
 
-		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic)
+		msg := flows.NewMsgOut(dest.URN.URN(), channelRef, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, templating, a.Topic, evaluatedIGComment, IGresponseType, IGTag)
 		logEvent(events.NewMsgCreated(msg))
 	}
 
 	// if we couldn't find a destination, create a msg without a URN or channel and it's up to the caller
 	// to handle that as they want
 	if len(destinations) == 0 {
-		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic)
+		msg := flows.NewMsgOut(urns.NilURN, nil, evaluatedText, evaluatedAttachments, evaluatedQuickReplies, nil, flows.NilMsgTopic, evaluatedIGComment, IGresponseType, IGTag)
 		logEvent(events.NewMsgCreated(msg))
 	}
 

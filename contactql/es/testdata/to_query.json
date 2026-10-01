@@ -1886,5 +1886,174 @@
                 }
             }
         }
+    },
+    {
+        "description": "whatsapp_bsuid is set",
+        "query": "whatsapp_bsuid!=\"\"",
+        "elastic": {
+            "nested": {
+                "path": "urns",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "term": {
+                                    "urns.scheme": "whatsapp"
+                                }
+                            },
+                            {
+                                "regexp": {
+                                    "urns.path.keyword": {
+                                        "value": "[a-z]{2}\\.(ent\\.)?[a-z0-9]+"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_bsuid is not set",
+        "query": "whatsapp_bsuid=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "nested": {
+                        "path": "urns",
+                        "query": {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "urns.scheme": "whatsapp"
+                                        }
+                                    },
+                                    {
+                                        "regexp": {
+                                            "urns.path.keyword": {
+                                                "value": "[a-z]{2}\\.(ent\\.)?[a-z0-9]+"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_phone is set",
+        "query": "whatsapp_phone!=\"\"",
+        "elastic": {
+            "nested": {
+                "path": "urns",
+                "query": {
+                    "bool": {
+                        "must": [
+                            {
+                                "term": {
+                                    "urns.scheme": "whatsapp"
+                                }
+                            },
+                            {
+                                "regexp": {
+                                    "urns.path.keyword": {
+                                        "value": "[0-9]+"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "whatsapp_phone is not set",
+        "query": "whatsapp_phone=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "nested": {
+                        "path": "urns",
+                        "query": {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "urns.scheme": "whatsapp"
+                                        }
+                                    },
+                                    {
+                                        "regexp": {
+                                            "urns.path.keyword": {
+                                                "value": "[0-9]+"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id exact match",
+        "query": "ctwa_source_id = \"campaign-a\"",
+        "elastic": {
+            "term": {
+                "ctwa_source_ids": "campaign-a"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id exact match is case-sensitive",
+        "query": "ctwa_source_id = \"Campaign-A\"",
+        "elastic": {
+            "term": {
+                "ctwa_source_ids": "Campaign-A"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is not equal",
+        "query": "ctwa_source_id != \"campaign-a\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "term": {
+                        "ctwa_source_ids": "campaign-a"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is set",
+        "query": "ctwa_source_id!=\"\"",
+        "elastic": {
+            "exists": {
+                "field": "ctwa_source_ids"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is not set",
+        "query": "ctwa_source_id=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "exists": {
+                        "field": "ctwa_source_ids"
+                    }
+                }
+            }
+        }
     }
 ]

@@ -11,6 +11,7 @@ import (
 	"github.com/nyaruka/gocommon/httpx"
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/gocommon/uuids"
+	"github.com/nyaruka/goflow/assets"
 	"github.com/nyaruka/goflow/flows"
 	"github.com/nyaruka/goflow/flows/engine"
 	"github.com/nyaruka/goflow/utils"
@@ -47,18 +48,24 @@ func NewService(httpClient *http.Client, httpRetries *httpx.RetryConfig, httpAcc
 	}
 }
 
-func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text string, contactURN urns.URN, attachments []utils.Attachment) (*flows.BrainCall, error) {
+func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text string, contact *flows.Contact, attachments []utils.Attachment) (*flows.BrainCall, error) {
 
 	body := struct {
-		ProjectUUID uuids.UUID         `json:"project_uuid"`
-		Text        string             `json:"text"`
-		ContactURN  urns.URN           `json:"contact_urn"`
-		Attachments []utils.Attachment `json:"attachments"`
+		ProjectUUID   uuids.UUID             `json:"project_uuid"`
+		ContactURN    urns.URN               `json:"contact_urn"`
+		Text          string                 `json:"text"`
+		Attachments   []utils.Attachment     `json:"attachments"`
+		ChannelUUID   assets.ChannelUUID     `json:"channel_uuid"`
+		ContactFields map[string]interface{} `json:"contact_fields"`
+		ContactName   string                 `json:"contact_name"`
 	}{
-		ProjectUUID: projectUUID,
-		Text:        text,
-		ContactURN:  contactURN.Identity(),
-		Attachments: attachments,
+		ProjectUUID:   projectUUID,
+		ContactURN:    contact.PreferredURN().URN().Identity(),
+		Text:          text,
+		Attachments:   attachments,
+		ChannelUUID:   contact.PreferredChannel().UUID(),
+		ContactName:   contact.Name(),
+		ContactFields: mapContactFields(contact),
 	}
 
 	var b io.Reader
@@ -100,6 +107,31 @@ func (s *service) Call(session flows.Session, projectUUID uuids.UUID, text strin
 	}
 
 	return nil, errors.Wrapf(err, "")
+}
+
+func mapContactFields(contact *flows.Contact) map[string]interface{} {
+	if len(contact.Fields()) == 0 {
+		return nil
+	}
+
+	contactFields := make(map[string]interface{})
+
+	for key, field := range contact.Fields() {
+		if field == nil {
+			contactFields[key] = nil
+			continue
+		}
+
+		contactFields[key] = struct {
+			Value interface{} `json:"value"`
+			Type  string      `json:"type"`
+		}{
+			Value: field.QueryValue(),
+			Type:  string(field.Type()),
+		}
+	}
+
+	return contactFields
 }
 
 func ExtractJSON(body []byte) ([]byte, bool) {

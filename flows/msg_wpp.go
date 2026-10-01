@@ -10,21 +10,33 @@ import (
 
 type MsgWppOut struct {
 	BaseMsg
-	InteractionType_     string              `json:"interaction_type,omitempty"`
-	HeaderType_          string              `json:"header_type,omitempty"`
-	HeaderText_          string              `json:"header_text,omitempty"`
-	Text_                string              `json:"text,omitempty"`
-	Footer_              string              `json:"footer,omitempty"`
-	Topic_               MsgTopic            `json:"topic,omitempty"`
-	ListMessage_         ListMessage         `json:"list_message,omitempty"`
-	Attachments_         []utils.Attachment  `json:"attachments,omitempty"`
-	QuickReplies_        []string            `json:"quick_replies,omitempty"`
-	TextLanguage         envs.Language       `json:"text_language,omitempty"`
-	CTAMessage_          CTAMessage          `json:"cta_message,omitempty"`
-	FlowMessage_         FlowMessage         `json:"flow_message,omitempty"`
-	OrderDetailsMessage_ OrderDetailsMessage `json:"order_details_message,omitempty"`
-	Templating_          *MsgTemplating      `json:"templating,omitempty"`
-	Buttons_             []ButtonComponent   `json:"buttons,omitempty"`
+	InteractionType_        string              `json:"interaction_type,omitempty"`
+	HeaderType_             string              `json:"header_type,omitempty"`
+	HeaderText_             string              `json:"header_text,omitempty"`
+	Text_                   string              `json:"text,omitempty"`
+	Footer_                 string              `json:"footer,omitempty"`
+	Topic_                  MsgTopic            `json:"topic,omitempty"`
+	ListMessage_            ListMessage         `json:"list_message,omitempty"`
+	Attachments_            []utils.Attachment  `json:"attachments,omitempty"`
+	QuickReplies_           []string            `json:"quick_replies,omitempty"`
+	TextLanguage            envs.Language       `json:"text_language,omitempty"`
+	CTAMessage_             CTAMessage          `json:"cta_message,omitempty"`
+	FlowMessage_            FlowMessage         `json:"flow_message,omitempty"`
+	OrderDetailsMessage_    OrderDetailsMessage `json:"order_details_message,omitempty"`
+	Templating_             *MsgTemplating      `json:"templating,omitempty"`
+	Buttons_                []ButtonComponent   `json:"buttons,omitempty"`
+	Cards_                  []CarouselMessage   `json:"carousel,omitempty"`
+	DirectSend_             bool                `json:"direct_send,omitempty"`
+	DirectSendTemplateName_ string              `json:"direct_send_template_name,omitempty"`
+	TTLSeconds_             int                 `json:"ttl_seconds,omitempty"`
+
+	// fields for msg_catalog
+	Products_         []ProductEntry `json:"products,omitempty"`
+	ActionButtonText_ string         `json:"action_button_text,omitempty"`
+	SendCatalog_      bool           `json:"send_catalog,omitempty"`
+
+	ActionType_       string `json:"action_type,omitempty"`
+	ActionExternalID_ string `json:"action_external_id,omitempty"`
 }
 
 type ButtonComponent struct {
@@ -54,6 +66,7 @@ type FlowMessage struct {
 	FlowScreen string   `json:"flow_screen,omitempty"`
 	FlowCTA    string   `json:"flow_cta,omitempty"`
 	FlowMode   string   `json:"flow_mode,omitempty"`
+	FlowToken  string   `json:"flow_token,omitempty"`
 }
 
 type ListItems struct {
@@ -82,9 +95,14 @@ type OrderPixConfig struct {
 }
 
 type OrderPaymentSettings struct {
-	Type        string          `json:"type,omitempty"`
-	PaymentLink string          `json:"payment_link,omitempty"`
-	PixConfig   *OrderPixConfig `json:"pix_config,omitempty"`
+	Type           string          `json:"type,omitempty"`
+	PaymentLink    string          `json:"payment_link,omitempty"`
+	PixConfig      *OrderPixConfig `json:"pix_config,omitempty"`
+	OffsiteCardPay *OffsiteCardPay `json:"offsite_card_pay,omitempty"`
+}
+type OffsiteCardPay struct {
+	LastFourDigits string `json:"last_four_digits,omitempty"`
+	CredentialID   string `json:"credential_id,omitempty"`
 }
 
 type OrderDetails struct {
@@ -136,27 +154,46 @@ type MessageOrderAmountWithOffset struct {
 	Offset int `json:"offset"`
 }
 
-func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic) *MsgWppOut {
+type CarouselMessage struct {
+	Body    string           `json:"body,omitempty"`
+	Buttons []CarouselButton `json:"buttons,omitempty"`
+}
+
+type CarouselButton struct {
+	SubType    string                 `json:"sub_type"`             // "url" or "quick_reply"
+	Parameters map[string]interface{} `json:"parameters,omitempty"` // for url: display_text, url; for quick_reply: id, title
+}
+
+func NewMsgWppOut(urn urns.URN, channel *assets.ChannelReference, interactionType, headerType, headerText, text, footer string, ctaMessage CTAMessage, listMessage ListMessage, flowMessage FlowMessage, orderDetailsMessage OrderDetailsMessage, attachments []utils.Attachment, replyButtons []string, buttons []ButtonComponent, templating *MsgTemplating, topic MsgTopic, products []ProductEntry, actionButtonText string, sendCatalog bool, actionType string, actionExternalID string, cards []CarouselMessage, directSend bool, ttlSeconds int, directSendTemplateName string) *MsgWppOut {
 	return &MsgWppOut{
 		BaseMsg: BaseMsg{
 			UUID_:    MsgUUID(uuids.New()),
 			URN_:     urn,
 			Channel_: channel,
 		},
-		HeaderType_:          headerType,
-		InteractionType_:     interactionType,
-		HeaderText_:          headerText,
-		Text_:                text,
-		Footer_:              footer,
-		ListMessage_:         listMessage,
-		Attachments_:         attachments,
-		QuickReplies_:        replyButtons,
-		Topic_:               topic,
-		CTAMessage_:          ctaMessage,
-		FlowMessage_:         flowMessage,
-		OrderDetailsMessage_: orderDetailsMessage,
-		Templating_:          templating,
-		Buttons_:             buttons,
+		HeaderType_:             headerType,
+		InteractionType_:        interactionType,
+		HeaderText_:             headerText,
+		Text_:                   text,
+		Footer_:                 footer,
+		ListMessage_:            listMessage,
+		Attachments_:            attachments,
+		QuickReplies_:           replyButtons,
+		Topic_:                  topic,
+		CTAMessage_:             ctaMessage,
+		FlowMessage_:            flowMessage,
+		OrderDetailsMessage_:    orderDetailsMessage,
+		Templating_:             templating,
+		Buttons_:                buttons,
+		Products_:               products,
+		ActionButtonText_:       actionButtonText,
+		SendCatalog_:            sendCatalog,
+		ActionType_:             actionType,
+		ActionExternalID_:       actionExternalID,
+		Cards_:                  cards,
+		DirectSend_:             directSend,
+		TTLSeconds_:             ttlSeconds,
+		DirectSendTemplateName_: directSendTemplateName,
 	}
 }
 
@@ -182,8 +219,26 @@ func (m *MsgWppOut) CTAMessage() CTAMessage { return m.CTAMessage_ }
 
 func (m *MsgWppOut) FlowMessage() FlowMessage { return m.FlowMessage_ }
 
+func (m *MsgWppOut) Cards() []CarouselMessage { return m.Cards_ }
+
 func (m *MsgWppOut) OrderDetailsMessage() OrderDetailsMessage { return m.OrderDetailsMessage_ }
 
 func (m *MsgWppOut) Templating() *MsgTemplating { return m.Templating_ }
 
 func (m *MsgWppOut) Buttons() []ButtonComponent { return m.Buttons_ }
+
+func (m *MsgWppOut) Products() []ProductEntry { return m.Products_ }
+
+func (m *MsgWppOut) ActionButtonText() string { return m.ActionButtonText_ }
+
+func (m *MsgWppOut) SendCatalog() bool { return m.SendCatalog_ }
+
+func (m *MsgWppOut) ActionType() string { return m.ActionType_ }
+
+func (m *MsgWppOut) ActionExternalID() string { return m.ActionExternalID_ }
+
+func (m *MsgWppOut) DirectSend() bool { return m.DirectSend_ }
+
+func (m *MsgWppOut) TTLSeconds() int { return m.TTLSeconds_ }
+
+func (m *MsgWppOut) DirectSendTemplateName() string { return m.DirectSendTemplateName_ }
