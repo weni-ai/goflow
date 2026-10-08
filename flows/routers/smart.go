@@ -194,16 +194,15 @@ func (r *SmartRouter) classifyText(run flows.FlowRun, step flows.Step, operand s
 		args[string(c.CategoryUUID)] = evaluatedArg
 	}
 
-	for category, arg := range args {
-		for _, c := range r.categories {
-			if string(c.UUID()) == category {
-				body.Options = append(body.Options, struct {
-					Class   string "json:\"class\""
-					Context string "json:\"context\""
-				}{Class: c.Name(), Context: arg})
-				break
-			}
+	for _, category := range r.categories {
+		arg, ok := args[string(category.UUID())]
+		if !ok {
+			continue
 		}
+		body.Options = append(body.Options, struct {
+			Class   string `json:"class"`
+			Context string `json:"context"`
+		}{Class: category.Name(), Context: arg})
 	}
 
 	bodyJSON, err := json.Marshal(body)

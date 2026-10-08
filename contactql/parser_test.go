@@ -86,6 +86,15 @@ func TestParseQuery(t *testing.T) {
 		{text: `whatsapp_phone = "5561"`, err: "whatsapp_phone can only be checked as set or not set", resolver: resolver},
 		{text: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, parsed: `whatsapp_bsuid != "" AND whatsapp_phone = "" AND tel = ""`, resolver: resolver},
 
+		// CTWA source id (equality and existence; no contains or ordering)
+		{text: `ctwa_source_id = "campaign-a"`, parsed: `ctwa_source_id = "campaign-a"`, resolver: resolver},
+		{text: `ctwa_source_id != "campaign-a"`, parsed: `ctwa_source_id != "campaign-a"`, resolver: resolver},
+		{text: `ctwa_source_id != ""`, parsed: `ctwa_source_id != ""`, resolver: resolver},
+		{text: `ctwa_source_id = ""`, parsed: `ctwa_source_id = ""`, resolver: resolver},
+		{text: `ctwa_source_id = "Campaign-A"`, parsed: `ctwa_source_id = "Campaign-A"`, resolver: resolver},
+		{text: `ctwa_source_id ~ "campaign"`, err: "contains conditions can only be used with name or URN values", resolver: resolver},
+		{text: `ctwa_source_id > "campaign-a"`, err: "comparisons with > can only be used with date and number fields", resolver: resolver},
+
 		// explicit conditions on URN with URN redaction
 		{text: `tel=""`, parsed: `tel = ""`, redactURNs: true, resolver: resolver},
 		{text: `tel!=""`, parsed: `tel != ""`, redactURNs: true, resolver: resolver},

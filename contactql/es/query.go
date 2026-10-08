@@ -337,6 +337,24 @@ func attributeConditionToElastic(env envs.Environment, resolver contactql.Resolv
 			return query
 		}
 		panic(fmt.Sprintf("unsupported whatsapp_phone attribute operator: %s", c.Operator()))
+	case contactql.AttributeCTWASourceID:
+		// keyword array of campaign source ids; comparison is case-sensitive and does not lowercase
+		raw := c.Value()
+		if (c.Operator() == contactql.OpEqual || c.Operator() == contactql.OpNotEqual) && raw == "" {
+			query = elastic.NewExistsQuery("ctwa_source_ids")
+			if c.Operator() == contactql.OpEqual {
+				query = not(query)
+			}
+			return query
+		}
+		switch c.Operator() {
+		case contactql.OpEqual:
+			return elastic.NewTermQuery("ctwa_source_ids", raw)
+		case contactql.OpNotEqual:
+			return not(elastic.NewTermQuery("ctwa_source_ids", raw))
+		default:
+			panic(fmt.Sprintf("unsupported ctwa_source_id attribute operator: %s", c.Operator()))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported contact attribute: %s", key))
 	}

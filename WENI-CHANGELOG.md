@@ -1,3 +1,8 @@
+1.21.0
+----------
+ * feat: add ctwa_source_id contact query attribute for Click to WhatsApp campaign source ids
+ * fix: build smart router zeroshot options in category order so tests are stable
+
 1.20.5
 ----------
  * feat: add named WhatsApp template parameter format, parameter names, and named placeholder substitution

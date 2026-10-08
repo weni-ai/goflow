@@ -46,18 +46,19 @@ const (
 
 // Contact represents a person who is interacting with the flow
 type Contact struct {
-	uuid       ContactUUID
-	id         ContactID
-	name       string
-	language   envs.Language
-	status     ContactStatus
-	timezone   *time.Location
-	createdOn  time.Time
-	lastSeenOn *time.Time
-	urns       URNList
-	groups     *GroupList
-	fields     FieldValues
-	tickets    *TicketList
+	uuid          ContactUUID
+	id            ContactID
+	name          string
+	language      envs.Language
+	status        ContactStatus
+	timezone      *time.Location
+	createdOn     time.Time
+	lastSeenOn    *time.Time
+	urns          URNList
+	groups        *GroupList
+	fields        FieldValues
+	tickets       *TicketList
+	ctwaSourceIDs []string
 
 	// transient fields
 	assets SessionAssets
@@ -131,19 +132,20 @@ func (c *Contact) Clone() *Contact {
 	}
 
 	return &Contact{
-		uuid:       c.uuid,
-		id:         c.id,
-		name:       c.name,
-		language:   c.language,
-		status:     c.status,
-		timezone:   c.timezone,
-		createdOn:  c.createdOn,
-		lastSeenOn: c.lastSeenOn,
-		urns:       c.urns.clone(),
-		groups:     c.groups.clone(),
-		fields:     c.fields.clone(),
-		tickets:    c.tickets.clone(),
-		assets:     c.assets,
+		uuid:          c.uuid,
+		id:            c.id,
+		name:          c.name,
+		language:      c.language,
+		status:        c.status,
+		timezone:      c.timezone,
+		createdOn:     c.createdOn,
+		lastSeenOn:    c.lastSeenOn,
+		urns:          c.urns.clone(),
+		groups:        c.groups.clone(),
+		fields:        c.fields.clone(),
+		tickets:       c.tickets.clone(),
+		ctwaSourceIDs: append([]string(nil), c.ctwaSourceIDs...),
+		assets:        c.assets,
 	}
 }
 
@@ -211,6 +213,9 @@ func (c *Contact) SetLastSeenOn(t time.Time) { c.lastSeenOn = &t }
 
 // SetName sets the name of this contact
 func (c *Contact) SetName(name string) { c.name = name }
+
+// SetCTWASourceIDs sets the CTWA campaign source ids used by contact search (not persisted on the flow session).
+func (c *Contact) SetCTWASourceIDs(ids []string) { c.ctwaSourceIDs = ids }
 
 // Name returns the name of this contact
 func (c *Contact) Name() string { return c.name }
@@ -301,20 +306,20 @@ func (c *Contact) Format(env envs.Environment) string {
 
 // Context returns the properties available in expressions
 //
-//   __default__:text -> the name or URN
-//   uuid:text -> the UUID of the contact
-//   id:text -> the numeric ID of the contact
-//   first_name:text -> the first name of the contact
-//   name:text -> the name of the contact
-//   language:text -> the language of the contact as 3-letter ISO code
-//   created_on:datetime -> the creation date of the contact
-//   last_seen_on:any -> the last seen date of the contact
-//   urns:[]text -> the URNs belonging to the contact
-//   urn:text -> the preferred URN of the contact
-//   groups:[]group -> the groups the contact belongs to
-//   fields:fields -> the custom field values of the contact
-//   channel:channel -> the preferred channel of the contact
-//   tickets:[]ticket -> the open tickets of the contact
+//	__default__:text -> the name or URN
+//	uuid:text -> the UUID of the contact
+//	id:text -> the numeric ID of the contact
+//	first_name:text -> the first name of the contact
+//	name:text -> the name of the contact
+//	language:text -> the language of the contact as 3-letter ISO code
+//	created_on:datetime -> the creation date of the contact
+//	last_seen_on:any -> the last seen date of the contact
+//	urns:[]text -> the URNs belonging to the contact
+//	urn:text -> the preferred URN of the contact
+//	groups:[]group -> the groups the contact belongs to
+//	fields:fields -> the custom field values of the contact
+//	channel:channel -> the preferred channel of the contact
+//	tickets:[]ticket -> the open tickets of the contact
 //
 // @context contact
 func (c *Contact) Context(env envs.Environment) map[string]types.XValue {
@@ -525,6 +530,15 @@ func (c *Contact) QueryProperty(env envs.Environment, key string, propType conta
 				if contactql.IsWhatsAppPhonePath(path) {
 					vals = append(vals, path)
 				}
+			}
+			return vals
+		case contactql.AttributeCTWASourceID:
+			if len(c.ctwaSourceIDs) == 0 {
+				return nil
+			}
+			vals := make([]interface{}, len(c.ctwaSourceIDs))
+			for i, id := range c.ctwaSourceIDs {
+				vals[i] = id
 			}
 			return vals
 		default:

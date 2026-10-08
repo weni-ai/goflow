@@ -25,17 +25,18 @@ var operatorAliases = map[string]Operator{
 
 // Fixed attributes that can be searched
 const (
-	AttributeUUID           = "uuid"
-	AttributeID             = "id"
-	AttributeName           = "name"
-	AttributeLanguage       = "language"
-	AttributeURN            = "urn"
-	AttributeGroup          = "group"
-	AttributeTickets        = "tickets"
-	AttributeCreatedOn      = "created_on"
-	AttributeLastSeenOn     = "last_seen_on"
-	AttributeWhatsAppBSUID  = "whatsapp_bsuid"
-	AttributeWhatsAppPhone  = "whatsapp_phone"
+	AttributeUUID          = "uuid"
+	AttributeID            = "id"
+	AttributeName          = "name"
+	AttributeLanguage      = "language"
+	AttributeURN           = "urn"
+	AttributeGroup         = "group"
+	AttributeTickets       = "tickets"
+	AttributeCreatedOn     = "created_on"
+	AttributeLastSeenOn    = "last_seen_on"
+	AttributeWhatsAppBSUID = "whatsapp_bsuid"
+	AttributeWhatsAppPhone = "whatsapp_phone"
+	AttributeCTWASourceID  = "ctwa_source_id"
 )
 
 var attributes = map[string]assets.FieldType{
@@ -50,6 +51,7 @@ var attributes = map[string]assets.FieldType{
 	AttributeLastSeenOn:    assets.FieldTypeDatetime,
 	AttributeWhatsAppBSUID: assets.FieldTypeText,
 	AttributeWhatsAppPhone: assets.FieldTypeText,
+	AttributeCTWASourceID:  assets.FieldTypeText,
 }
 
 // WhatsAppBSUIDRegex matches Meta WhatsApp Business-Scoped User IDs (portfolio and parent).

@@ -2002,5 +2002,58 @@
                 }
             }
         }
+    },
+    {
+        "description": "ctwa_source_id exact match",
+        "query": "ctwa_source_id = \"campaign-a\"",
+        "elastic": {
+            "term": {
+                "ctwa_source_ids": "campaign-a"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id exact match is case-sensitive",
+        "query": "ctwa_source_id = \"Campaign-A\"",
+        "elastic": {
+            "term": {
+                "ctwa_source_ids": "Campaign-A"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is not equal",
+        "query": "ctwa_source_id != \"campaign-a\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "term": {
+                        "ctwa_source_ids": "campaign-a"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is set",
+        "query": "ctwa_source_id!=\"\"",
+        "elastic": {
+            "exists": {
+                "field": "ctwa_source_ids"
+            }
+        }
+    },
+    {
+        "description": "ctwa_source_id is not set",
+        "query": "ctwa_source_id=\"\"",
+        "elastic": {
+            "bool": {
+                "must_not": {
+                    "exists": {
+                        "field": "ctwa_source_ids"
+                    }
+                }
+            }
+        }
     }
 ]
