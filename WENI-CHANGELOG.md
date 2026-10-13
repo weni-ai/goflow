@@ -1,3 +1,7 @@
+1.21.1
+----------
+ * feat: prefer a WhatsApp phone number over a BSUID for @urns.whatsapp and @contact.urn
+
 1.21.0
 ----------
  * feat: add ctwa_source_id contact query attribute for Click to WhatsApp campaign source ids

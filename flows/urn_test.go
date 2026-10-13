@@ -114,3 +114,33 @@ func TestURNList(t *testing.T) {
 		types.NewXText("tel:+250781111222"),
 	), urnList.ToXValue(env))
 }
+
+func TestURNListMapContextWhatsAppPhoneOverBSUID(t *testing.T) {
+	env := envs.NewBuilder().Build()
+
+	bsuid := flows.NewContactURN("whatsapp:BR.1583576196772655", nil)
+	parent := flows.NewContactURN("whatsapp:US.ENT.11815799212886844830", nil)
+	phone := flows.NewContactURN("whatsapp:5511999999999", nil)
+	otherPhone := flows.NewContactURN("whatsapp:14155552671", nil)
+	tel := flows.NewContactURN("tel:+12024561111", nil)
+
+	assertWhatsApp := func(list flows.URNList, want string) {
+		t.Helper()
+		test.AssertXEqual(t, types.NewXText(want), list.MapContext(env)["whatsapp"])
+	}
+
+	assertWhatsApp(flows.URNList{bsuid, phone}, "whatsapp:5511999999999")
+	assertWhatsApp(flows.URNList{phone, bsuid}, "whatsapp:5511999999999")
+	assertWhatsApp(flows.URNList{parent, phone}, "whatsapp:5511999999999")
+	assertWhatsApp(flows.URNList{phone}, "whatsapp:5511999999999")
+	assertWhatsApp(flows.URNList{bsuid, phone, otherPhone}, "whatsapp:5511999999999")
+
+	// A contact with only a BSUID keeps that URN. Compare against ToXValue so the
+	// assertion follows whatever the linked gocommon renders for a BSUID path.
+	test.AssertXEqual(t, bsuid.ToXValue(env), flows.URNList{bsuid}.MapContext(env)["whatsapp"])
+	test.AssertXEqual(t, parent.ToXValue(env), flows.URNList{parent}.MapContext(env)["whatsapp"])
+
+	ctx := flows.URNList{tel, bsuid, phone}.MapContext(env)
+	test.AssertXEqual(t, types.NewXText("tel:+12024561111"), ctx["tel"])
+	test.AssertXEqual(t, types.NewXText("whatsapp:5511999999999"), ctx["whatsapp"])
+}
