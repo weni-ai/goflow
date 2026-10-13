@@ -553,3 +553,82 @@ func TestContactQuery(t *testing.T) {
 		}
 	}
 }
+
+func TestWhatsAppPhonePreferredOverBSUID(t *testing.T) {
+	env := envs.NewBuilder().Build()
+	source, err := static.NewSource([]byte(`{
+		"channels": [
+			{
+				"uuid": "294a14d4-c998-41e5-a314-5941b97b89d7",
+				"name": "My Android Phone",
+				"address": "+17036975131",
+				"schemes": ["tel"],
+				"roles": ["send", "receive"],
+				"country": "US"
+			},
+			{
+				"uuid": "57f1078f-88aa-46f4-a59a-948a5739c03d",
+				"name": "WhatsApp",
+				"address": "5511999990000",
+				"schemes": ["whatsapp"],
+				"roles": ["send", "receive"]
+			}
+		]
+	}`))
+	require.NoError(t, err)
+
+	sa, err := engine.NewSessionAssets(env, source, nil)
+	require.NoError(t, err)
+
+	newContact := func(urnz ...urns.URN) *flows.Contact {
+		t.Helper()
+		contact, err := flows.NewContact(
+			sa,
+			flows.ContactUUID("f5e2c5a0-7b2a-4c2a-8b2a-0c2c6d2e0b2a"),
+			flows.ContactID(1),
+			"Ada",
+			envs.NilLanguage,
+			flows.ContactStatusActive,
+			nil,
+			time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC),
+			nil,
+			urnz,
+			nil,
+			nil,
+			nil,
+			assets.PanicOnMissing,
+		)
+		require.NoError(t, err)
+		return contact
+	}
+
+	paths := func(contact *flows.Contact, all bool) []string {
+		t.Helper()
+		destinations := contact.ResolveDestinations(all)
+		got := make([]string, len(destinations))
+		for i, dest := range destinations {
+			got[i] = dest.URN.URN().Path()
+		}
+		return got
+	}
+
+	both := newContact("whatsapp:BR.1583576196772655", "whatsapp:5511999999999", "tel:+12024561111")
+	assert.Equal(t, "5511999999999", both.PreferredURN().URN().Path())
+	assert.Equal(t, []string{"5511999999999"}, paths(both, false))
+	assert.Equal(t, []string{"5511999999999", "BR.1583576196772655", "+12024561111"}, paths(both, true))
+	test.AssertXEqual(t, types.NewXText("whatsapp:5511999999999"), both.Context(env)["urn"])
+
+	phoneFirst := newContact("whatsapp:5511999999999", "whatsapp:BR.1583576196772655")
+	assert.Equal(t, "5511999999999", phoneFirst.PreferredURN().URN().Path())
+
+	parent := newContact("whatsapp:US.ENT.11815799212886844830", "whatsapp:5511999999999")
+	assert.Equal(t, "5511999999999", parent.PreferredURN().URN().Path())
+
+	bsuidOnly := newContact("whatsapp:BR.1583576196772655")
+	assert.Equal(t, "BR.1583576196772655", bsuidOnly.PreferredURN().URN().Path())
+
+	telFirst := newContact("tel:+12024561111", "whatsapp:BR.1583576196772655", "whatsapp:5511999999999")
+	assert.Equal(t, "+12024561111", telFirst.PreferredURN().URN().Path())
+	assert.Equal(t, []string{"+12024561111", "5511999999999", "BR.1583576196772655"}, paths(telFirst, true))
+	test.AssertXEqual(t, types.NewXText("tel:+12024561111"), telFirst.Context(env)["urn"])
+}
