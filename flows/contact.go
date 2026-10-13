@@ -368,20 +368,61 @@ type Destination struct {
 	URN     *ContactURN
 }
 
-// ResolveDestinations resolves possible URN/channel destinations
+// ResolveDestinations resolves possible URN/channel destinations.
+// When a contact has both a WhatsApp phone number and a BSUID, the phone takes the
+// priority slot the BSUID occupied. Other schemes stay in their original positions,
+// so a higher-priority tel URN remains the preferred destination.
 func (c *Contact) ResolveDestinations(all bool) []Destination {
-	destinations := []Destination{}
+	destinations := make([]Destination, 0, len(c.urns))
 
 	for _, u := range c.urns {
 		channel := c.assets.Channels().GetForURN(u, assets.ChannelRoleSend)
 		if channel != nil {
 			destinations = append(destinations, Destination{URN: u, Channel: channel})
-			if !all {
-				break
-			}
 		}
 	}
+
+	destinations = preferWhatsAppPhoneDestinations(destinations)
+	if !all && len(destinations) > 0 {
+		return destinations[:1]
+	}
 	return destinations
+}
+
+// preferWhatsAppPhoneDestinations moves WhatsApp phone destinations ahead of WhatsApp
+// BSUID destinations, reusing the slots those WhatsApp URNs already occupy.
+func preferWhatsAppPhoneDestinations(destinations []Destination) []Destination {
+	if len(destinations) < 2 {
+		return destinations
+	}
+
+	indexes := make([]int, 0, len(destinations))
+	phones := make([]Destination, 0, len(destinations))
+	others := make([]Destination, 0, len(destinations))
+
+	for i, dest := range destinations {
+		if dest.URN.URN().Scheme() != urns.WhatsAppScheme {
+			continue
+		}
+		indexes = append(indexes, i)
+		if contactql.IsWhatsAppPhonePath(dest.URN.URN().Path()) {
+			phones = append(phones, dest)
+		} else {
+			others = append(others, dest)
+		}
+	}
+
+	if len(phones) == 0 || len(others) == 0 {
+		return destinations
+	}
+
+	ordered := append(phones, others...)
+	result := make([]Destination, len(destinations))
+	copy(result, destinations)
+	for i, idx := range indexes {
+		result[idx] = ordered[i]
+	}
+	return result
 }
 
 // PreferredURN gets the preferred URN for this contact, i.e. the URN we would use for sending
