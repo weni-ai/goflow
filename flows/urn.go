@@ -6,6 +6,7 @@ import (
 
 	"github.com/nyaruka/gocommon/urns"
 	"github.com/nyaruka/goflow/assets"
+	"github.com/nyaruka/goflow/contactql"
 	"github.com/nyaruka/goflow/envs"
 	"github.com/nyaruka/goflow/excellent/types"
 	"github.com/nyaruka/goflow/utils"
@@ -197,15 +198,24 @@ func (l URNList) ToXValue(env envs.Environment) types.XValue {
 	})
 }
 
-// MapContext returns a map of the highest priority URN for each scheme - exposed in expressions as @urns
+// MapContext returns a map of the highest priority URN for each scheme - exposed in expressions as @urns.
+// A WhatsApp phone number outranks a BSUID when the contact has both.
 func (l URNList) MapContext(env envs.Environment) map[string]types.XValue {
 	byScheme := make(map[string]types.XValue)
+	var whatsappPhone *ContactURN
 
 	for _, u := range l {
 		scheme := u.URN().Scheme()
+		if scheme == urns.WhatsAppScheme && contactql.IsWhatsAppPhonePath(u.URN().Path()) && whatsappPhone == nil {
+			whatsappPhone = u
+		}
 		if _, seen := byScheme[scheme]; !seen {
 			byScheme[scheme] = u.ToXValue(env)
 		}
+	}
+
+	if whatsappPhone != nil {
+		byScheme[urns.WhatsAppScheme] = whatsappPhone.ToXValue(env)
 	}
 
 	// and add nils for all other schemes
